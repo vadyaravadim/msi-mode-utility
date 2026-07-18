@@ -50,15 +50,13 @@ if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administra
     Write-Host "Not running as Administrator. Requesting elevation..." -ForegroundColor Yellow
     $scriptPath = $PSCommandPath
     if (-not $scriptPath) {
-        # Launched via `irm ... | iex` - no file on disk to relaunch. Persist the
-        # text that is actually executing and elevate that, not a re-download:
-        # what the user piped in (a fork, a branch, a local copy) is what must
-        # run under Administrator. UTF-8 with BOM: -File reads it correctly on
-        # PS 5.1 whatever the piped content contains.
-        $body = $MyInvocation.MyCommand.Definition
-        if (-not $body) { Write-Host "ERROR: cannot recover the executing script text; save the script to a file and run it with -File." -ForegroundColor Red; return }
+        # Launched via `irm ... | iex` - no file on disk to relaunch, and the
+        # piped text is not recoverable from inside iex ($MyInvocation there
+        # holds the caller's command line, not the script body). Download to a
+        # file and elevate that, so -Elevated/-FromIex and the mode switches
+        # still flow through.
         $scriptPath = Join-Path $env:TEMP 'msi-mode-utility.ps1'
-        [IO.File]::WriteAllText($scriptPath, $body, [Text.Encoding]::UTF8)
+        Invoke-RestMethod 'https://raw.githubusercontent.com/vadyaravadim/msi-mode-utility/main/msi-mode-utility.ps1' -OutFile $scriptPath
     }
     try {
         # Always powershell.exe (not pwsh) so Out-GridView is guaranteed.
