@@ -145,8 +145,9 @@ Double-click the `msi_undo_*.reg` file saved next to the script — see [Reverti
 
 - [CPU Parking Disabler](https://github.com/vadyaravadim/cpu-parking-disabler) — disable CPU core parking on Windows 10/11 to fix micro-stutters and input lag
 - [Timer Resolution Utility](https://github.com/vadyaravadim/timer-resolution-utility) — set 0.5 ms timer resolution, disable dynamic tick, un-force HPET — with a built-in Sleep(1) benchmark
+- [GameDVR & FSO Disabler](https://github.com/vadyaravadim/gamedvr-fso-disabler) — disable Game DVR / Xbox Game Bar capture and Fullscreen Optimizations on Windows 10/11 to fix capture stutters and frame drops
 
-Same idea across all three: one transparent PowerShell script, built-in rollback.
+Same idea across all four: one transparent PowerShell script, built-in rollback.
 
 ## Disclaimer
 
