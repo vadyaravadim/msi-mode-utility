@@ -31,10 +31,10 @@ Zero install. Zero dependencies. Built-in undo.
 **One-liner** instead (in any PowerShell — it self-elevates):
 
 ```powershell
-irm https://raw.githubusercontent.com/vadyaravadim/msi-mode-utility/main/msi-mode-utility.ps1 -OutFile "$env:USERPROFILE\msi-mode-utility.ps1"; powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\msi-mode-utility.ps1"
+irm https://raw.githubusercontent.com/vadyaravadim/msi-mode-utility/main/msi-mode-utility.ps1 | iex
 ```
 
-The script is saved to your user profile (not a temp folder) on purpose: the `msi_undo_*.reg` rollback file is written next to it and must survive automatic temp cleanup.
+Run this way, the `msi_undo_*.reg` rollback file is saved to your **Desktop** (there is no script folder to put it next to). The optional switches below need a local copy of the script — use the ZIP or clone method for those.
 
 **Or clone:**
 
@@ -54,7 +54,7 @@ cd msi-mode-utility
 ## What It Does
 
 1. **Scans** PCI devices and shows the latency-critical ones (GPU, network, USB, audio) in a grid with their current MSI status
-2. **Backs up** the previous state of every selected device to a timestamped `msi_undo_*.reg` file next to the script — **before** changing anything
+2. **Backs up** the previous state of every selected device to a timestamped `msi_undo_*.reg` file next to the script (on your Desktop when run via the one-liner) — **before** changing anything
 3. **Enables MSI mode** for the devices you selected (sets the documented `MSISupported` registry value)
 
 Rollback = double-click the undo file, then reboot. No System Restore needed — works from Safe Mode too.
@@ -139,7 +139,7 @@ Hidden by the default filter on purpose: NVMe uses MSI-X out of the box, so ther
 
 ### How do I re-enable the old interrupt mode?
 
-Double-click the `msi_undo_*.reg` file saved next to the script — see [Reverting](#reverting).
+Double-click the `msi_undo_*.reg` file saved next to the script (or on your Desktop if you used the one-liner) — see [Reverting](#reverting).
 
 ### Does disabling MPO (Multiplane Overlay) help with flickering and stutters?
 

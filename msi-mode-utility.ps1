@@ -27,9 +27,17 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+# Canonical raw URL of this script — used to relaunch elevated when running
+# via `irm <url> | iex`, where there is no file on disk to relaunch with -File.
+$ScriptUrl = 'https://raw.githubusercontent.com/vadyaravadim/msi-mode-utility/main/msi-mode-utility.ps1'
+# Empty $PSCommandPath = the script text was piped to iex, no file on disk.
+$scriptOnDisk = [bool]$PSCommandPath
+
 # Keep the self-elevated window open so the user can read the output.
+# $Elevated comes from the -File relaunch; the env var from the iex relaunch,
+# which cannot pass parameters.
 function Wait-IfElevatedWindow {
-    if ($Elevated) { Read-Host "Press Enter to close" | Out-Null }
+    if ($Elevated -or $env:MSI_UTIL_ELEVATED) { Read-Host "Press Enter to close" | Out-Null }
 }
 
 # Without this, an unhandled error closes the self-elevated window before
@@ -45,10 +53,17 @@ $principal = New-Object Security.Principal.WindowsPrincipal(
 if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Host "Not running as Administrator. Requesting elevation..." -ForegroundColor Yellow
     try {
-        $argList = @('-NoProfile', '-ExecutionPolicy', 'Bypass',
-                     '-File', "`"$PSCommandPath`"", '-Elevated')
-        if ($ShowAll) { $argList += '-ShowAll' }
-        if ($Disable)        { $argList += '-Disable' }
+        if ($scriptOnDisk) {
+            $argList = @('-NoProfile', '-ExecutionPolicy', 'Bypass',
+                         '-File', "`"$PSCommandPath`"", '-Elevated')
+            if ($ShowAll) { $argList += '-ShowAll' }
+            if ($Disable) { $argList += '-Disable' }
+        } else {
+            # No file to relaunch — re-run the one-liner itself. Always
+            # powershell.exe (not pwsh) so Out-GridView is guaranteed.
+            $argList = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command',
+                         "`$env:MSI_UTIL_ELEVATED=1; irm $ScriptUrl | iex")
+        }
         Start-Process -FilePath 'powershell.exe' -ArgumentList $argList -Verb RunAs
     } catch {
         Write-Host "ERROR: elevation was refused. Run this script as Administrator." -ForegroundColor Red
@@ -155,9 +170,13 @@ if (-not $selected) {
 # The suffix loop keeps two runs within the same second from clobbering
 # each other's undo file.
 $stamp = Get-Date -Format 'yyyyMMdd_HHmmss'
-$undoFile = Join-Path $PSScriptRoot "msi_undo_$stamp.reg"
+# Next to the script; via `irm | iex` fall back to the Desktop — durable, and
+# resolved through the known-folder API so OneDrive redirection (Known Folder
+# Move) is honored, unlike a hardcoded $env:USERPROFILE\Desktop.
+$undoDir = if ($scriptOnDisk) { $PSScriptRoot } else { [Environment]::GetFolderPath('Desktop') }
+$undoFile = Join-Path $undoDir "msi_undo_$stamp.reg"
 $n = 1
-while (Test-Path $undoFile) { $undoFile = Join-Path $PSScriptRoot ("msi_undo_{0}_{1}.reg" -f $stamp, $n++) }
+while (Test-Path $undoFile) { $undoFile = Join-Path $undoDir ("msi_undo_{0}_{1}.reg" -f $stamp, $n++) }
 $undo = New-Object System.Text.StringBuilder
 [void]$undo.AppendLine('Windows Registry Editor Version 5.00')
 [void]$undo.AppendLine('')
