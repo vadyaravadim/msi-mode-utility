@@ -152,7 +152,12 @@ if (-not $selected) {
 # Undo is value-level on purpose: a "[-key]" stanza would also wipe values the
 # tool never wrote (e.g. MessageNumberLimit added later by a driver or tweak);
 # deleting just MSISupported may leave an empty key behind, which is harmless.
-$undoFile = Join-Path $PSScriptRoot ("msi_undo_{0}.reg" -f (Get-Date -Format 'yyyyMMdd_HHmmss'))
+# The suffix loop keeps two runs within the same second from clobbering
+# each other's undo file.
+$stamp = Get-Date -Format 'yyyyMMdd_HHmmss'
+$undoFile = Join-Path $PSScriptRoot "msi_undo_$stamp.reg"
+$n = 1
+while (Test-Path $undoFile) { $undoFile = Join-Path $PSScriptRoot ("msi_undo_{0}_{1}.reg" -f $stamp, $n++) }
 $undo = New-Object System.Text.StringBuilder
 [void]$undo.AppendLine('Windows Registry Editor Version 5.00')
 [void]$undo.AppendLine('')
