@@ -61,8 +61,11 @@ if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administra
         } else {
             # No file to relaunch — re-run the one-liner itself. Always
             # powershell.exe (not pwsh) so Out-GridView is guaranteed.
+            # try/catch: if the download fails, the elevated window would
+            # otherwise close before the error can be read (the script's own
+            # trap is not on screen yet at that point).
             $argList = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command',
-                         "`$env:MSI_UTIL_ELEVATED=1; irm $ScriptUrl | iex")
+                         "`$env:MSI_UTIL_ELEVATED=1; try { irm $ScriptUrl | iex } catch { Write-Host `$_ -ForegroundColor Red; Read-Host 'Press Enter to close' }")
         }
         Start-Process -FilePath 'powershell.exe' -ArgumentList $argList -Verb RunAs
     } catch {
