@@ -13,31 +13,24 @@
     A reboot is required for changes to take effect.
     Revert: apply the msi_undo_*.reg file written before each change.
     Each undo file is a per-run snapshot: after several runs touching the
-    same device, apply them newest-to-oldest — only the oldest file holds
+    same device, apply them newest-to-oldest - only the oldest file holds
     the original state.
     (-Disable writes an explicit 0; it does not restore the original
-    "value absent" state — only the undo file does.)
+    "value absent" state - only the undo file does.)
 #>
 [CmdletBinding()]
 param(
     [switch]$ShowAll,
     [switch]$Disable,
-    [switch]$Elevated   # internal: set by the self-elevation relaunch
+    [switch]$Elevated,  # internal: set by the self-elevation relaunch
+    [switch]$FromIex    # internal: elevated rerun of a piped (irm | iex) script - undo falls back to Desktop
 )
 
 $ErrorActionPreference = 'Stop'
 
-# Canonical raw URL of this script — used to relaunch elevated when running
-# via `irm <url> | iex`, where there is no file on disk to relaunch with -File.
-$ScriptUrl = 'https://raw.githubusercontent.com/vadyaravadim/msi-mode-utility/main/msi-mode-utility.ps1'
-# Empty $PSCommandPath = the script text was piped to iex, no file on disk.
-$scriptOnDisk = [bool]$PSCommandPath
-
 # Keep the self-elevated window open so the user can read the output.
-# $Elevated comes from the -File relaunch; the env var from the iex relaunch,
-# which cannot pass parameters.
 function Wait-IfElevatedWindow {
-    if ($Elevated -or $env:MSI_UTIL_ELEVATED) { Read-Host "Press Enter to close" | Out-Null }
+    if ($Elevated) { Read-Host "Press Enter to close" | Out-Null }
 }
 
 # Without this, an unhandled error closes the self-elevated window before
@@ -45,28 +38,35 @@ function Wait-IfElevatedWindow {
 trap {
     Write-Host "ERROR: $_" -ForegroundColor Red
     Wait-IfElevatedWindow
-    exit 1
+    # Under `irm | iex` this runs inside the user's own session, where `exit`
+    # would close their console - rethrow so only the piped script stops.
+    if ($PSCommandPath) { exit 1 }
+    break
 }
 
 $principal = New-Object Security.Principal.WindowsPrincipal(
     [Security.Principal.WindowsIdentity]::GetCurrent())
 if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Host "Not running as Administrator. Requesting elevation..." -ForegroundColor Yellow
+    $scriptPath = $PSCommandPath
+    if (-not $scriptPath) {
+        # Launched via `irm ... | iex` - no file on disk to relaunch. Persist the
+        # text that is actually executing and elevate that, not a re-download:
+        # what the user piped in (a fork, a branch, a local copy) is what must
+        # run under Administrator. UTF-8 with BOM: -File reads it correctly on
+        # PS 5.1 whatever the piped content contains.
+        $body = $MyInvocation.MyCommand.Definition
+        if (-not $body) { Write-Host "ERROR: cannot recover the executing script text; save the script to a file and run it with -File." -ForegroundColor Red; return }
+        $scriptPath = Join-Path $env:TEMP 'msi-mode-utility.ps1'
+        [IO.File]::WriteAllText($scriptPath, $body, [Text.Encoding]::UTF8)
+    }
     try {
-        if ($scriptOnDisk) {
-            $argList = @('-NoProfile', '-ExecutionPolicy', 'Bypass',
-                         '-File', "`"$PSCommandPath`"", '-Elevated')
-            if ($ShowAll) { $argList += '-ShowAll' }
-            if ($Disable) { $argList += '-Disable' }
-        } else {
-            # No file to relaunch — re-run the one-liner itself. Always
-            # powershell.exe (not pwsh) so Out-GridView is guaranteed.
-            # try/catch: if the download fails, the elevated window would
-            # otherwise close before the error can be read (the script's own
-            # trap is not on screen yet at that point).
-            $argList = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command',
-                         "`$env:MSI_UTIL_ELEVATED=1; try { irm $ScriptUrl | iex } catch { Write-Host `$_ -ForegroundColor Red; Read-Host 'Press Enter to close' }")
-        }
+        # Always powershell.exe (not pwsh) so Out-GridView is guaranteed.
+        $argList = @('-NoProfile', '-ExecutionPolicy', 'Bypass',
+                     '-File', "`"$scriptPath`"", '-Elevated')
+        if (-not $PSCommandPath) { $argList += '-FromIex' }
+        if ($ShowAll) { $argList += '-ShowAll' }
+        if ($Disable) { $argList += '-Disable' }
         Start-Process -FilePath 'powershell.exe' -ArgumentList $argList -Verb RunAs
     } catch {
         Write-Host "ERROR: elevation was refused. Run this script as Administrator." -ForegroundColor Red
@@ -173,10 +173,12 @@ if (-not $selected) {
 # The suffix loop keeps two runs within the same second from clobbering
 # each other's undo file.
 $stamp = Get-Date -Format 'yyyyMMdd_HHmmss'
-# Next to the script; via `irm | iex` fall back to the Desktop — durable, and
+# Next to the script; via `irm | iex` fall back to the Desktop - durable, and
 # resolved through the known-folder API so OneDrive redirection (Known Folder
-# Move) is honored, unlike a hardcoded $env:USERPROFILE\Desktop.
-$undoDir = if ($scriptOnDisk) { $PSScriptRoot } else { [Environment]::GetFolderPath('Desktop') }
+# Move) is honored, unlike a hardcoded $env:USERPROFILE\Desktop. -FromIex marks
+# the elevated rerun of a piped script: it HAS a file path (the %TEMP% shim),
+# but undo must not land in %TEMP%.
+$undoDir = if ($PSCommandPath -and -not $FromIex) { $PSScriptRoot } else { [Environment]::GetFolderPath('Desktop') }
 $undoFile = Join-Path $undoDir "msi_undo_$stamp.reg"
 $n = 1
 while (Test-Path $undoFile) { $undoFile = Join-Path $undoDir ("msi_undo_{0}_{1}.reg" -f $stamp, $n++) }

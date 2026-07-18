@@ -1,0 +1,17 @@
+# The script must stay pure ASCII with no BOM: a BOM breaks `irm | iex`
+# (the parser chokes on a leading U+FEFF), and non-ASCII literals in a
+# BOM-less file break -File runs under PowerShell 5.1.
+name: ascii-check
+on: [push, pull_request]
+jobs:
+  ascii:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          bad=$(perl -ne 'print "$.: $_" if /[^\x00-\x7F]/' msi-mode-utility.ps1)
+          if [ -n "$bad" ]; then
+            echo "$bad"
+            echo 'Non-ASCII bytes found: replace with ASCII or \uXXXX regex escapes'
+            exit 1
+          fi
