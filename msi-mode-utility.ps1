@@ -22,8 +22,7 @@
 param(
     [switch]$ShowAll,
     [switch]$Disable,
-    [switch]$Elevated,  # internal: set by the self-elevation relaunch
-    [switch]$FromIex    # internal: elevated rerun of a piped (irm | iex) script - undo falls back to Desktop
+    [switch]$Elevated   # internal: set by the self-elevation relaunch
 )
 
 $ErrorActionPreference = 'Stop'
@@ -44,30 +43,57 @@ trap {
     break
 }
 
+# Mode switches forwarded on every relaunch (the irm|iex bootstrap rerun below
+# and the self-elevation later) - one list so neither path can silently drop one.
+function Get-ForwardedSwitchList {
+    $a = @()
+    if ($ShowAll) { $a += '-ShowAll' }
+    if ($Disable) { $a += '-Disable' }
+    $a
+}
+
+# Launched via `irm <url> | iex` - no file on disk. The undo .reg is written
+# next to the script, so a stable path is required: save the script to the
+# user profile (not TEMP - the undo file must survive automatic temp cleanup)
+# and rerun it from there (the rerun handles elevation).
+if (-not $PSCommandPath) {
+    # The piped text is not recoverable from inside iex ($MyInvocation there
+    # holds the caller's command line, not the script body) - download the
+    # script.
+    try {
+        $body = Invoke-RestMethod 'https://raw.githubusercontent.com/vadyaravadim/msi-mode-utility/main/msi-mode-utility.ps1' -TimeoutSec 30
+    } catch {
+        Write-Host "ERROR: could not download the script ($($_.Exception.Message)). Check your internet connection, or save the script to a file and run it from there." -ForegroundColor Red
+        return
+    }
+    $saved = Join-Path $env:USERPROFILE 'msi-mode-utility.ps1'
+    if ((Test-Path $saved) -and ([IO.File]::ReadAllText($saved) -cne $body)) {
+        Copy-Item $saved "$saved.bak" -Force
+        Write-Host "Existing $saved differs - previous copy kept as $saved.bak" -ForegroundColor Yellow
+    }
+    [IO.File]::WriteAllText($saved, $body, [Text.Encoding]::UTF8)
+    Write-Host "Script saved to: $saved (the undo file will be written next to it)" -ForegroundColor Cyan
+    # @(): a single forwarded switch unrolls to a scalar, and splatting a
+    # scalar string breaks powershell.exe -File switch binding on PS 5.1.
+    $fwd = @(Get-ForwardedSwitchList)
+    powershell -NoProfile -ExecutionPolicy Bypass -File $saved @fwd
+    # The rerun's exit code stays in $LASTEXITCODE for scripted callers.
+    return
+}
+
 $principal = New-Object Security.Principal.WindowsPrincipal(
     [Security.Principal.WindowsIdentity]::GetCurrent())
 if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Host "Not running as Administrator. Requesting elevation..." -ForegroundColor Yellow
-    $scriptPath = $PSCommandPath
-    if (-not $scriptPath) {
-        # Launched via `irm ... | iex` - no file on disk to relaunch, and the
-        # piped text is not recoverable from inside iex ($MyInvocation there
-        # holds the caller's command line, not the script body). Download to a
-        # file and elevate that, so -Elevated/-FromIex and the mode switches
-        # still flow through.
-        $scriptPath = Join-Path $env:TEMP 'msi-mode-utility.ps1'
-        Invoke-RestMethod 'https://raw.githubusercontent.com/vadyaravadim/msi-mode-utility/main/msi-mode-utility.ps1' -OutFile $scriptPath
-    }
     try {
         # Always powershell.exe (not pwsh) so Out-GridView is guaranteed.
         $argList = @('-NoProfile', '-ExecutionPolicy', 'Bypass',
-                     '-File', "`"$scriptPath`"", '-Elevated')
-        if (-not $PSCommandPath) { $argList += '-FromIex' }
-        if ($ShowAll) { $argList += '-ShowAll' }
-        if ($Disable) { $argList += '-Disable' }
+                     '-File', "`"$PSCommandPath`"", '-Elevated') + (Get-ForwardedSwitchList)
         Start-Process -FilePath 'powershell.exe' -ArgumentList $argList -Verb RunAs
     } catch {
-        Write-Host "ERROR: elevation was refused. Run this script as Administrator." -ForegroundColor Red
+        # Not always a refusal (UAC service disabled, ...) - show the real cause.
+        Write-Host "ERROR: elevation failed ($($_.Exception.Message)). Run this script as Administrator." -ForegroundColor Red
+        Read-Host "Press Enter to close" | Out-Null
     }
     return
 }
@@ -171,15 +197,9 @@ if (-not $selected) {
 # The suffix loop keeps two runs within the same second from clobbering
 # each other's undo file.
 $stamp = Get-Date -Format 'yyyyMMdd_HHmmss'
-# Next to the script; via `irm | iex` fall back to the Desktop - durable, and
-# resolved through the known-folder API so OneDrive redirection (Known Folder
-# Move) is honored, unlike a hardcoded $env:USERPROFILE\Desktop. -FromIex marks
-# the elevated rerun of a piped script: it HAS a file path (the %TEMP% shim),
-# but undo must not land in %TEMP%.
-$undoDir = if ($PSCommandPath -and -not $FromIex) { $PSScriptRoot } else { [Environment]::GetFolderPath('Desktop') }
-$undoFile = Join-Path $undoDir "msi_undo_$stamp.reg"
+$undoFile = Join-Path $PSScriptRoot "msi_undo_$stamp.reg"
 $n = 1
-while (Test-Path $undoFile) { $undoFile = Join-Path $undoDir ("msi_undo_{0}_{1}.reg" -f $stamp, $n++) }
+while (Test-Path $undoFile) { $undoFile = Join-Path $PSScriptRoot ("msi_undo_{0}_{1}.reg" -f $stamp, $n++) }
 $undo = New-Object System.Text.StringBuilder
 [void]$undo.AppendLine('Windows Registry Editor Version 5.00')
 [void]$undo.AppendLine('')

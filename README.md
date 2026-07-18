@@ -34,7 +34,7 @@ Zero install. Zero dependencies. Built-in undo.
 irm https://raw.githubusercontent.com/vadyaravadim/msi-mode-utility/main/msi-mode-utility.ps1 | iex
 ```
 
-Run this way, the `msi_undo_*.reg` rollback file is saved to your **Desktop** (there is no script folder to put it next to). The optional switches below need a local copy of the script — use the ZIP or clone method for those.
+The script downloads itself to `%USERPROFILE%\msi-mode-utility.ps1` (not a temp folder) on purpose: the `msi_undo_*.reg` rollback file is written next to it and must survive automatic temp cleanup. An existing copy at that path that differs is kept as `.bak`. The optional switches below need a local copy of the script — use the ZIP or clone method for those.
 
 **Or clone:**
 
