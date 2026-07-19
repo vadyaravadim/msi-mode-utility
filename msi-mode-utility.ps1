@@ -103,7 +103,9 @@ if (-not $PSCommandPath) {
         Copy-Item $saved "$saved.bak" -Force
         Write-Host "Existing $saved differs - previous copy kept as $saved.bak" -ForegroundColor Yellow
     }
-    [IO.File]::WriteAllText($saved, $body, [Text.Encoding]::UTF8)
+    # UTF8Encoding($false) = no BOM: a BOM would break a later `irm | iex` of
+    # the saved copy and violates the ASCII/no-BOM invariant the repo enforces.
+    [IO.File]::WriteAllText($saved, $body, [Text.UTF8Encoding]::new($false))
     Write-Host "Script saved to: $saved (the undo file will be written next to it)" -ForegroundColor Cyan
     # @(): a single forwarded switch unrolls to a scalar, and splatting a
     # scalar string breaks powershell.exe -File switch binding on PS 5.1.
