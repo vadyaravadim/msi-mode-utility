@@ -12,6 +12,7 @@ Zero install. Zero dependencies. Built-in undo.
 [![Windows 10/11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?logo=windows)](https://www.microsoft.com/windows)
 [![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-5391FE?logo=powershell&logoColor=white)](https://docs.microsoft.com/en-us/powershell/)
 [![Latest release](https://img.shields.io/github/v/release/vadyaravadim/msi-mode-utility)](https://github.com/vadyaravadim/msi-mode-utility/releases)
+[![PowerShell Gallery](https://img.shields.io/powershellgallery/v/msi-mode-utility?logo=powershell&label=PS%20Gallery)](https://www.powershellgallery.com/packages/msi-mode-utility)
 ![GitHub Stars](https://img.shields.io/github/stars/vadyaravadim/msi-mode-utility?style=social)
 
 </div>
@@ -29,6 +30,16 @@ Zero install. Zero dependencies. Built-in undo.
 3. Click **Yes** on the UAC prompt (the script requests admin rights on its own).
 4. In the grid window, `Ctrl`-click the devices you want, then click **OK**.
 5. **Reboot.**
+
+**Or from the PowerShell Gallery:**
+
+```powershell
+Install-Script msi-mode-utility
+msi-mode-utility                     # then run it by name (open a NEW PowerShell window first, so the Scripts folder is on PATH)
+msi-mode-utility -ShowAll            # switches work directly: -ShowAll, -Disable
+```
+
+The script self-elevates. Update later with `Update-Script msi-mode-utility`.
 
 **One-liner** instead (in any PowerShell — it self-elevates):
 
