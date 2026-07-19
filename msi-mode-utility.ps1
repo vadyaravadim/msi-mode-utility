@@ -1,3 +1,35 @@
+<#PSScriptInfo
+
+.VERSION 1.0.0
+
+.GUID 01a3b6f9-f755-49e4-8cff-86c95dc4cb83
+
+.AUTHOR vadyaravadim
+
+.COMPANYNAME
+
+.COPYRIGHT
+
+.TAGS Windows Windows10 Windows11 Gaming MSI MessageSignaledInterrupts DPC Latency PCI GPU Performance Tweak
+
+.LICENSEURI https://github.com/vadyaravadim/msi-mode-utility/blob/main/LICENSE
+
+.PROJECTURI https://github.com/vadyaravadim/msi-mode-utility
+
+.ICONURI
+
+.EXTERNALMODULEDEPENDENCIES
+
+.REQUIREDSCRIPTS
+
+.EXTERNALSCRIPTDEPENDENCIES
+
+.RELEASENOTES
+
+.PRIVATEDATA
+
+#>
+
 <#
 .SYNOPSIS
     Native MSI (Message Signaled Interrupts) mode manager for PCI devices.

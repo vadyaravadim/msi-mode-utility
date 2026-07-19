@@ -11,6 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Sync PSScriptInfo version to tag
+        # The tag is the single source of truth for the version. The .VERSION
+        # in the committed file is a placeholder; stamp the tag (minus the
+        # leading v) into it here so provenance, checksums, and the PSGallery
+        # package all describe the same version.
+        run: sed -i "s/^\.VERSION .*/.VERSION ${GITHUB_REF_NAME#v}/" msi-mode-utility.ps1
       - name: Compute checksums
         run: sha256sum msi-mode-utility.ps1 > SHA256SUMS.txt
       - name: Attest build provenance
@@ -21,3 +27,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "$GITHUB_REF_NAME" --generate-notes msi-mode-utility.ps1 SHA256SUMS.txt
+      - name: Publish to PowerShell Gallery
+        shell: pwsh
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: Publish-Script -Path ./msi-mode-utility.ps1 -NuGetApiKey $env:NUGET_API_KEY
