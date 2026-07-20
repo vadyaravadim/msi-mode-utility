@@ -1,0 +1,4 @@
+msi_undo_*.reg
+.vs/
+.vscode/
+.claude/
