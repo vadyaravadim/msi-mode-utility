@@ -10,7 +10,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Sync PSScriptInfo version to tag
         # The tag is the single source of truth for the version. The .VERSION
         # in the committed file is a placeholder; stamp the tag (minus the
