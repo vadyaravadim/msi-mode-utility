@@ -33,9 +33,11 @@ verbatim into the release and fails the release if the tag has no section here.
   elevated, with a guard so UAC is never asked to relaunch a file that failed to download. Note the
   trade-off this makes explicit: a piped fork or branch is replaced by canonical `main`, so a fork has to
   point the URL at itself.
-- `-ShowAll` and `-Disable` could be dropped on the way through a relaunch. Both relaunch paths - the
-  piped-run rerun and the UAC elevation - now build their arguments from one shared list, so neither can
-  lose a switch. A single forwarded switch also used to break argument binding on Windows PowerShell 5.1.
+- Forwarding a mode switch got a second chance to go wrong: the piped-run rerun added in this release is a
+  second relaunch path, on top of the UAC elevation that 1.1.2 had already fixed. Both now build their
+  arguments from one shared list, so neither can lose `-ShowAll` or `-Disable`. Passing exactly one switch
+  also used to break argument binding on Windows PowerShell 5.1, where a single-element list unrolls to a
+  plain string.
 
 ### Changed
 
