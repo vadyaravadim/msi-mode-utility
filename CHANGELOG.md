@@ -50,45 +50,87 @@ verbatim into the release and fails the release if the tag has no section here.
 
 ### Changed
 
-- Elevation under `irm | iex` was reworked to relaunch the text that was actually executing rather than
-  re-fetching `main`, so that a fork or a pinned commit would keep running after the UAC prompt. This did
-  not hold in practice - see the 1.1.3 fix.
+- Elevation under `irm | iex` was reworked to relaunch the text that was actually executing rather
+  than re-fetching `main`: the piped text - a fork, a branch, a pinned commit, a local copy - was
+  saved to `%TEMP%` and elevated with `-File`, where before the elevated window silently ran
+  whatever `main` happened to contain at that moment. This did not hold in practice - see the 1.1.3
+  fix.
+- The undo `.reg` still lands on your Desktop for one-liner runs, through an internal `-FromIex`
+  marker, even though the elevated rerun is now file-backed.
+- The `MSI_UTIL_ELEVATED` environment-variable workaround and the second network fetch it needed are
+  gone; the `-File` relaunch passes `-Elevated` directly.
+- The script is now pure ASCII, with its em-dashes replaced, and an `ascii-check` CI workflow keeps
+  it that way on every commit. The encoding is not cosmetic here: non-ASCII in a BOM-less file
+  breaks Windows PowerShell 5.1 `-File` runs, and a BOM breaks `irm | iex`.
+
+### Fixed
+
+- `-ShowAll` and `-Disable` were silently dropped by the elevated relaunch of a piped run, so a
+  piped `-Disable` flipped to enable mode after the UAC prompt and turned MSI on for the devices you
+  had picked to turn it off for. Both switches are now forwarded across that relaunch.
+- An unhandled error in a piped (`irm | iex`) run closed your console. The trap used `exit 1`, which
+  terminates the session it runs in and not just the script; it now rethrows the error instead.
 
 ## [1.1.1] - 2026-07-18
 
 ### Fixed
 
-- When the one-liner failed to download the script, the elevated window closed before you could read why.
-  It now stays open on that error.
+- When the script download inside the elevated one-liner relaunch failed - no network, GitHub
+  unreachable - the elevated window closed before you could read why. It now prints the error and
+  waits for Enter.
 
 ## [1.1.0] - 2026-07-18
 
 ### Added
 
-- The tool runs from a one-line `irm ... | iex` command, self-elevating through UAC. A piped run has no
-  script directory, so the undo `.reg` was written to the Desktop in that case.
+- The tool runs from a one-line `irm ... | iex` command, with no download step at all. Without
+  Administrator rights it self-elevates by re-running that one-liner in an elevated Windows
+  PowerShell window, which also guarantees the device grid is there when you started from PowerShell
+  7, since `Out-GridView` does not ship with PowerShell 7.
+- A piped run has no script directory, so the undo `.reg` is written to your Desktop in that case.
+  The Desktop path is resolved through the Windows known-folder API, so a Desktop that OneDrive
+  Known Folder Move has redirected is honored rather than guessed at.
+
+### Changed
+
+- The README Quick Start now leads with the short `irm | iex` one-liner, and Requirements records
+  that self-elevation works in every launch mode again.
 
 ## [1.0.1] - 2026-07-18
 
+### Changed
+
+- New FAQ entry on whether disabling MPO (Multiplane Overlay) helps with flickering and stutters,
+  and why there is no MPO disabler in this series.
+- The Related section now links Timer Resolution Utility, GameDVR & FSO Disabler, and Interrupt
+  Affinity Utility.
+
 ### Fixed
 
-- Two runs within the same second silently destroyed the first run's undo file. The file is named from a
-  whole-second timestamp and was overwritten without asking, so the `.reg` you would have reverted with was
-  gone. Colliding names now get a numeric suffix.
+- Two runs within the same second silently destroyed the first run's undo file. The file is named
+  from a whole-second timestamp and was overwritten without asking, so the `.reg` you would have
+  reverted with was gone. Colliding names now take the first free numeric suffix (`_1`, `_2`, ...),
+  and undo files still sort newest to oldest by name.
 
 ## [1.0.0] - 2026-07-17
 
 ### Added
 
-- First release. Lists your PCI devices with their MSI (Message Signaled Interrupts) status in a grid and
-  switches the devices you pick to MSI mode by writing the documented `MSISupported` value.
-- `-Disable` sets the selected devices to MSI off instead of on; `-ShowAll` includes the bridges and
-  abstract controllers that are hidden by default.
-- Writes an `msi_undo_<stamp>.reg` next to the script before any change, so one double-click reverts that
-  run. Note that `-Disable` writes an explicit `0` rather than restoring a value that was originally
-  absent - only the undo file restores that.
-- Self-elevates through UAC and keeps the elevated window open on both success and error. Zero external
-  dependencies, Windows PowerShell 5.1+. A reboot is needed for the change to take effect.
+- First public release. Lists your PCI devices with their MSI (Message Signaled Interrupts) status
+  in a grid and switches the devices you pick to MSI mode by writing the documented `MSISupported`
+  value. On Windows 10 and 11 the ones worth switching are usually the GPU, network, USB and audio
+  controllers.
+- `-Disable` sets the selected devices to MSI off instead of on; `-ShowAll` drops the default filter
+  and lists every MSI-capable PCI device, including the bridges and abstract controllers hidden
+  otherwise.
+- Writes an `msi_undo_<stamp>.reg` next to the script before any change, so one double-click reverts
+  that run - and it reverts from Safe Mode too, which is where you will be if a device stops coming
+  up after the reboot. Note that `-Disable` writes an explicit `0` rather than restoring a value
+  that was originally absent - only the undo file restores that.
+- Self-elevates through UAC and keeps the elevated window open on both success and error. A
+  `Run.bat` is included so the whole thing is a double-click. Nothing to install and no external
+  dependencies - one readable PowerShell script on Windows PowerShell 5.1+, an open-source
+  alternative to the closed-source MSI Util v3. A reboot is needed for the change to take effect.
 
 [Unreleased]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.1.3...HEAD
 [1.1.3]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.1.2...v1.1.3
