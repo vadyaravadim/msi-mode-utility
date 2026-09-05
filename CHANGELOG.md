@@ -9,6 +9,8 @@ verbatim into the release and fails the release if the tag has no section here.
 
 ## [Unreleased]
 
+## [1.1.4] - 2026-09-05
+
 ### Fixed
 
 - The copy a piped `irm ... | iex` run saves into your user profile was written with a UTF-8 BOM, which
@@ -134,7 +136,8 @@ verbatim into the release and fails the release if the tag has no section here.
   dependencies - one readable PowerShell script on Windows PowerShell 5.1+, an open-source
   alternative to the closed-source MSI Util v3. A reboot is needed for the change to take effect.
 
-[Unreleased]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.1.3...HEAD
+[Unreleased]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.1.4...HEAD
+[1.1.4]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.1.3...v1.1.4
 [1.1.3]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.1.0...v1.1.1
