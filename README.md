@@ -15,6 +15,8 @@ Zero install. Zero dependencies. Built-in undo.
 [![PowerShell Gallery](https://img.shields.io/powershellgallery/v/msi-mode-utility?logo=powershell&label=PS%20Gallery)](https://www.powershellgallery.com/packages/msi-mode-utility)
 ![GitHub Stars](https://img.shields.io/github/stars/vadyaravadim/msi-mode-utility?style=social)
 
+**Part of [RigPolice](https://rigpolice.com/?utm_source=github&utm_medium=readme&utm_campaign=msi-mode-utility) — check your mouse's real polling rate after the change with the free [Polling Rate Test](https://rigpolice.com/mouse/tests/polling-rate-test/?utm_source=github&utm_medium=readme&utm_campaign=msi-mode-utility)**
+
 </div>
 
 ---
