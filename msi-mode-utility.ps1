@@ -139,9 +139,9 @@ $version = [regex]::Match((Get-Content $PSCommandPath -Raw), '(?m)^\.VERSION\s+(
 $version = if ($version -eq '0.0.0') { 'dev build' } else { "v$version" }
 
 Write-Host ""
-Write-Host "===============================" -ForegroundColor Cyan
+Write-Host "===================================" -ForegroundColor Cyan
 Write-Host "  MSI MODE UTILITY $version" -ForegroundColor Cyan
-Write-Host "===============================" -ForegroundColor Cyan
+Write-Host "===================================" -ForegroundColor Cyan
 Write-Host ""
 
 # Out-GridView exists only on Windows editions with a desktop - Server Core has
