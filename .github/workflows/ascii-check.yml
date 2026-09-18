@@ -2,14 +2,17 @@
 # (the parser chokes on a leading U+FEFF), and non-ASCII literals in a
 # BOM-less file break -File runs under PowerShell 5.1.
 name: ascii-check
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_call:   # release.yml runs this as a gate before publishing
 permissions:
   contents: read
 jobs:
   ascii:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: |
           bad=$(perl -ne 'print "$.: $_" if /[^\x00-\x7F]/' msi-mode-utility.ps1)
           if [ -n "$bad" ]; then

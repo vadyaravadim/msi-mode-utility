@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 1.0.0
+.VERSION 0.0.0
 
 .GUID 01a3b6f9-f755-49e4-8cff-86c95dc4cb83
 
@@ -93,7 +93,7 @@ if (-not $PSCommandPath) {
     # holds the caller's command line, not the script body) - download the
     # script.
     try {
-        $body = Invoke-RestMethod 'https://raw.githubusercontent.com/vadyaravadim/msi-mode-utility/main/msi-mode-utility.ps1' -TimeoutSec 30
+        $body = Invoke-RestMethod 'https://github.com/vadyaravadim/msi-mode-utility/releases/latest/download/msi-mode-utility.ps1' -TimeoutSec 30
     } catch {
         Write-Host "ERROR: could not download the script ($($_.Exception.Message)). Check your internet connection, or save the script to a file and run it from there." -ForegroundColor Red
         return
@@ -131,6 +131,18 @@ if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administra
     }
     return
 }
+
+# Read from this file's own PSScriptInfo block - the one place the version
+# lives (release.yml stamps the tag into it). 0.0.0 is the committed
+# placeholder: a clone or ZIP of main, not a release.
+$version = [regex]::Match((Get-Content $PSCommandPath -Raw), '(?m)^\.VERSION\s+(\S+)').Groups[1].Value
+$version = if ($version -eq '0.0.0') { 'dev build' } else { "v$version" }
+
+Write-Host ""
+Write-Host "===============================" -ForegroundColor Cyan
+Write-Host "  MSI MODE UTILITY $version" -ForegroundColor Cyan
+Write-Host "===============================" -ForegroundColor Cyan
+Write-Host ""
 
 # PowerShell 7 ships without Out-GridView (Server Core has none at all);
 # fail up front with instructions instead of a raw CommandNotFound mid-run.

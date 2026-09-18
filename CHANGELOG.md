@@ -9,6 +9,30 @@ verbatim into the release and fails the release if the tag has no section here.
 
 ## [Unreleased]
 
+### Added
+
+- The banner shows the script version (`MSI MODE UTILITY v1.1.5`), so you can tell at a glance whether
+  the copy you are running is the current release - and a bug report that includes the output says which
+  version it is about. A copy cloned or zipped from `main` rather than taken from a release says
+  `dev build`.
+
+### Changed
+
+- The `irm ... | iex` one-liner, and the copy it saves into your user profile, now download the latest
+  tagged release instead of whatever sits on `main`. Until now the one-liner ran - as Administrator - a
+  file that had not been through the release checks and had no checksum or provenance behind it. It is
+  now byte-for-byte the release asset, so `SHA256SUMS.txt` and `gh attestation verify` cover it too. The
+  old command keeps working; swap the URL for the one in the README when convenient.
+- A release is no longer published unless `lint` and `ascii-check` pass on the tagged commit.
+
+### Fixed
+
+- `Run.bat -ShowAll` and `Run.bat -Disable` now do what they say. `Run.bat` dropped everything typed after
+  its name, so `Run.bat -Disable` quietly ran the normal enable instead of turning MSI off.
+- The README still said a one-liner run writes the undo `.reg` to your Desktop. It has gone next to the
+  saved copy in your user profile since 1.1.3; the README now says so, and lists a working command for
+  passing `-ShowAll` / `-Disable` under each install method.
+
 ## [1.1.4] - 2026-09-05
 
 ### Fixed

@@ -1,0 +1,9 @@
+version: 2
+updates:
+  # Actions are the only tracked dependency: the script itself has none.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: Bump

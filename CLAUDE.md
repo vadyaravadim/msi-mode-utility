@@ -43,6 +43,14 @@ halfway through a scan the user already waited on.
 the script, attests build provenance, creates the GitHub Release and publishes to the PowerShell Gallery.
 Nothing ships from a push to `main`.
 
+- **The `irm | iex` URL is `releases/latest/download/msi-mode-utility.ps1` - in the README AND in the
+  script's bootstrap download, never `raw.githubusercontent.com/.../main`.** That is what keeps the
+  sentence above true for the one-liner, and makes the saved copy byte-identical to the attested asset.
+- **`release.yml` calls `lint.yml` and `ascii-check.yml` through `workflow_call` and `needs:` both.** Their
+  push-triggered runs on the tag do not block the release, and a PSGallery version cannot be re-published.
+- **`v*` tags cannot be moved or deleted (tag ruleset) and releases are immutable (repo setting).** A broken
+  release is fixed with a new patch tag, never by re-tagging.
+
 **Before tagging, move the `## [Unreleased]` bullets in `CHANGELOG.md` into a `## [X.Y.Z] - YYYY-MM-DD`
 section and add the compare link at the bottom.** The release job copies exactly that section into the
 release body and **fails the release when the tag's section is missing**. This is a gate on purpose, not a
@@ -55,3 +63,6 @@ machine and why it matters. A fix says what was broken and what it cost them.
 
 Do NOT bump `.VERSION` in the `.ps1` by hand - it is a placeholder the workflow overwrites, and a
 hand-edited value that disagrees with the tag would only mislead whoever reads the committed file.
+**The placeholder is `0.0.0` and must stay exactly that**: the banner reads its own `.VERSION` line and
+prints `dev build` for `0.0.0`, the stamped tag otherwise. It used to be `1.0.0`, which is also a real tag,
+so a clone of `main` was indistinguishable from the v1.0.0 release.

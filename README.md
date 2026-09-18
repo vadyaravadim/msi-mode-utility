@@ -38,10 +38,10 @@ The script self-elevates. Update later with `Update-Script msi-mode-utility`.
 **One-liner** instead (in any PowerShell — it self-elevates):
 
 ```powershell
-irm https://raw.githubusercontent.com/vadyaravadim/msi-mode-utility/main/msi-mode-utility.ps1 | iex
+irm https://github.com/vadyaravadim/msi-mode-utility/releases/latest/download/msi-mode-utility.ps1 | iex
 ```
 
-The script downloads itself to `%USERPROFILE%\msi-mode-utility.ps1` (not a temp folder) on purpose: the `msi_undo_*.reg` rollback file is written next to it and must survive automatic temp cleanup. An existing copy at that path that differs is kept as `.bak`. The optional switches below are passed straight through when you run it by name (`msi-mode-utility -ShowAll`); the plain `irm | iex` pipeline can't take switches, so use the Gallery, ZIP, or clone method for those.
+The script downloads itself to `%USERPROFILE%\msi-mode-utility.ps1` (not a temp folder) on purpose: the `msi_undo_*.reg` rollback file is written next to it and must survive automatic temp cleanup. An existing copy at that path that differs is kept as `.bak`. The `irm | iex` pipe itself takes no switches - run the saved copy instead, see [Optional switches](#optional-switches).
 
 **Or clone:**
 
@@ -68,10 +68,20 @@ However you launch it:
 | `-ShowAll` | Show every MSI-capable PCI device, including bridges/controllers hidden by default |
 | `-Disable` | Turn MSI **off** for the selected devices |
 
+How to pass a switch depends on how you got the script:
+
+| Installed via | Command |
+|---------------|---------|
+| PowerShell Gallery | `msi-mode-utility -ShowAll` |
+| ZIP or clone | `.\Run.bat -ShowAll` from the script's folder |
+| One-liner | `powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\msi-mode-utility.ps1" -ShowAll` |
+
+Calling `.\msi-mode-utility.ps1` directly only works if your execution policy allows scripts — Windows blocks them by default, which is what `Run.bat` and `-ExecutionPolicy Bypass` get around.
+
 ## What It Does
 
 1. **Scans** PCI devices and shows the latency-critical ones (GPU, network, USB, audio) in a grid with their current MSI status
-2. **Backs up** the previous state of every selected device to a timestamped `msi_undo_*.reg` file next to the script (on your Desktop when run via the one-liner) — **before** changing anything
+2. **Backs up** the previous state of every selected device to a timestamped `msi_undo_*.reg` file next to the script (in `%USERPROFILE%` when run via the one-liner) — **before** changing anything
 3. **Enables MSI mode** for the devices you selected (sets the documented `MSISupported` registry value)
 
 Rollback = double-click the undo file, then reboot. No System Restore needed — works from Safe Mode too.
@@ -120,7 +130,7 @@ After the reboot, confirm the device actually runs in MSI mode:
 Two options:
 
 1. Double-click the `msi_undo_*.reg` file created before your change, then reboot (restores the previous `MSISupported` state, works from Safe Mode). If you ran the script several times against the same device, apply the undo files newest-to-oldest — each one is a snapshot of the state before *that* run, so only the oldest holds the original state.
-2. Run the script again with `-Disable` and select the same devices. Note: this writes an explicit `MSISupported = 0`; if the device originally had no `MSISupported` value at all (shown as **Default** in the grid), only the undo file restores that exact state.
+2. Run the script again with `-Disable` (`.\Run.bat -Disable` from a ZIP or clone; [other install methods](#optional-switches) pass the switch differently) and select the same devices. Note: this writes an explicit `MSISupported = 0`; if the device originally had no `MSISupported` value at all (shown as **Default** in the grid), only the undo file restores that exact state.
 
 Prefer a System Restore point anyway? Create one yourself before running: `Checkpoint-Computer -Description "Before MSI"` (note: Windows silently skips it if a point was made within the last 24 hours).
 
@@ -156,7 +166,7 @@ Hidden by the default filter on purpose: NVMe uses MSI-X out of the box, so ther
 
 ### How do I re-enable the old interrupt mode?
 
-Double-click the `msi_undo_*.reg` file saved next to the script (or on your Desktop if you used the one-liner) — see [Reverting](#reverting).
+Double-click the `msi_undo_*.reg` file saved next to the script (or in `%USERPROFILE%` if you used the one-liner) — see [Reverting](#reverting).
 
 ### Does disabling MPO (Multiplane Overlay) help with flickering and stutters?
 
