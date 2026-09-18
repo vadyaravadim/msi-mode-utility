@@ -5,9 +5,10 @@ A single self-contained PowerShell script (`msi-mode-utility.ps1`) that lists PC
 documented `MSISupported` value. Part of a family of six single-script Windows tuning tools that share this
 layout: one `.ps1`, `Run.bat`, `PSScriptAnalyzerSettings.psd1`, and the same three workflows.
 
-**`Out-GridView` is a hard dependency and the check for it stays up front.** PowerShell 7 ships without it
-and Server Core has none at all; failing early with instructions beats a raw `CommandNotFound` thrown
-halfway through a scan the user already waited on.
+**`Out-GridView` is a hard dependency and the check for it stays up front.** It exists only on Windows
+editions with a desktop - Server Core has none, while PowerShell 7 on a desktop edition does have it; failing
+early with instructions beats a raw `CommandNotFound` thrown halfway through a scan the user already
+waited on.
 
 ## Invariants
 

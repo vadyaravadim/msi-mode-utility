@@ -101,7 +101,7 @@ Legacy line-based (IRQ) interrupts share physical lines, so a device can be forc
 | | |
 |---|---|
 | **Windows** | 10, 11 |
-| **PowerShell** | Windows PowerShell 5.1 (ships with Windows 10/11). Uses `Out-GridView` — built into Windows PowerShell 5.1; PowerShell 7 needs the `Microsoft.PowerShell.GraphicalTools` module; **not** available on Server Core. The script detects a missing `Out-GridView` and tells you what to do |
+| **PowerShell** | Windows PowerShell 5.1 (ships with Windows 10/11); PowerShell 7 works too. Uses `Out-GridView`, which both have on Windows editions with a desktop and which is **not** available on Server Core. The script detects a missing `Out-GridView` and tells you what to do |
 | **Rights** | Administrator (the script self-elevates via UAC) |
 
 ## How It Works

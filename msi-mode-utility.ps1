@@ -144,10 +144,10 @@ Write-Host "  MSI MODE UTILITY $version" -ForegroundColor Cyan
 Write-Host "===============================" -ForegroundColor Cyan
 Write-Host ""
 
-# PowerShell 7 ships without Out-GridView (Server Core has none at all);
-# fail up front with instructions instead of a raw CommandNotFound mid-run.
+# Out-GridView exists only on Windows editions with a desktop - Server Core has
+# none; fail up front with instructions instead of a raw CommandNotFound mid-run.
 if (-not (Get-Command Out-GridView -ErrorAction SilentlyContinue)) {
-    Write-Host "Out-GridView is not available in this PowerShell. Run the script with Windows PowerShell (powershell.exe), or install the Microsoft.PowerShell.GraphicalTools module." -ForegroundColor Red
+    Write-Host "Out-GridView is not available in this PowerShell. It needs a Windows edition with a desktop (not Server Core); on a desktop edition, run the script with Windows PowerShell (powershell.exe)." -ForegroundColor Red
     Wait-IfElevatedWindow
     return
 }

@@ -9,6 +9,13 @@ verbatim into the release and fails the release if the tag has no section here.
 
 ## [Unreleased]
 
+### Fixed
+
+- The "Out-GridView is not available" message no longer tells you to install the
+  `Microsoft.PowerShell.GraphicalTools` module, and the README no longer claims PowerShell 7 needs it.
+  PowerShell 7 on a desktop edition of Windows has `Out-GridView` built in; it is missing only on Server
+  Core, where no module brings it back.
+
 ## [1.1.5] - 2026-09-18
 
 ### Added
