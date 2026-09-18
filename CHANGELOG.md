@@ -9,6 +9,8 @@ verbatim into the release and fails the release if the tag has no section here.
 
 ## [Unreleased]
 
+## [1.1.5] - 2026-09-18
+
 ### Added
 
 - The banner shows the script version (`MSI MODE UTILITY v1.1.5`), so you can tell at a glance whether
@@ -160,7 +162,8 @@ verbatim into the release and fails the release if the tag has no section here.
   dependencies - one readable PowerShell script on Windows PowerShell 5.1+, an open-source
   alternative to the closed-source MSI Util v3. A reboot is needed for the change to take effect.
 
-[Unreleased]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.1.4...HEAD
+[Unreleased]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.1.5...HEAD
+[1.1.5]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.1.4...v1.1.5
 [1.1.4]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.1.3...v1.1.4
 [1.1.3]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.1.1...v1.1.2
