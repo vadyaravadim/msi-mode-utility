@@ -1,0 +1,52 @@
+name: Bug report
+description: The script failed, printed an error, or a device did not switch to MSI / did not stay switched after the reboot.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Not a bug:** a device showing **Default** in the grid (no explicit value is set, the driver default applies), NVMe drives missing from the list (hidden on purpose - use `-ShowAll`), or no FPS gain after enabling MSI - all three are explained in the [FAQ](https://github.com/vadyaravadim/msi-mode-utility#faq).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: run-output
+    attributes:
+      label: Output of the run
+      description: |
+        Everything the elevated window printed, from the `MSI MODE UTILITY vX.Y.Z` banner down, including any red ERROR line - the banner says which version you ran. If the window closed before you could copy it, run the script again from a console so the output stays, and cancel the device picker if you do not want to change anything:
+        - PowerShell Gallery: `msi-mode-utility`
+        - One-liner: `powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\msi-mode-utility.ps1"`
+        - ZIP / clone, from the script's folder: `powershell -ExecutionPolicy Bypass -File .\msi-mode-utility.ps1`
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and its MSI column in the grid
+      description: The device the report is about, with the state the grid showed for it (Default / Enabled / Disabled).
+      placeholder: NVIDIA GeForce RTX 4070 - Default
+  - type: dropdown
+    id: launch-method
+    attributes:
+      label: How did you run it?
+      description: Each method reaches the script through a different relaunch path, and that is where launch bugs live.
+      options:
+        - PowerShell Gallery (Install-Script)
+        - irm | iex one-liner
+        - Run.bat from the ZIP
+        - .ps1 directly (clone or download)
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version and display language
+      description: Win+R, `winver`. The display language matters - device names in the grid and the output are localized.
+      placeholder: Windows 11 24H2, build 26100.4061, German
+    validations:
+      required: true

@@ -1,0 +1,9 @@
+# Blank issues stay on: ideas and questions should not have to fit the bug form.
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/vadyaravadim/msi-mode-utility/security/advisories/new
+    about: The script runs as Administrator - please report privately, not in a public issue.
+  - name: A device shows "Default", NVMe drives are missing, or FPS did not change?
+    url: https://github.com/vadyaravadim/msi-mode-utility#faq
+    about: Expected - the FAQ explains what Default means, why NVMe is hidden, and what MSI does and does not improve.
