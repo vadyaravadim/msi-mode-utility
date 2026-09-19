@@ -9,12 +9,21 @@ verbatim into the release and fails the release if the tag has no section here.
 
 ## [Unreleased]
 
+### Added
+
+- `bench/msi-bench.ps1` - the interrupt benchmark used to measure this tweak: the interrupt mode of every PCI
+  device, per-driver ISR and DPC times from the built-in NT Kernel Logger, and a stall probe pinned to one
+  core. The numbers in the README can be reproduced on your own machine rather than taken on trust.
+  The raw results of our own runs are published next to it in `bench/results/`.
+
 ### Fixed
 
 - The "Out-GridView is not available" message no longer tells you to install the
   `Microsoft.PowerShell.GraphicalTools` module, and the README no longer claims PowerShell 7 needs it.
   PowerShell 7 on a desktop edition of Windows has `Out-GridView` built in; it is missing only on Server
   Core, where no module brings it back.
+- The README said msinfo32 shows MSI devices with negative IRQ values. It prints them as ten-digit
+  numbers such as `IRQ 4294967255` at the bottom of the list; only Device Manager shows the negative form.
 
 ## [1.1.5] - 2026-09-18
 

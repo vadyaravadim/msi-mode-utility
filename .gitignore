@@ -1,4 +1,5 @@
 msi_undo_*.reg
+bench/msi-bench-*.json
 .vs/
 .vscode/
 .claude/

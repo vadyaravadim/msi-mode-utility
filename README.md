@@ -2,7 +2,7 @@
 
 # MSI Mode Utility
 
-**Enable MSI mode. Cut DPC latency. Fix input lag.**
+**Check MSI mode in 10 seconds. Enable it in one click. We measured what it fixes, and what it doesn't.**
 
 An open-source PowerShell script to view and toggle **MSI (Message Signaled Interrupts) mode** for PCI devices on Windows 10/11 — a transparent alternative to the closed-source "MSI Util v3" `.exe` from forum threads.
 Zero install. Zero dependencies. Built-in undo.
@@ -14,6 +14,8 @@ Zero install. Zero dependencies. Built-in undo.
 [![Latest release](https://img.shields.io/github/v/release/vadyaravadim/msi-mode-utility)](https://github.com/vadyaravadim/msi-mode-utility/releases)
 [![PowerShell Gallery](https://img.shields.io/powershellgallery/v/msi-mode-utility?logo=powershell&label=PS%20Gallery)](https://www.powershellgallery.com/packages/msi-mode-utility)
 ![GitHub Stars](https://img.shields.io/github/stars/vadyaravadim/msi-mode-utility?style=social)
+
+**[Read the deep dive with measured before/after traces →](https://rigpolice.com/system/articles/enable-msi-mode/?utm_source=github&utm_medium=readme&utm_campaign=msi-mode-utility)**
 
 **Part of [RigPolice](https://rigpolice.com/?utm_source=github&utm_medium=readme&utm_campaign=msi-mode-utility) — check your mouse's real polling rate after the change with the free [Polling Rate Test](https://rigpolice.com/mouse/tests/polling-rate-test/?utm_source=github&utm_medium=readme&utm_campaign=msi-mode-utility)**
 
@@ -88,13 +90,15 @@ Rollback = double-click the undo file, then reboot. No System Restore needed —
 
 ## The Problem: Line-Based (IRQ) vs Message Signaled Interrupts
 
-Legacy line-based (IRQ) interrupts share physical lines, so a device can be forced to wait or collide with others. MSI lets a device signal the CPU by writing to a memory address instead — interrupts are delivered faster and without line-sharing conflicts. Windows leaves many devices in legacy mode even when their driver supports MSI.
+Legacy line-based (IRQ) interrupts share physical lines, so a device can be forced to wait or collide with others. MSI lets a device signal the CPU by writing to a memory address instead — every device gets its own vector and nothing is shared. Windows still leaves some devices in legacy mode even when their driver supports MSI: on our Windows 11 testbed it was both audio controllers, stacked on one line.
 
-**Symptoms this fixes:**
+**When it actually helps** (what we measured is in the [FAQ](#does-enabling-msi-mode-reduce-input-lag-or-increase-fps)):
 
-- DPC latency spikes and frame-time stutters despite high FPS
-- Audio popping / crackling under load
-- Input lag from slow servicing of mouse/keyboard interrupts
+- A device sharing a legacy IRQ line with a busy neighbor. Audio popping / crackling under GPU or USB load is the classic case: on a shared line every interrupt runs the routine of every driver on it
+- DPC latency spikes that trace back to a driver on a shared line (msinfo32 shows who shares with whom, see [Verify](#verify-check-if-msi-mode-is-enabled))
+- Older platforms and add-in cards (sound, USB, capture) that Windows left in line-based mode
+
+**What it won't do:** raise average FPS, or shave input lag on a PC whose GPU and USB controller already run MSI. Forcing our USB controller back onto a legacy line cost 0.9 µs per mouse report. That is why the first thing this script does is show you the current state: on a modern PC the honest answer is often "already on".
 
 ## Requirements
 
@@ -122,7 +126,7 @@ When the value is absent, the grid shows **Default** (not "Disabled"): it means 
 After the reboot, confirm the device actually runs in MSI mode:
 
 - **Device Manager** → device → **Properties ▸ Resources**: a **negative IRQ number** (e.g. `-3145728`) means message-signaled interrupts are active; a small positive number means legacy line-based mode.
-- **msinfo32** → Hardware Resources ▸ IRQs: same rule — negative IRQ values are MSI/MSI-X devices.
+- **msinfo32** → Hardware Resources ▸ IRQs: legacy devices sit at the top on small numbers (two devices on the same number share that line); MSI/MSI-X devices sit at the bottom, where msinfo32 prints the negative IRQ as a ten-digit number such as `IRQ 4294967255`.
 - Or just run the script again — the grid shows the current `MSISupported` state of every device.
 
 ## Reverting
@@ -138,11 +142,19 @@ Prefer a System Restore point anyway? Create one yourself before running: `Check
 
 ### What is MSI mode?
 
-MSI (Message Signaled Interrupts) is a way for a PCI/PCIe device to deliver interrupts by writing to a memory address instead of asserting a shared physical IRQ line. Interrupts arrive faster and without line-sharing conflicts, which lowers DPC latency.
+MSI (Message Signaled Interrupts) is a way for a PCI/PCIe device to deliver interrupts by writing to a memory address instead of asserting a shared physical IRQ line. Every device gets its own vector, so the extra interrupt-routine calls a shared line causes go away.
 
 ### Does enabling MSI mode reduce input lag or increase FPS?
 
-It mainly improves **DPC latency, frame-time consistency, and interrupt servicing latency** — not average FPS. MSI on the GPU tends to reduce the DPC latency spikes that cause frame-time stutters; MSI on the USB host controller reduces the latency of mouse/keyboard interrupts being serviced, which can lower perceived input lag.
+Not average FPS, and on a healthy modern PC not input lag either. We traced it on an i9-14900F / RX 7800 XT desktop (Windows 11 25H2), two 30 s runs per state under the same 180 fps load:
+
+| Device, change | What moved | What did not |
+|----------------|-----------|--------------|
+| Two audio controllers, shared IRQ 17 → MSI | ISR calls per interrupt **1.9 → 1.0** (6,480 → 3,470 calls for ~3,450 real interrupts) | Frame times (p99 5.8 ms both ways, 0 missed frames) |
+| GPU, MSI → forced legacy line | Nothing we would bet on: mean ISR 19.2 → 25.4 µs in the fresh-boot pair, but MSI-mode runs alone ranged 18.9–25.9 µs | ISR + DPC per interrupt (38 vs 42 µs), 0 missed frames |
+| USB xHCI with a fast mouse (~7,500 interrupts/s), MSI → forced legacy line | Mean ISR 0.2 → 1.1 µs | Mean DPC 5.6 µs both ways; **+0.9 µs per mouse report** in total |
+
+MSI mode removes one specific cost: devices stacked on a shared interrupt line, each running its routine for the other's interrupts. Windows 11 drivers had already put the GPU, USB, NVMe and network devices in MSI/MSI-X on that machine; the only legacy devices were the two audio controllers. The cost becomes audible or visible when a shared line carries something heavy (the classic case is a sound card sharing a line with a busy GPU). Full methodology, screenshots and the "check your own PC in 30 seconds" guide: **[the RigPolice deep dive](https://rigpolice.com/system/articles/enable-msi-mode/?utm_source=github&utm_medium=readme&utm_campaign=msi-mode-utility)**. Reproduce it yourself with [`bench/msi-bench.ps1`](bench/msi-bench.ps1): built-in Windows tools only (NT Kernel Logger + `tracerpt`), nothing to install. The raw output of every run behind these numbers, with the known gaps listed, is in [`bench/results/`](bench/results/).
 
 ### Is it safe to enable MSI mode?
 
@@ -150,7 +162,7 @@ It mainly improves **DPC latency, frame-time consistency, and interrupt servicin
 
 ### Should I enable MSI mode for my NVIDIA or AMD GPU?
 
-GPUs are the most common target for this tweak. Some NVIDIA and AMD driver/board combinations leave the card in legacy line-based mode — the grid shows the current state, so you don't have to guess. If your GPU shows **Default** or **Disabled** and you see DPC latency spikes or frame-time stutters, enabling MSI is the usual first step. If it already shows **Enabled**, there is nothing to change.
+GPUs are the most common target for this tweak. Some NVIDIA and AMD driver/board combinations leave the card in legacy line-based mode — the grid shows the current state, so you don't have to guess. If your GPU shows **Default** or **Disabled** and you see DPC latency spikes or frame-time stutters, enabling MSI is a cheap, reversible first step. If it already shows **Enabled**, there is nothing to change: our RX 7800 XT was on out of the box, and forcing it off changed nothing we could measure.
 
 ### What is the difference between MSI and MSI-X?
 
@@ -194,7 +206,7 @@ Editing interrupt settings can, in rare cases, cause a device to fail to start. 
 
 <div align="center">
 
-If this fixed your stutters, consider giving it a ⭐
+If this helped, consider giving it a ⭐
 
 [Report Issues](https://github.com/vadyaravadim/msi-mode-utility/issues)
 

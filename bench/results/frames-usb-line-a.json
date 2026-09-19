@@ -1,0 +1,13 @@
+{
+  "phase": "usb-line-a",
+  "swapchain": "0x23A94B685C0",
+  "frames": 5394,
+  "fps": 179.9,
+  "p50Ms": 5.56,
+  "p99Ms": 5.92,
+  "p999Ms": 6.54,
+  "maxMs": 11.38,
+  "stdevMs": 0.171,
+  "over2xMedian": 1,
+  "missed180Hz": 1
+}

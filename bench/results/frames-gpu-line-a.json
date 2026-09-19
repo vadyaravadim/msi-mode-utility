@@ -1,0 +1,13 @@
+{
+  "phase": "gpu-line-a",
+  "swapchain": "0x2590A9476B0",
+  "frames": 5397,
+  "fps": 179.9,
+  "p50Ms": 5.56,
+  "p99Ms": 5.66,
+  "p999Ms": 5.7,
+  "maxMs": 5.9,
+  "stdevMs": 0.041,
+  "over2xMedian": 0,
+  "missed180Hz": 0
+}

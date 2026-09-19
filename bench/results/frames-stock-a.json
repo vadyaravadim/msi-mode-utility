@@ -1,0 +1,13 @@
+{
+  "phase": "stock-a",
+  "swapchain": "0x2B7FE75A670",
+  "frames": 5395,
+  "fps": 180,
+  "p50Ms": 5.56,
+  "p99Ms": 5.83,
+  "p999Ms": 6.65,
+  "maxMs": 7.4,
+  "stdevMs": 0.126,
+  "over2xMedian": 0,
+  "missed180Hz": 0
+}

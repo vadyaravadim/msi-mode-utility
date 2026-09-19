@@ -1,0 +1,13 @@
+{
+  "phase": "audio-msi-b",
+  "swapchain": "0x2B7FE75A670",
+  "frames": 5392,
+  "fps": 179.9,
+  "p50Ms": 5.56,
+  "p99Ms": 5.84,
+  "p999Ms": 6.42,
+  "maxMs": 6.55,
+  "stdevMs": 0.116,
+  "over2xMedian": 0,
+  "missed180Hz": 0
+}

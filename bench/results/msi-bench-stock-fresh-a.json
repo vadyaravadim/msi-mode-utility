@@ -1,0 +1,493 @@
+{
+  "phase": "stock-fresh-a",
+  "timestamp": "2026-09-19T20:31:32",
+  "devices": [
+    {
+      "Device": "AMD Radeon RX 7800 XT",
+      "Class": "Display",
+      "MSISupported": "on",
+      "Mode": "message-signaled, 1 vector",
+      "SharedWith": ""
+    },
+    {
+      "Device": "High Definition Audio Bus",
+      "Class": "System",
+      "MSISupported": "off",
+      "Mode": "line IRQ 17",
+      "SharedWith": "High Definition Audio Controller"
+    },
+    {
+      "Device": "Realtek Gaming 2.5GbE Family Controller",
+      "Class": "Net",
+      "MSISupported": "on",
+      "Mode": "message-signaled, 16 vectors",
+      "SharedWith": ""
+    },
+    {
+      "Device": "Realtek 8852BE Wireless LAN WiFi 6 PCI-E NIC",
+      "Class": "Net",
+      "MSISupported": "on",
+      "Mode": "message-signaled, 1 vector",
+      "SharedWith": ""
+    },
+    {
+      "Device": "Standard NVM Express Controller",
+      "Class": "SCSIAdapter",
+      "MSISupported": "on",
+      "Mode": "message-signaled, 17 vectors",
+      "SharedWith": ""
+    },
+    {
+      "Device": "Standard NVM Express Controller",
+      "Class": "SCSIAdapter",
+      "MSISupported": "on",
+      "Mode": "message-signaled, 33 vectors",
+      "SharedWith": ""
+    },
+    {
+      "Device": "Intel(R) PCI Express Root Port #15 - 7A36",
+      "Class": "System",
+      "MSISupported": "default",
+      "Mode": "message-signaled, 1 vector",
+      "SharedWith": ""
+    },
+    {
+      "Device": "Intel(R) PCI Express Root Port #1 - 7A38",
+      "Class": "System",
+      "MSISupported": "default",
+      "Mode": "message-signaled, 1 vector",
+      "SharedWith": ""
+    },
+    {
+      "Device": "Intel(R) PCI Express Root Port #5 - 7A3C",
+      "Class": "System",
+      "MSISupported": "default",
+      "Mode": "message-signaled, 1 vector",
+      "SharedWith": ""
+    },
+    {
+      "Device": "High Definition Audio Controller",
+      "Class": "System",
+      "MSISupported": "off",
+      "Mode": "line IRQ 17",
+      "SharedWith": "High Definition Audio Bus"
+    },
+    {
+      "Device": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+      "Class": "USB",
+      "MSISupported": "on",
+      "Mode": "message-signaled, 1 vector",
+      "SharedWith": ""
+    },
+    {
+      "Device": "Standard SATA AHCI Controller",
+      "Class": "HDC",
+      "MSISupported": "on",
+      "Mode": "message-signaled, 1 vector",
+      "SharedWith": ""
+    },
+    {
+      "Device": "Intel(R) Management Engine Interface #1",
+      "Class": "System",
+      "MSISupported": "on",
+      "Mode": "message-signaled, 1 vector",
+      "SharedWith": ""
+    },
+    {
+      "Device": "Intel(R) PCIe RC 010 G5 - A70D",
+      "Class": "System",
+      "MSISupported": "default",
+      "Mode": "message-signaled, 1 vector",
+      "SharedWith": ""
+    },
+    {
+      "Device": "Intel(R) PCIe RC 060 (x4) G4 - A74D",
+      "Class": "System",
+      "MSISupported": "default",
+      "Mode": "message-signaled, 1 vector",
+      "SharedWith": ""
+    },
+    {
+      "Device": "Intel(R) GNA Scoring Accelerator module",
+      "Class": "System",
+      "MSISupported": "on",
+      "Mode": "message-signaled, 1 vector",
+      "SharedWith": ""
+    }
+  ],
+  "probe": {
+    "cpu": 1,
+    "seconds": 30,
+    "gapsPerSecond": 126.6,
+    "gapP50Us": 30.2,
+    "gapP99Us": 36.2,
+    "gapP999Us": 110.5,
+    "gapMaxUs": 121.9,
+    "stalledPct": 0.31
+  },
+  "trace": {
+    "seconds": 30,
+    "dpcCount": 180394,
+    "droppedEvents": 0,
+    "drivers": [
+      {
+        "driver": "ntoskrnl.exe",
+        "isrMaxUs": 0,
+        "isrMeanUs": 0,
+        "dpcCount": 17218,
+        "dpcMaxUs": 139.2,
+        "dpcP99Us": 32.7,
+        "dpcMeanUs": 11.5,
+        "isrPlain": 0,
+        "isrMessage": 0
+      },
+      {
+        "driver": "amdkmdag.sys",
+        "isrMaxUs": 0,
+        "isrMeanUs": 0,
+        "dpcCount": 49274,
+        "dpcMaxUs": 130.9,
+        "dpcP99Us": 74.5,
+        "dpcMeanUs": 19.3,
+        "isrPlain": 0,
+        "isrMessage": 0
+      },
+      {
+        "driver": "dxgkrnl.sys",
+        "isrMaxUs": 171.5,
+        "isrMeanUs": 19.43,
+        "dpcCount": 83958,
+        "dpcMaxUs": 75.6,
+        "dpcP99Us": 16.7,
+        "dpcMeanUs": 1.58,
+        "isrPlain": 0,
+        "isrMessage": 49325
+      },
+      {
+        "driver": "tcpip.sys",
+        "isrMaxUs": 0,
+        "isrMeanUs": 0,
+        "dpcCount": 143,
+        "dpcMaxUs": 73.7,
+        "dpcP99Us": 67,
+        "dpcMeanUs": 12,
+        "isrPlain": 0,
+        "isrMessage": 0
+      },
+      {
+        "driver": "CLASSPNP.SYS",
+        "isrMaxUs": 0,
+        "isrMeanUs": 0,
+        "dpcCount": 44,
+        "dpcMaxUs": 37,
+        "dpcP99Us": 37,
+        "dpcMeanUs": 3.15,
+        "isrPlain": 0,
+        "isrMessage": 0
+      },
+      {
+        "driver": "ndis.sys",
+        "isrMaxUs": 137,
+        "isrMeanUs": 10.18,
+        "dpcCount": 1913,
+        "dpcMaxUs": 27.3,
+        "dpcP99Us": 10.9,
+        "dpcMeanUs": 2.63,
+        "isrPlain": 0,
+        "isrMessage": 994
+      },
+      {
+        "driver": "storport.sys",
+        "isrMaxUs": 3.1,
+        "isrMeanUs": 0.67,
+        "dpcCount": 3951,
+        "dpcMaxUs": 23.2,
+        "dpcP99Us": 14.6,
+        "dpcMeanUs": 6.09,
+        "isrPlain": 0,
+        "isrMessage": 3939
+      },
+      {
+        "driver": "Wdf01000.sys",
+        "isrMaxUs": 1.8,
+        "isrMeanUs": 0.65,
+        "dpcCount": 12,
+        "dpcMaxUs": 17.7,
+        "dpcP99Us": 17.7,
+        "dpcMeanUs": 8.87,
+        "isrPlain": 12,
+        "isrMessage": 0
+      },
+      {
+        "driver": "HDAudBus.sys",
+        "isrMaxUs": 23.5,
+        "isrMeanUs": 10.59,
+        "dpcCount": 3449,
+        "dpcMaxUs": 17.3,
+        "dpcP99Us": 10.9,
+        "dpcMeanUs": 2.78,
+        "isrPlain": 6471,
+        "isrMessage": 0
+      },
+      {
+        "driver": "stornvme.sys",
+        "isrMaxUs": 0,
+        "isrMeanUs": 0,
+        "dpcCount": 3938,
+        "dpcMaxUs": 13.3,
+        "dpcP99Us": 2.4,
+        "dpcMeanUs": 0.94,
+        "isrPlain": 0,
+        "isrMessage": 0
+      },
+      {
+        "driver": "amdfendr.sys",
+        "isrMaxUs": 0,
+        "isrMeanUs": 0,
+        "dpcCount": 16306,
+        "dpcMaxUs": 8.1,
+        "dpcP99Us": 0.2,
+        "dpcMeanUs": 0.13,
+        "isrPlain": 0,
+        "isrMessage": 0
+      },
+      {
+        "driver": "Ndu.sys",
+        "isrMaxUs": 0,
+        "isrMeanUs": 0,
+        "dpcCount": 56,
+        "dpcMaxUs": 4.4,
+        "dpcP99Us": 4.4,
+        "dpcMeanUs": 1.42,
+        "isrPlain": 0,
+        "isrMessage": 0
+      },
+      {
+        "driver": "symcryptk.dll",
+        "isrMaxUs": 0,
+        "isrMeanUs": 0,
+        "dpcCount": 108,
+        "dpcMaxUs": 4.1,
+        "dpcP99Us": 2.7,
+        "dpcMeanUs": 1.82,
+        "isrPlain": 0,
+        "isrMessage": 0
+      },
+      {
+        "driver": "UnionFS.sys",
+        "isrMaxUs": 0,
+        "isrMeanUs": 0,
+        "dpcCount": 1,
+        "dpcMaxUs": 3.4,
+        "dpcP99Us": 3.4,
+        "dpcMeanUs": 3.4,
+        "isrPlain": 0,
+        "isrMessage": 0
+      },
+      {
+        "driver": "ReFS.SYS",
+        "isrMaxUs": 0,
+        "isrMeanUs": 0,
+        "dpcCount": 1,
+        "dpcMaxUs": 3.3,
+        "dpcP99Us": 3.3,
+        "dpcMeanUs": 3.3,
+        "isrPlain": 0,
+        "isrMessage": 0
+      },
+      {
+        "driver": "hvservice.sys",
+        "isrMaxUs": 0,
+        "isrMeanUs": 0,
+        "dpcCount": 1,
+        "dpcMaxUs": 2.9,
+        "dpcP99Us": 2.9,
+        "dpcMeanUs": 2.9,
+        "isrPlain": 0,
+        "isrMessage": 0
+      },
+      {
+        "driver": "storvsp.sys",
+        "isrMaxUs": 0,
+        "isrMeanUs": 0,
+        "dpcCount": 3,
+        "dpcMaxUs": 2.8,
+        "dpcP99Us": 2.8,
+        "dpcMeanUs": 2.1,
+        "isrPlain": 0,
+        "isrMessage": 0
+      },
+      {
+        "driver": "Ntfs.sys",
+        "isrMaxUs": 0,
+        "isrMeanUs": 0,
+        "dpcCount": 6,
+        "dpcMaxUs": 2.6,
+        "dpcP99Us": 2.6,
+        "dpcMeanUs": 2.28,
+        "isrPlain": 0,
+        "isrMessage": 0
+      },
+      {
+        "driver": "WdFilter.sys",
+        "isrMaxUs": 0,
+        "isrMeanUs": 0,
+        "dpcCount": 1,
+        "dpcMaxUs": 2.3,
+        "dpcP99Us": 2.3,
+        "dpcMeanUs": 2.3,
+        "isrPlain": 0,
+        "isrMessage": 0
+      },
+      {
+        "driver": "dxgmms2.sys",
+        "isrMaxUs": 0,
+        "isrMeanUs": 0,
+        "dpcCount": 11,
+        "dpcMaxUs": 2.1,
+        "dpcP99Us": 2.1,
+        "dpcMeanUs": 1.82,
+        "isrPlain": 0,
+        "isrMessage": 0
+      }
+    ],
+    "isrPlain": 6483,
+    "isrMessage": 54258,
+    "isrPlainPerCpu": [
+      {
+        "cpu": 1,
+        "isr": 6483
+      }
+    ],
+    "isrMessagePerCpu": [
+      {
+        "cpu": 6,
+        "isr": 25
+      },
+      {
+        "cpu": 11,
+        "isr": 44
+      },
+      {
+        "cpu": 3,
+        "isr": 96
+      },
+      {
+        "cpu": 7,
+        "isr": 98
+      },
+      {
+        "cpu": 4,
+        "isr": 39
+      },
+      {
+        "cpu": 8,
+        "isr": 53
+      },
+      {
+        "cpu": 10,
+        "isr": 50
+      },
+      {
+        "cpu": 9,
+        "isr": 49
+      },
+      {
+        "cpu": 26,
+        "isr": 5
+      },
+      {
+        "cpu": 18,
+        "isr": 24
+      },
+      {
+        "cpu": 1,
+        "isr": 2
+      },
+      {
+        "cpu": 19,
+        "isr": 8
+      },
+      {
+        "cpu": 2,
+        "isr": 26
+      },
+      {
+        "cpu": 30,
+        "isr": 11
+      },
+      {
+        "cpu": 23,
+        "isr": 6
+      },
+      {
+        "cpu": 20,
+        "isr": 12
+      },
+      {
+        "cpu": 24,
+        "isr": 10
+      },
+      {
+        "cpu": 25,
+        "isr": 11
+      },
+      {
+        "cpu": 28,
+        "isr": 38
+      },
+      {
+        "cpu": 27,
+        "isr": 16
+      },
+      {
+        "cpu": 0,
+        "isr": 50323
+      },
+      {
+        "cpu": 22,
+        "isr": 1353
+      },
+      {
+        "cpu": 17,
+        "isr": 31
+      },
+      {
+        "cpu": 29,
+        "isr": 119
+      },
+      {
+        "cpu": 14,
+        "isr": 173
+      },
+      {
+        "cpu": 16,
+        "isr": 38
+      },
+      {
+        "cpu": 31,
+        "isr": 11
+      },
+      {
+        "cpu": 12,
+        "isr": 212
+      },
+      {
+        "cpu": 5,
+        "isr": 148
+      },
+      {
+        "cpu": 21,
+        "isr": 14
+      },
+      {
+        "cpu": 13,
+        "isr": 782
+      },
+      {
+        "cpu": 15,
+        "isr": 431
+      }
+    ]
+  }
+}
