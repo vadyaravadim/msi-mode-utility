@@ -1,0 +1,13 @@
+{
+  "phase": "usb-msi-frames-a",
+  "swapchain": "0x1E72D112E40",
+  "frames": 5220,
+  "fps": 174.2,
+  "p50Ms": 5.56,
+  "p99Ms": 6.61,
+  "p999Ms": 51.27,
+  "maxMs": 81.28,
+  "stdevMs": 2.759,
+  "over2xMedian": 39,
+  "missed180Hz": 40
+}
