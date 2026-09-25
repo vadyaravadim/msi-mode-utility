@@ -67,3 +67,15 @@ hand-edited value that disagrees with the tag would only mislead whoever reads t
 **The placeholder is `0.0.0` and must stay exactly that**: the banner reads its own `.VERSION` line and
 prints `dev build` for `0.0.0`, the stamped tag otherwise. It used to be `1.0.0`, which is also a real tag,
 so a clone of `main` was indistinguishable from the v1.0.0 release.
+
+## The RigPolice pages that mirror this script
+
+- **The hub card.** `src/lib/latency-toolbox.ts` in the rigpolice repo holds this script's card on
+  https://rigpolice.com/system/latency-toolbox/: what it does, what was measured with it, and whether it
+  writes an undo file. A release that changes any of those updates the card in the same pass; nothing
+  there reads this repo, so the card drifts silently otherwise.
+- **The companion article.** `src/content/articles/enable-msi-mode.md` (the "How to enable it"
+  section) quotes the `irm | iex` one-liner, describes what a run prints and explains the undo. A
+  change to the one-liner URL, the run output or the undo mechanism updates that article in the same
+  pass. rigpolice's `src/lib/latency-toolbox.test.ts` reds on a one-liner that is not the release URL;
+  the output and the undo text have no gate, so check them against this README by hand.
