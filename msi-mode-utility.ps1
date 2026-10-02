@@ -288,4 +288,8 @@ if ($failed) {
     Write-Host "$failed device(s) failed - see errors above." -ForegroundColor Yellow
 }
 Write-Host "REBOOT REQUIRED for changes to take effect." -ForegroundColor Green
+if ($updated -and -not $Disable) {
+    Write-Host ""
+    Write-Host "Useful? A star on GitHub helps others find it: https://github.com/vadyaravadim/msi-mode-utility"
+}
 Wait-IfElevatedWindow

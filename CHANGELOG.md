@@ -16,6 +16,12 @@ verbatim into the release and fails the release if the tag has no section here.
   core. The numbers in the README can be reproduced on your own machine rather than taken on trust.
   The raw results of our own runs are published next to it in `bench/results/`.
 
+### Changed
+
+- A successful run now ends with one line linking to this repo and asking for a star, so people who got
+  the one-liner from an article or a chatbot know where the tool lives. It is printed only when a device
+  was switched to MSI mode: not with `-Disable`.
+
 ### Fixed
 
 - The "Out-GridView is not available" message no longer tells you to install the
