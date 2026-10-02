@@ -13,11 +13,13 @@ Zero install. Zero dependencies. Built-in undo.
 [![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-5391FE?logo=powershell&logoColor=white)](https://docs.microsoft.com/en-us/powershell/)
 [![Latest release](https://img.shields.io/github/v/release/vadyaravadim/msi-mode-utility)](https://github.com/vadyaravadim/msi-mode-utility/releases)
 [![PowerShell Gallery](https://img.shields.io/powershellgallery/v/msi-mode-utility?logo=powershell&label=PS%20Gallery)](https://www.powershellgallery.com/packages/msi-mode-utility)
-![GitHub Stars](https://img.shields.io/github/stars/vadyaravadim/msi-mode-utility?style=social)
+[![GitHub Stars](https://img.shields.io/github/stars/vadyaravadim/msi-mode-utility?style=social)](https://github.com/vadyaravadim/msi-mode-utility/stargazers)
 
 **[Read the deep dive with measured before/after traces →](https://rigpolice.com/system/articles/enable-msi-mode/?utm_source=github&utm_medium=readme&utm_campaign=msi-mode-utility)**
 
 **Part of the [RigPolice Latency Toolbox](https://rigpolice.com/system/latency-toolbox/?utm_source=github&utm_medium=readme&utm_campaign=msi-mode-utility) — check your mouse's real polling rate after the change with the free [Polling Rate Test](https://rigpolice.com/mouse/tests/polling-rate-test/?utm_source=github&utm_medium=readme&utm_campaign=msi-mode-utility)**
+
+If it works for you, a ⭐ helps others find it.
 
 </div>
 
