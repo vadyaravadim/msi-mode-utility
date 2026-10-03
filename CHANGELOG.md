@@ -32,6 +32,15 @@ verbatim into the release and fails the release if the tag has no section here.
 
 ### Fixed
 
+- The README's first install method, the PowerShell Gallery, failed in the Windows PowerShell 5.1 that
+  comes with Windows: `Install-Script` stopped with "Administrator rights are required", and the installed
+  script was then blocked by the default execution policy. The one-liner, which works in any PowerShell,
+  is now listed first, and the Gallery route is marked as PowerShell 7.
+- After the `irm | iex` one-liner, the PowerShell window you ran it from was left treating every error as
+  fatal, so a later command or another script in that window could stop on an error it would normally
+  shrug off. The one-liner no longer changes that setting in your window.
+- Run from a folder with `[` or `]` in its path, the script stopped at once with "A parameter cannot be
+  found that matches parameter name 'Raw'". It now runs, and writes its undo file, from any folder.
 - Selecting a device that was already in the requested state wrote another undo file and reported it as
   "updated". Such devices are now skipped, and a run that changes nothing writes no undo file.
 - Hardware that was removed from the PC (an old graphics card after an upgrade) still showed up in the

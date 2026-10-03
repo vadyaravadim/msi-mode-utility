@@ -18,7 +18,7 @@ body:
       label: Output of the run
       description: |
         Everything the elevated window printed, from the `MSI MODE UTILITY vX.Y.Z` banner down, including any red ERROR line - the banner says which version you ran. If the window closed before you could copy it, run the script again from a console so the output stays, and cancel the device picker if you do not want to change anything:
-        - PowerShell Gallery: `msi-mode-utility`
+        - PowerShell Gallery (PowerShell 7): `msi-mode-utility`
         - One-liner: `powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\msi-mode-utility.ps1"`
         - ZIP / clone, from the script's folder: `powershell -ExecutionPolicy Bypass -File .\msi-mode-utility.ps1`
       render: text

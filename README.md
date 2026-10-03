@@ -29,23 +29,23 @@ If it works for you, a ⭐ helps others find it.
 
 ## Quick Start
 
-**Easiest — from the PowerShell Gallery:**
-
-```powershell
-Install-Script msi-mode-utility
-msi-mode-utility                     # then run it by name (open a NEW PowerShell window first, so the Scripts folder is on PATH)
-msi-mode-utility -ShowAll            # switches work directly: -ShowAll, -Disable
-```
-
-The script self-elevates. Update later with `Update-Script msi-mode-utility`.
-
-**One-liner** instead (in any PowerShell — it self-elevates):
+**Easiest — one line, in any PowerShell** (it self-elevates):
 
 ```powershell
 irm https://github.com/vadyaravadim/msi-mode-utility/releases/latest/download/msi-mode-utility.ps1 | iex
 ```
 
 The script downloads itself to `%USERPROFILE%\msi-mode-utility.ps1` (not a temp folder) on purpose: the `msi_undo_*.reg` rollback file is written next to it and must survive automatic temp cleanup. An existing copy at that path that differs is kept as `.bak`. The `irm | iex` pipe itself takes no switches - run the saved copy instead, see [Optional switches](#optional-switches).
+
+**From the PowerShell Gallery**, in PowerShell 7 (`pwsh`):
+
+```powershell
+Install-Script msi-mode-utility
+msi-mode-utility                     # then run it by name (open a NEW PowerShell window first, so the Scripts folder is on PATH)
+msi-mode-utility -ShowAll            # switches work directly: -ShowAll, -Disable, -Status
+```
+
+The script self-elevates. Update later with `Update-Script msi-mode-utility`. Not in the Windows PowerShell 5.1 that comes with Windows: there `Install-Script` wants an admin console and the default execution policy blocks the installed script — use the one-liner instead.
 
 **Or clone:**
 
@@ -77,7 +77,7 @@ How to pass a switch depends on how you got the script:
 
 | Installed via | Command |
 |---------------|---------|
-| PowerShell Gallery | `msi-mode-utility -ShowAll` |
+| PowerShell Gallery (PowerShell 7) | `msi-mode-utility -ShowAll` |
 | ZIP or clone | `.\Run.bat -ShowAll` from the script's folder |
 | One-liner | `powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\msi-mode-utility.ps1" -ShowAll` |
 
