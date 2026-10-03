@@ -8,9 +8,20 @@ layout: one `.ps1`, `Run.bat`, `PSScriptAnalyzerSettings.psd1`, and the same thr
 **`Out-GridView` is a hard dependency and the check for it stays up front.** It exists only on Windows
 editions with a desktop - Server Core has none, while PowerShell 7 on a desktop edition does have it; failing
 early with instructions beats a raw `CommandNotFound` thrown halfway through a scan the user already
-waited on.
+waited on. `-Status` prints to the console, so it skips that check and the elevation.
+
+**The `Mode` column, not `MSI`, is what a device runs in.** `MSI` is the registry override, and "Default"
+there is how most MSI-X devices look. `Mode` comes from the IRQs Windows assigned this boot
+(`Win32_PNPAllocatedResource`; negative = message-signaled, WMI reports it unsigned) - do not derive it
+from `MSISupported`.
 
 ## Invariants
+
+- **A run that changes nothing writes NO undo file.** Devices already at the target are dropped from the
+  selection first; a snapshot of an already-tweaked device would make the newest undo file "revert" to the
+  tweak.
+- **Only present devices are listed** (`Get-PnpDevice -PresentOnly`). `Enum\PCI` keeps the keys of removed
+  hardware, and writing those reports success while changing nothing.
 
 - **The undo `.reg` is a per-run snapshot, written next to the script BEFORE any change.** After several
   runs over the same device they must be applied newest-to-oldest - only the oldest holds the original
@@ -22,7 +33,7 @@ waited on.
   one path for every launch mode is the point.
 - **`Get-ForwardedSwitchList` is the ONE place mode switches are listed.** Both relaunch paths - the
   `irm | iex` bootstrap rerun and the UAC elevation - build their argument list from it, so neither can
-  silently drop `-ShowAll` or `-Disable`. Splat it as `@(...)`: on PS 5.1 a single forwarded switch unrolls
+  silently drop `-ShowAll`, `-Disable` or `-Status`. Splat it as `@(...)`: on PS 5.1 a single forwarded switch unrolls
   to a scalar string and breaks `powershell.exe -File` switch binding.
 - **The elevated window must stay open on the error paths too.** The `trap` plus `Wait-IfElevatedWindow`
   exist because an unhandled error otherwise closes the window before the message can be read; under

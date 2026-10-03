@@ -41,6 +41,9 @@
     controllers (hidden by default).
 .PARAMETER Disable
     Set the selected devices to MSI OFF instead of ON.
+.PARAMETER Status
+    Print the device list with the interrupt mode each device actually runs
+    in, change nothing. Does not need Administrator rights.
 .NOTES
     A reboot is required for changes to take effect.
     Revert: apply the msi_undo_*.reg file written before each change.
@@ -54,6 +57,7 @@
 param(
     [switch]$ShowAll,
     [switch]$Disable,
+    [switch]$Status,
     [switch]$Elevated   # internal: set by the self-elevation relaunch
 )
 
@@ -81,6 +85,7 @@ function Get-ForwardedSwitchList {
     $a = @()
     if ($ShowAll) { $a += '-ShowAll' }
     if ($Disable) { $a += '-Disable' }
+    if ($Status)  { $a += '-Status' }
     $a
 }
 
@@ -115,9 +120,10 @@ if (-not $PSCommandPath) {
     return
 }
 
+# ---- Everything below -Status writes the registry: Administrator required ----
 $principal = New-Object Security.Principal.WindowsPrincipal(
     [Security.Principal.WindowsIdentity]::GetCurrent())
-if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+if (-not $Status -and -not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Host "Not running as Administrator. Requesting elevation..." -ForegroundColor Yellow
     try {
         # Always powershell.exe (not pwsh) so Out-GridView is guaranteed.
@@ -146,7 +152,8 @@ Write-Host ""
 
 # Out-GridView exists only on Windows editions with a desktop - Server Core has
 # none; fail up front with instructions instead of a raw CommandNotFound mid-run.
-if (-not (Get-Command Out-GridView -ErrorAction SilentlyContinue)) {
+# -Status prints to the console and does not need it.
+if (-not $Status -and -not (Get-Command Out-GridView -ErrorAction SilentlyContinue)) {
     Write-Host "Out-GridView is not available in this PowerShell. It needs a Windows edition with a desktop (not Server Core); on a desktop edition, run the script with Windows PowerShell (powershell.exe)." -ForegroundColor Red
     Wait-IfElevatedWindow
     return
@@ -162,56 +169,73 @@ $IncludeClassGuids = @(
     '{36fc9e60-c465-11cf-8056-444553540000}'   # USB host controllers
 )
 
-function Get-DeviceName {
-    param([Microsoft.Win32.RegistryKey]$Key)
-    $fn = $Key.GetValue('FriendlyName')
-    if ([string]::IsNullOrWhiteSpace($fn)) { $fn = $Key.GetValue('DeviceDesc') }
-    if ($fn -and $fn -match ';') {
-        # Strip the @res;Text prefix; keep the raw string if nothing follows ';'
-        # (a malformed indirect string) so the device stays visible.
-        $text = $fn.Split(';')[-1]
-        if (-not [string]::IsNullOrWhiteSpace($text)) { $fn = $text }
-    }
-    return $fn
+Write-Host "Scanning PCI devices..." -ForegroundColor Cyan
+# Present devices only: Enum\PCI also keeps the keys of removed hardware (an
+# old GPU), and writing those changes nothing. Windows resolves the names.
+$present = @(Get-PnpDevice -PresentOnly)
+$names = @{}
+foreach ($d in $present) { $names[$d.InstanceId] = $d.FriendlyName }
+
+# The interrupts Windows actually assigned this boot - what the device runs
+# in, whatever MSISupported says: a negative IRQ number is a message-signaled
+# vector, a non-negative one a legacy line that other devices may share.
+$irqs = @{}
+$lineUsers = @{}
+foreach ($r in Get-CimInstance Win32_PNPAllocatedResource) {
+    if ($r.Antecedent.CimClass.CimClassName -ne 'Win32_IRQResource') { continue }
+    $n = [int64]$r.Antecedent.IRQNumber
+    if ($n -gt 2147483647) { $n -= 4294967296 }   # WMI reports it unsigned
+    $irqs[$r.Dependent.DeviceID] += @($n)
+    if ($n -ge 0) { $lineUsers[$n] += @($r.Dependent.DeviceID) }
 }
 
-Write-Host "Scanning PCI devices..." -ForegroundColor Cyan
-$pciRoot = 'HKLM:\SYSTEM\CurrentControlSet\Enum\PCI'
 $rows = New-Object System.Collections.Generic.List[object]
-
 $hidden = 0
-foreach ($devClass in Get-ChildItem $pciRoot -ErrorAction SilentlyContinue) {
-    foreach ($inst in Get-ChildItem $devClass.PSPath -ErrorAction SilentlyContinue) {
-        $name = Get-DeviceName -Key $inst
-        if ([string]::IsNullOrWhiteSpace($name)) { continue }
+foreach ($dev in $present) {
+    if ($dev.InstanceId -notlike 'PCI\*' -or -not $dev.FriendlyName) { continue }
 
-        # MSI-capable devices expose "Device Parameters\Interrupt Management".
-        $imPath = Join-Path $inst.PSPath 'Device Parameters\Interrupt Management'
-        if (-not (Test-Path $imPath)) { continue }
+    # MSI-capable devices expose "Device Parameters\Interrupt Management".
+    $imPath = "Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Enum\$($dev.InstanceId)\Device Parameters\Interrupt Management"
+    if (-not (Test-Path $imPath)) { continue }
 
-        if (-not $ShowAll) {
-            # HD Audio controllers register under the System class, not Media;
-            # their locale-invariant marker is the HDAudBus service.
-            $classGuid = $inst.GetValue('ClassGUID')
-            if ($classGuid -notin $IncludeClassGuids -and
-                $inst.GetValue('Service') -ne 'HDAudBus') { $hidden++; continue }
-        }
-
-        # Absent key/value = no explicit override: the driver default applies,
-        # and MSI-X-capable devices may already run in MSI-X mode regardless.
-        $msiPath = Join-Path $imPath 'MessageSignaledInterruptProperties'
-        $v = (Get-ItemProperty -Path $msiPath -Name 'MSISupported' -ErrorAction SilentlyContinue).MSISupported
-        $status = 'Default'
-        if     ($v -eq 1) { $status = 'Enabled' }
-        elseif ($v -eq 0) { $status = 'Disabled' }
-
-        $rows.Add([PSCustomObject]@{
-            Name       = $name
-            MSI        = $status
-            DeviceID   = $inst.PSChildName
-            RegPath    = $msiPath   # target key we will write
-        })
+    # HD Audio controllers register under the System class, not Media; their
+    # locale-invariant marker is the HDAudBus service.
+    if (-not $ShowAll -and $dev.ClassGuid -notin $IncludeClassGuids -and $dev.Service -ne 'HDAudBus') {
+        $hidden++; continue
     }
+
+    # Absent key/value = no explicit override: the driver default applies,
+    # and MSI-X-capable devices may already run in MSI-X mode regardless.
+    $msiPath = "$imPath\MessageSignaledInterruptProperties"
+    $v = (Get-ItemProperty -Path $msiPath -Name 'MSISupported' -ErrorAction SilentlyContinue).MSISupported
+    $setting = 'Default'
+    if     ($v -eq 1) { $setting = 'Enabled' }
+    elseif ($v -eq 0) { $setting = 'Disabled' }
+
+    $vectors = $irqs[$dev.InstanceId]
+    $lines = @($vectors | Where-Object { $_ -ge 0 })
+    if ($lines) {
+        $shared = @()
+        foreach ($n in $lines) {
+            foreach ($other in $lineUsers[$n]) {
+                if ($other -ne $dev.InstanceId -and $names[$other]) { $shared += $names[$other] }
+            }
+        }
+        $mode = "Line IRQ $($lines -join ',')"
+        if ($shared) { $mode += ", shared with: $($shared -join '; ')" }
+    } elseif ($vectors) {
+        $mode = 'MSI'
+    } else {
+        $mode = '-'
+    }
+
+    $rows.Add([PSCustomObject]@{
+        Name       = $dev.FriendlyName
+        MSI        = $setting
+        Mode       = $mode
+        DeviceID   = $dev.InstanceId
+        RegPath    = $msiPath   # target key we will write
+    })
 }
 
 if ($rows.Count -eq 0) {
@@ -223,14 +247,29 @@ if ($hidden) {
     Write-Host "$hidden more MSI-capable device(s) (storage controllers, bridges, ...) are hidden by the default filter. Use -ShowAll to include them." -ForegroundColor DarkGray
 }
 
-if ($Disable) { $action = 'DISABLE'; $target = 0; $label = 'OFF' }
-else          { $action = 'enable';  $target = 1; $label = 'ON ' }
+# Line-IRQ devices sort first: they are the ones MSI can change.
+$rows = $rows | Sort-Object Mode, Name
+if ($Status) {
+    $rows | Format-Table Name, MSI, Mode -AutoSize -Wrap | Out-Host
+    Wait-IfElevatedWindow; return
+}
+
+if ($Disable) { $action = 'DISABLE'; $target = 0; $label = 'OFF'; $targetState = 'Disabled' }
+else          { $action = 'enable';  $target = 1; $label = 'ON ';  $targetState = 'Enabled' }
 $selected = $rows |
-    Sort-Object MSI, Name |
     Out-GridView -Title "Select devices to $action MSI Mode (Ctrl-click for multiple)" -PassThru
 
 if (-not $selected) {
     Write-Host "No devices selected. No changes made." -ForegroundColor Yellow
+    Wait-IfElevatedWindow
+    return
+}
+
+# A device already at the target would still get an undo file whose
+# "previous" value is the tweak itself, and be reported as updated.
+$selected = @($selected | Where-Object MSI -ne $targetState)
+if (-not $selected) {
+    Write-Host "Every selected device is already $($targetState.ToLower()) - nothing to change, no undo file written." -ForegroundColor Green
     Wait-IfElevatedWindow
     return
 }

@@ -15,6 +15,14 @@ verbatim into the release and fails the release if the tag has no section here.
   device, per-driver ISR and DPC times from the built-in NT Kernel Logger, and a stall probe pinned to one
   core. The numbers in the README can be reproduced on your own machine rather than taken on trust.
   The raw results of our own runs are published next to it in `bench/results/`.
+- A **Mode** column shows the interrupt mode each device actually runs in this boot: `MSI`, or
+  `Line IRQ n` plus the devices sharing that line. The `MSI` column only shows the registry setting, and
+  "Default" there often hides a device that already runs in MSI mode - most GPUs, USB and network
+  controllers on Windows 11 do - so people enabled MSI where there was nothing to gain. Devices on a line
+  now sort to the top.
+- `-Status` prints the same list to the console and changes nothing. It needs no admin rights, so checking
+  after the reboot that a device really switched no longer costs a UAC prompt and a grid you have to
+  cancel.
 
 ### Changed
 
@@ -24,6 +32,10 @@ verbatim into the release and fails the release if the tag has no section here.
 
 ### Fixed
 
+- Selecting a device that was already in the requested state wrote another undo file and reported it as
+  "updated". Such devices are now skipped, and a run that changes nothing writes no undo file.
+- Hardware that was removed from the PC (an old graphics card after an upgrade) still showed up in the
+  list, and "enabling" it reported success while changing nothing. Only connected devices are listed now.
 - The "Out-GridView is not available" message no longer tells you to install the
   `Microsoft.PowerShell.GraphicalTools` module, and the README no longer claims PowerShell 7 needs it.
   PowerShell 7 on a desktop edition of Windows has `Out-GridView` built in; it is missing only on Server

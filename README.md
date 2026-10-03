@@ -71,6 +71,7 @@ However you launch it:
 | --- | --- |
 | `-ShowAll` | Show every MSI-capable PCI device, including bridges/controllers hidden by default |
 | `-Disable` | Turn MSI **off** for the selected devices |
+| `-Status` | Print the device list with the interrupt mode each device actually runs in. Changes nothing, needs no admin rights |
 
 How to pass a switch depends on how you got the script:
 
@@ -84,7 +85,7 @@ Calling `.\msi-mode-utility.ps1` directly only works if your execution policy al
 
 ## What It Does
 
-1. **Scans** PCI devices and shows the latency-critical ones (GPU, network, USB, audio) in a grid with their current MSI status
+1. **Scans** PCI devices and shows the latency-critical ones (GPU, network, USB, audio) in a grid with their `MSISupported` setting and the interrupt mode each one actually runs in: `MSI`, or `Line IRQ n` plus whoever shares that line
 2. **Backs up** the previous state of every selected device to a timestamped `msi_undo_*.reg` file next to the script (in `%USERPROFILE%` when run via the one-liner) — **before** changing anything
 3. **Enables MSI mode** for the devices you selected (sets the documented `MSISupported` registry value)
 
@@ -108,7 +109,7 @@ Legacy line-based (IRQ) interrupts share physical lines, so a device can be forc
 |---|---|
 | **Windows** | 10, 11 |
 | **PowerShell** | Windows PowerShell 5.1 (ships with Windows 10/11); PowerShell 7 works too. Uses `Out-GridView`, which both have on Windows editions with a desktop and which is **not** available on Server Core. The script detects a missing `Out-GridView` and tells you what to do |
-| **Rights** | Administrator (the script self-elevates via UAC) |
+| **Rights** | Administrator (the script self-elevates via UAC); `-Status` needs none |
 
 ## How It Works
 
@@ -121,7 +122,7 @@ HKLM\SYSTEM\CurrentControlSet\Enum\PCI\<class>\<instance>\Device Parameters\Inte
 
 MSI-capable devices always have the `Interrupt Management` key, but the `MessageSignaledInterruptProperties` subkey and `MSISupported` value **often don't exist until you enable MSI** — so the script creates them as needed rather than only flipping existing values.
 
-When the value is absent, the grid shows **Default** (not "Disabled"): it means no explicit override is set and the driver default applies — an MSI-X-capable device may already be running in MSI-X mode regardless of this key.
+When the value is absent, the grid shows **Default** (not "Disabled"): it means no explicit override is set and the driver default applies — an MSI-X-capable device may already be running in MSI-X mode regardless of this key. The **Mode** column shows whether it does.
 
 ## Verify: Check If MSI Mode Is Enabled
 
@@ -129,7 +130,7 @@ After the reboot, confirm the device actually runs in MSI mode:
 
 - **Device Manager** → device → **Properties ▸ Resources**: a **negative IRQ number** (e.g. `-3145728`) means message-signaled interrupts are active; a small positive number means legacy line-based mode.
 - **msinfo32** → Hardware Resources ▸ IRQs: legacy devices sit at the top on small numbers (two devices on the same number share that line); MSI/MSI-X devices sit at the bottom, where msinfo32 prints the negative IRQ as a ten-digit number such as `IRQ 4294967255`.
-- Or just run the script again — the grid shows the current `MSISupported` state of every device.
+- Or run the script with `-Status` (no admin rights needed): the **Mode** column shows what each device runs in this boot — `MSI`, or `Line IRQ n` plus whoever shares that line.
 
 ## Reverting
 
@@ -164,7 +165,7 @@ MSI mode removes one specific cost: devices stacked on a shared interrupt line, 
 
 ### Should I enable MSI mode for my NVIDIA or AMD GPU?
 
-GPUs are the most common target for this tweak. Some NVIDIA and AMD driver/board combinations leave the card in legacy line-based mode — the grid shows the current state, so you don't have to guess. If your GPU shows **Default** or **Disabled** and you see DPC latency spikes or frame-time stutters, enabling MSI is a cheap, reversible first step. If it already shows **Enabled**, there is nothing to change: our RX 7800 XT was on out of the box, and forcing it off changed nothing we could measure.
+GPUs are the most common target for this tweak. Some NVIDIA and AMD driver/board combinations leave the card in legacy line-based mode — the **Mode** column shows what the card actually runs in, so you don't have to guess. If it says `Line IRQ …` and you see DPC latency spikes or frame-time stutters, enabling MSI is a cheap, reversible first step. If it says `MSI`, there is nothing to change, even when the `MSI` setting column reads **Default**: our RX 7800 XT ran in MSI mode out of the box, and forcing it off changed nothing we could measure.
 
 ### What is the difference between MSI and MSI-X?
 
