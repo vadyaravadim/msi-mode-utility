@@ -101,7 +101,7 @@ Legacy line-based (IRQ) interrupts share physical lines, so a device can be forc
 - DPC latency spikes that trace back to a driver on a shared line (msinfo32 shows who shares with whom, see [Verify](#verify-check-if-msi-mode-is-enabled))
 - Older platforms and add-in cards (sound, USB, capture) that Windows left in line-based mode
 
-**What it won't do:** raise average FPS, or shave input lag on a PC whose GPU and USB controller already run MSI. Forcing our USB controller back onto a legacy line cost 0.9 µs per mouse report. That is why the first thing this script does is show you the current state: on a modern PC the honest answer is often "already on".
+**What it won't do:** raise average FPS, or change anything for a GPU and USB controller that already run MSI. Forcing our USB controller back onto a legacy line cost 0.9 µs of interrupt handling per mouse report. That is why the first thing this script does is show you the current state: on a modern PC the honest answer is often "already on".
 
 ## Requirements
 
@@ -149,7 +149,7 @@ MSI (Message Signaled Interrupts) is a way for a PCI/PCIe device to deliver inte
 
 ### Does enabling MSI mode reduce input lag or increase FPS?
 
-Not average FPS, and on a healthy modern PC not input lag either. We traced it on an i9-14900F / RX 7800 XT desktop (Windows 11 25H2), two 30 s runs per state under the same 180 fps load:
+Not average FPS on our testbed. We have not measured input lag: that takes an end-to-end instrument (a Reflex Analyzer, LDAT or a photodiode), and interrupt or frame times are not input lag. What we traced on an i9-14900F / RX 7800 XT desktop (Windows 11 25H2), two 30 s runs per state under the same 180 fps load:
 
 | Device, change | What moved | What did not |
 |----------------|-----------|--------------|
@@ -190,9 +190,9 @@ MPO is a DWM display feature, not an interrupt setting, but it shows up in the s
 ## Related
 
 - [Interrupt Affinity Utility](https://github.com/vadyaravadim/interrupt-affinity-utility) — pin GPU, network, USB & audio interrupts to specific CPU cores (P/E-core aware) — the natural next step after enabling MSI mode
-- [CPU Parking Disabler](https://github.com/vadyaravadim/cpu-parking-disabler) — disable CPU core parking on Windows 10/11 to fix micro-stutters and input lag
+- [CPU Parking Disabler](https://github.com/vadyaravadim/cpu-parking-disabler) — disable CPU core parking on Windows 10/11, with the parked-core count shown before and after
 - [Timer Resolution Utility](https://github.com/vadyaravadim/timer-resolution-utility) — set 0.5 ms timer resolution, disable dynamic tick, un-force HPET — with a built-in Sleep(1) benchmark
-- [GameDVR & FSO Disabler](https://github.com/vadyaravadim/gamedvr-fso-disabler) — disable Game DVR / Xbox Game Bar capture and Fullscreen Optimizations on Windows 10/11 to fix capture stutters and frame drops
+- [GameDVR & FSO Disabler](https://github.com/vadyaravadim/gamedvr-fso-disabler) — disable Game DVR / Xbox Game Bar capture and Fullscreen Optimizations on Windows 10/11
 - [Remove Hidden Devices](https://github.com/vadyaravadim/remove-hidden-devices) — remove ghost / hidden devices left behind by unplugged USB sticks, headsets & dongles cluttering Device Manager
 
 Same idea across the series: one transparent PowerShell script, no binaries, you see exactly what changes.
