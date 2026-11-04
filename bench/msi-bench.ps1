@@ -46,9 +46,11 @@ param(
 $ErrorActionPreference = 'Stop'
 [System.Threading.Thread]::CurrentThread.CurrentCulture = [cultureinfo]::InvariantCulture
 $outDir = $PSScriptRoot
+. (Join-Path $PSScriptRoot 'bench-env.ps1')
+$traceSession = 'NT Kernel Logger'
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
-Add-Type -TypeDefinition @'
+$msiBenchSource = @'
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -214,94 +216,101 @@ function Get-InterruptTable {
     }
 }
 
-function Get-Percentile([double[]]$sorted, [double]$q) {
-    if ($sorted.Count -eq 0) { return 0 }
-    [math]::Round($sorted[[math]::Min($sorted.Count - 1, [int][math]::Floor($sorted.Count * $q))], 1)
-}
+if ($MyInvocation.InvocationName -ne '.') {
+    Add-Type -TypeDefinition $msiBenchSource
+    Write-Host "Phase: $Phase"
+    $metadata = Get-BenchMetadata -BenchScript $PSCommandPath
+    $table = @(Get-InterruptTable)
+    $table | Sort-Object Class, Device | Format-Table Device, MSISupported, Mode, SharedWith -AutoSize -Wrap | Out-String -Width 200 | Write-Host
 
-Write-Host "Phase: $Phase"
-$table = @(Get-InterruptTable)
-$table | Sort-Object Class, Device | Format-Table Device, MSISupported, Mode, SharedWith -AutoSize -Wrap | Out-String -Width 200 | Write-Host
+    $trace = $null
+    $probe = $null
+    $doTrace = $isAdmin -and -not $SkipTrace
+    if (-not $isAdmin) { Write-Host 'Not elevated: the kernel trace needs admin, running the stall probe only.' -ForegroundColor Yellow }
 
-$trace = $null
-$probe = $null
-$doTrace = $isAdmin -and -not $SkipTrace
-if (-not $isAdmin) { Write-Host 'Not elevated: the kernel trace needs admin, running the stall probe only.' -ForegroundColor Yellow }
-
-$etl = Join-Path $env:TEMP "msi-bench-$Phase.etl"
-$csv = Join-Path $env:TEMP "msi-bench-$Phase.csv"
-if ($doTrace) {
-    Remove-Item $etl, $csv -ErrorAction SilentlyContinue
-    & logman stop 'NT Kernel Logger' -ets 2>&1 | Out-Null
-    & logman start 'NT Kernel Logger' -p 'Windows Kernel Trace' '(img,dpc,isr)' -o $etl -ets | Out-Null
-}
-Write-Host "Measuring for $Seconds s on CPU $Cpu, keep your load running..."
-[StallProbe]::Start($Seconds, $Cpu, $GapThresholdUs)
-if ($doTrace) { Start-Sleep -Seconds $Seconds; & logman stop 'NT Kernel Logger' -ets | Out-Null }
-$span = 0.0
-$gaps = [StallProbe]::Stop([ref]$span)
-$sortedGaps = [double[]]($gaps | Sort-Object)
-$probe = [pscustomobject]@{
-    cpu           = $Cpu
-    seconds       = [math]::Round($span, 1)
-    gapsPerSecond = [math]::Round($gaps.Count / $span, 1)
-    gapP50Us      = Get-Percentile $sortedGaps 0.50
-    gapP99Us      = Get-Percentile $sortedGaps 0.99
-    gapP999Us     = Get-Percentile $sortedGaps 0.999
-    gapMaxUs      = if ($gaps.Count) { [math]::Round($sortedGaps[-1], 1) } else { 0 }
-    stalledPct    = [math]::Round(100 * (($gaps | Measure-Object -Sum).Sum / 1e6) / $span, 2)
-}
-Write-Host 'Stall probe (gaps in a spinning time-critical thread):'
-$probe | Format-List | Out-String | Write-Host
-
-if ($doTrace) {
-    Write-Host 'Decoding the kernel trace...'
-    & tracerpt $etl -o $csv -of CSV -y | Out-Null
-    $isrLine = 0L; $isrMsi = 0L; $dpc = 0L; $perCpu = $null; $msiCpu = $null; $dropped = 0L
-    $stats = [KernelCsv]::Parse($csv, [ref]$isrLine, [ref]$isrMsi, [ref]$dpc, [ref]$perCpu, [ref]$msiCpu, [ref]$dropped)
-    $drivers = foreach ($s in $stats.Values) {
-        $isrSorted = [double[]]($s.IsrUs | Sort-Object)
-        $dpcSorted = [double[]]($s.DpcUs | Sort-Object)
-        [pscustomobject]@{
-            driver    = $s.Module
-            isrPlain   = $s.IsrLine
-            isrMessage = $s.IsrMsi
-            vectors    = (($s.Vectors.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 3 | ForEach-Object { "$($_.Key):$($_.Value)" }) -join " ")
-            isrMaxUs  = if ($isrSorted.Count) { [math]::Round($isrSorted[-1], 1) } else { 0 }
-            isrMeanUs = if ($isrSorted.Count) { [math]::Round(($s.IsrUs | Measure-Object -Average).Average, 2) } else { 0 }
-            dpcCount  = $s.DpcCount
-            dpcMaxUs  = if ($dpcSorted.Count) { [math]::Round($dpcSorted[-1], 1) } else { 0 }
-            dpcP99Us  = Get-Percentile $dpcSorted 0.99
-            dpcMeanUs = if ($dpcSorted.Count) { [math]::Round(($s.DpcUs | Measure-Object -Average).Average, 2) } else { 0 }
+    $etl = Join-Path $env:TEMP "msi-bench-$Phase.etl"
+    $csv = Join-Path $env:TEMP "msi-bench-$Phase.csv"
+    if ($doTrace) {
+        Remove-Item $etl, $csv -ErrorAction SilentlyContinue
+        $started = & { $ErrorActionPreference = 'Continue'; & logman start $traceSession -p 'Windows Kernel Trace' '(img,dpc,isr)' -o $etl -ets 2>&1 }
+        if ($LASTEXITCODE -ne 0) {
+            throw "Cannot start the ETW session '$traceSession': $(($started | ForEach-Object { "$_" }) -join ' '). Another program holds that session. The bench never stops a session it did not start: close that program or reboot, then run the bench again."
         }
     }
-    $drivers = @($drivers | Sort-Object dpcMaxUs -Descending)
-    $trace = [pscustomobject]@{
-        seconds      = $Seconds
-        isrPlain     = $isrLine
-        isrMessage   = $isrMsi
-        dpcCount     = $dpc
-        droppedEvents = $dropped
-        isrPlainPerCpu = @($perCpu.GetEnumerator() | Sort-Object Name | ForEach-Object { [pscustomobject]@{ cpu = $_.Key; isr = $_.Value } })
-        isrMessagePerCpu = @($msiCpu.GetEnumerator() | Sort-Object Name | ForEach-Object { [pscustomobject]@{ cpu = $_.Key; isr = $_.Value } })
-        drivers      = $drivers
+    try {
+        Write-Host "Measuring for $Seconds s on CPU $Cpu, keep your load running..."
+        [StallProbe]::Start($Seconds, $Cpu, $GapThresholdUs)
+        if ($doTrace) { Start-Sleep -Seconds $Seconds }
+    } finally {
+        if ($doTrace) { & logman stop $traceSession -ets | Out-Null }
     }
-    Write-Host ("Kernel trace: {0} plain ISRs, {1} message-based ISRs, {2} DPCs in {3} s ({4} undecodable events dropped)" -f $isrLine, $isrMsi, $dpc, $Seconds, $dropped)
-    foreach ($pair in @(@('Plain ISRs land on', $perCpu), @('Message-based ISRs land on', $msiCpu))) {
-        if ($pair[1].Count) {
-            Write-Host "$($pair[0]): " -NoNewline
-            Write-Host (($pair[1].GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 4 | ForEach-Object { "CPU $($_.Key): $($_.Value)" }) -join ', ')
-        }
+    $span = 0.0
+    $gaps = [StallProbe]::Stop([ref]$span)
+    $sortedGaps = [double[]]($gaps | Sort-Object)
+    $probe = [pscustomobject]@{
+        cpu           = $Cpu
+        seconds       = [math]::Round($span, 1)
+        gapsPerSecond = [math]::Round($gaps.Count / $span, 1)
+        gapP50Us      = Get-Percentile $sortedGaps 0.50 1
+        gapP99Us      = Get-Percentile $sortedGaps 0.99 1
+        gapP999Us     = Get-Percentile $sortedGaps 0.999 1
+        gapMaxUs      = if ($gaps.Count) { [math]::Round($sortedGaps[-1], 1) } else { 0 }
+        stalledPct    = [math]::Round(100 * (($gaps | Measure-Object -Sum).Sum / 1e6) / $span, 2)
     }
-    $drivers | Select-Object -First 15 | Format-Table driver, isrPlain, isrMessage, isrMaxUs, isrMeanUs, dpcCount, dpcMaxUs, dpcP99Us, dpcMeanUs, vectors -AutoSize | Out-String -Width 200 | Write-Host
-    Remove-Item $etl, $csv -ErrorAction SilentlyContinue
-}
+    Write-Host 'Stall probe (gaps in a spinning time-critical thread):'
+    $probe | Format-List | Out-String | Write-Host
 
-[pscustomobject]@{
-    phase     = $Phase
-    timestamp = (Get-Date).ToString('s')
-    devices   = $table
-    probe     = $probe
-    trace     = $trace
-} | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $outDir "msi-bench-$Phase.json")
-Write-Host "Saved msi-bench-$Phase.json"
+    if ($doTrace) {
+        Write-Host 'Decoding the kernel trace...'
+        & tracerpt $etl -o $csv -of CSV -y | Out-Null
+        $isrLine = 0L; $isrMsi = 0L; $dpc = 0L; $perCpu = $null; $msiCpu = $null; $dropped = 0L
+        $stats = [KernelCsv]::Parse($csv, [ref]$isrLine, [ref]$isrMsi, [ref]$dpc, [ref]$perCpu, [ref]$msiCpu, [ref]$dropped)
+        $drivers = foreach ($s in $stats.Values) {
+            $isrSorted = [double[]]($s.IsrUs | Sort-Object)
+            $dpcSorted = [double[]]($s.DpcUs | Sort-Object)
+            [pscustomobject]@{
+                driver    = $s.Module
+                isrPlain   = $s.IsrLine
+                isrMessage = $s.IsrMsi
+                vectors    = (($s.Vectors.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 3 | ForEach-Object { "$($_.Key):$($_.Value)" }) -join " ")
+                isrMaxUs  = if ($isrSorted.Count) { [math]::Round($isrSorted[-1], 1) } else { 0 }
+                isrMeanUs = if ($isrSorted.Count) { [math]::Round(($s.IsrUs | Measure-Object -Average).Average, 2) } else { 0 }
+                dpcCount  = $s.DpcCount
+                dpcMaxUs  = if ($dpcSorted.Count) { [math]::Round($dpcSorted[-1], 1) } else { 0 }
+                dpcP99Us  = Get-Percentile $dpcSorted 0.99 1
+                dpcMeanUs = if ($dpcSorted.Count) { [math]::Round(($s.DpcUs | Measure-Object -Average).Average, 2) } else { 0 }
+            }
+        }
+        $drivers = @($drivers | Sort-Object dpcMaxUs -Descending)
+        $trace = [pscustomobject]@{
+            seconds      = $Seconds
+            isrPlain     = $isrLine
+            isrMessage   = $isrMsi
+            dpcCount     = $dpc
+            droppedEvents = $dropped
+            isrPlainPerCpu = @($perCpu.GetEnumerator() | Sort-Object Name | ForEach-Object { [pscustomobject]@{ cpu = $_.Key; isr = $_.Value } })
+            isrMessagePerCpu = @($msiCpu.GetEnumerator() | Sort-Object Name | ForEach-Object { [pscustomobject]@{ cpu = $_.Key; isr = $_.Value } })
+            drivers      = $drivers
+        }
+        Write-Host ("Kernel trace: {0} plain ISRs, {1} message-based ISRs, {2} DPCs in {3} s ({4} undecodable events dropped)" -f $isrLine, $isrMsi, $dpc, $Seconds, $dropped)
+        foreach ($pair in @(@('Plain ISRs land on', $perCpu), @('Message-based ISRs land on', $msiCpu))) {
+            if ($pair[1].Count) {
+                Write-Host "$($pair[0]): " -NoNewline
+                Write-Host (($pair[1].GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 4 | ForEach-Object { "CPU $($_.Key): $($_.Value)" }) -join ', ')
+            }
+        }
+        $drivers | Select-Object -First 15 | Format-Table driver, isrPlain, isrMessage, isrMaxUs, isrMeanUs, dpcCount, dpcMaxUs, dpcP99Us, dpcMeanUs, vectors -AutoSize | Out-String -Width 200 | Write-Host
+        Remove-Item $etl, $csv -ErrorAction SilentlyContinue
+    }
+
+    $result = [pscustomobject]@{
+        phase     = $Phase
+        timestamp = (Get-Date).ToString('s')
+        devices   = $table
+        probe     = $probe
+        trace     = $trace
+        metadata  = $metadata
+    }
+    Write-BenchResult -Object $result -Path (Join-Path $outDir "msi-bench-$Phase.json")
+    Write-Host "Saved msi-bench-$Phase.json"
+}

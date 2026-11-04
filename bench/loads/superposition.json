@@ -1,0 +1,27 @@
+{
+  "name": "superposition",
+  "title": "Unigine Superposition 1.1 (free), infinite scene",
+  "process": "superposition",
+  "presentMonProcess": "superposition.exe",
+  "program": {
+    "version": "1.1",
+    "installerFile": "Unigine_Superposition-1.1.exe",
+    "installerSha256": "DE5DBF4F7AD284B709C5DB318DBEDC1B025A41E50326595A444EE9CBD4A17182",
+    "installDir": "C:\\Program Files\\Unigine\\Superposition Benchmark",
+    "exe": "bin\\superposition.exe"
+  },
+  "presentMon": {
+    "version": "2.6.0",
+    "sha256": "b2a706bc6ad475749e3b7e3409263aa1e6906d45bdcf993f6dbc0f660188f1af",
+    "url": "https://github.com/GameTechDev/PresentMon/releases/tag/v2.6.0"
+  },
+  "launchArgs": ["-project_name", "Superposition", "-video_mode", "-1", "-console_command", "world_load superposition/superposition", "-video_app", "direct3d11", "-video_width", "2560", "-video_height", "1440", "-video_fullscreen", "1", "-preset", "0", "-video_vsync", "0", "-sound", "0"],
+  "workingDirectory": "bin",
+  "consoleLine": null,
+  "timings": { "loadPauseSeconds": 20, "captureSeconds": 60 },
+  "vsync": 0,
+  "driverOff": ["AMD Radeon Chill", "AMD Frame Rate Target Control (FRTC)", "AMD Anti-Lag", "any external frame limiter"],
+  "bottleneck": "gpu",
+  "suitableFor": ["msi"],
+  "rejectIf": ["SyncInterval above 0", "frame times cluster at the monitor refresh period", "superposition.exe is not the captured process"]
+}
