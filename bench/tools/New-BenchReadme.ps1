@@ -7,19 +7,11 @@ $ErrorActionPreference = 'Stop'
 $benchDir = Split-Path -Parent $PSScriptRoot
 $loadsDir = Join-Path $benchDir 'loads'
 $readmePath = Join-Path $benchDir 'README.md'
+. (Join-Path $benchDir 'bench-env.ps1')
 
 function Read-Json {
     param([string]$Path)
     Get-Content -Path $Path -Raw -Encoding UTF8 | ConvertFrom-Json
-}
-
-function Read-ValveKeyValues {
-    param([string]$Path)
-    $values = [ordered]@{}
-    foreach ($line in Get-Content -Path $Path -Encoding UTF8) {
-        if ($line -match '^\s*"([^"]+)"\s+"([^"]*)"\s*$') { $values[$Matches[1]] = $Matches[2] }
-    }
-    $values
 }
 
 function Format-Arg {
@@ -84,7 +76,11 @@ function Get-LoadSection {
         $out.Add('The line is fixed; do not edit it. `hideconsole` closes the console so it does not sit over the scene.')
         $out.Add('')
     }
-    $out.Add(('Timings: load pause {0} s after the Enter, then capture {1} s.' -f $Load.timings.loadPauseSeconds, $Load.timings.captureSeconds))
+    if ($Load.startMarker) {
+        $out.Add(('Timings: the route has started when the game log `{0}` (relative to the folder of {1}) shows `{2}`. From that line: load pause {3} s, then capture {4} s.' -f $Load.startMarker.log, $Load.presentMonProcess, $Load.startMarker.pattern, $Load.timings.loadPauseSeconds, $Load.timings.captureSeconds))
+    } else {
+        $out.Add(('Timings: from the start of {1}: load pause {0} s, then capture {2} s.' -f $Load.timings.loadPauseSeconds, $Load.presentMonProcess, $Load.timings.captureSeconds))
+    }
     $out.Add('')
     $out.Add('Turn these off in the GPU driver and anywhere else before the run:')
     $out.Add('')
@@ -127,7 +123,7 @@ function Get-Readme {
 3. Run the bench from the elevated shell: {RUN}
 4. Repeat at least 5 times per state in the order A-B-A-B (never all A then all B), with a reboot before every run.
 
-Frame-time capture of a running load (`-Test game -Load <name>`) is not part of this version yet. The load recipes below are the single source it will read.
+{GAME}
 
 ## What the bench touches
 
@@ -135,7 +131,7 @@ Nothing persistent. It reads the registry, `powercfg /qh`, WMI and performance c
 
 ## Result record
 
-Each result stores the bench script name and its SHA256, the OS build, display version and update revision, the active power scheme GUID with every processor setting for AC and DC, the load name and the PresentMon version, next to the measurements. Nothing else is recorded: no process or service list, no driver inventory, no user name or computer name.
+Each result stores the bench script name and its SHA256, the OS build, display version and update revision, the active power scheme GUID with every processor setting for AC and DC, the load name and the PresentMon version, next to the measurements. {RECORD} Nothing else is recorded: no process or service list, no driver inventory, no user name or computer name.
 
 ## Reading the result
 
@@ -159,6 +155,8 @@ The result files hold only the fields above and the measurements, so they can be
         '{PMSHA}'     = $pm.sha256
         '{RUN}'       = $profileData.run
         '{TOUCH}'     = $profileData.touch
+        '{GAME}'      = $profileData.game
+        '{RECORD}'    = $profileData.record
     }
     foreach ($key in $map.Keys) { $text = $text.Replace($key, [string]$map[$key]) }
     $text.Replace('{LOADS}', $sections.TrimEnd("`n"))

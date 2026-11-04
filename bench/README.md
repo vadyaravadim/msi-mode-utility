@@ -27,7 +27,7 @@ Nothing persistent. It reads the registry, `powercfg /qh`, WMI and performance c
 
 ## Result record
 
-Each result stores the bench script name and its SHA256, the OS build, display version and update revision, the active power scheme GUID with every processor setting for AC and DC, the load name and the PresentMon version, next to the measurements. Nothing else is recorded: no process or service list, no driver inventory, no user name or computer name.
+Each result stores the bench script name and its SHA256, the OS build, display version and update revision, the active power scheme GUID with every processor setting for AC and DC, the load name and the PresentMon version, next to the measurements. The device table names each PCI device and its driver, because the interrupt mode per device is the measurement. Nothing else is recorded: no process or service list, no driver inventory, no user name or computer name.
 
 ## Reading the result
 
@@ -59,7 +59,7 @@ game_type 3; game_mode 0; sv_skirmish_id 0; sv_game_mode_flags 32; mapgroup @wor
 
 The line is fixed; do not edit it. `hideconsole` closes the console so it does not sit over the scene.
 
-Timings: load pause 15 s after the Enter, then capture 100 s.
+Timings: from the start of cs2.exe: load pause 15 s, then capture 100 s.
 
 Turn these off in the GPU driver and anywhere else before the run:
 
@@ -99,7 +99,7 @@ bin\superposition.exe -project_name Superposition -video_mode -1 -console_comman
 
 Run it from `C:\Program Files\Unigine\Superposition Benchmark\bin`. Change `-video_width` and `-video_height` to your monitor's native resolution.
 
-Timings: load pause 20 s after the Enter, then capture 60 s.
+Timings: from the start of superposition.exe: load pause 20 s, then capture 60 s.
 
 Turn these off in the GPU driver and anywhere else before the run:
 

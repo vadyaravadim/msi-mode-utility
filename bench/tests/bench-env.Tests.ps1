@@ -160,12 +160,12 @@ Describe 'Invoke-PresentMonCapture' {
     It 'requires the PresentMon path' {
         { Invoke-PresentMonCapture -PresentMonPath $null -ProcessName 'x.exe' -OutputFile (Join-Path $TestDrive 'a.csv') } | Should -Throw
     }
-    It 'records the version field and the SHA256 of the PresentMon it ran' {
+    It 'records the SHA256 of the PresentMon it ran and no version field (the 2.6.0 exe has no version resource)' {
         $out = Join-Path $TestDrive 'frames.csv'
         $capture = Invoke-PresentMonCapture -PresentMonPath $fakePm -ProcessName 'x.exe' -OutputFile $out -Seconds 1 -ExpectedSha256 $fakeSha
         $capture.presentMonSha256 | Should -Be $fakeSha
         $capture.csv | Should -Be $out
-        $capture.PSObject.Properties.Name | Should -Contain 'presentMonVersion'
+        $capture.PSObject.Properties.Name | Should -Be @('presentMonSha256', 'csv')
         Test-Path $out | Should -BeTrue
     }
     It 'refuses a PresentMon whose hash is not the pinned one' {
