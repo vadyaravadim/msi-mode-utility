@@ -1,0 +1,7 @@
+{
+  "title": "MSI mode bench",
+  "intro": "Reproduce the measurements behind the RigPolice article https://rigpolice.com/system/articles/enable-msi-mode/ . `msi-bench.ps1` records the interrupt mode of every PCI device, ISR and DPC time per driver from a kernel trace, and a stall probe pinned to one CPU. The Superposition load below is the GPU-bound load for it.",
+  "needs": "Run one interrupt-mode state per series (stock, then after `msi-mode-utility.ps1`, with a reboot between).",
+  "run": "`.\\msi-bench.ps1 -Phase stock -Seconds 30`, then `.\\msi-bench.ps1 -Phase msi -Seconds 30`.",
+  "touch": "one temporary ETW session named \"NT Kernel Logger\" that it starts and stops itself, and the stall-probe thread"
+}

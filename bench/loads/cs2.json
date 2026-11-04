@@ -1,0 +1,25 @@
+{
+  "name": "cs2",
+  "title": "Counter-Strike 2, workshop map CS2 FPS BENCHMARK (Angel)",
+  "process": "cs2",
+  "presentMonProcess": "cs2.exe",
+  "workshop": { "id": "3240880604", "mapName": "de_dust2", "routeSeconds": 131 },
+  "game": { "steamAppId": 730, "price": "free" },
+  "presentMon": {
+    "version": "2.6.0",
+    "sha256": "b2a706bc6ad475749e3b7e3409263aa1e6906d45bdcf993f6dbc0f660188f1af",
+    "url": "https://github.com/GameTechDev/PresentMon/releases/tag/v2.6.0"
+  },
+  "launchArgs": ["-applaunch", "730", "-novid", "-condebug", "+con_enable", "1", "-console", "+toggleconsole"],
+  "menuWaitSeconds": 25,
+  "consoleLine": "game_type 3; game_mode 0; sv_skirmish_id 0; sv_game_mode_flags 32; mapgroup @workshop/3240880604/de_dust2; nextlevel de_dust2; map de_dust2 customgamemode=3240880604 nomapvalidation=true; hideconsole",
+  "timings": { "loadPauseSeconds": 15, "captureSeconds": 100 },
+  "vsync": 0,
+  "driverOff": ["AMD Radeon Chill", "AMD Frame Rate Target Control (FRTC)", "AMD Anti-Lag", "NVIDIA Reflex / Low Latency Mode overrides", "any external frame limiter"],
+  "bottleneck": "cpu",
+  "videoConfig": {
+    "file": "cs2_video.txt",
+    "location": "<Steam>\\userdata\\<your Steam id>\\730\\local\\cfg\\cs2_video.txt"
+  },
+  "rejectIf": ["SyncInterval above 0", "frame times cluster at the monitor refresh period", "cs2.exe is not the captured process"]
+}
