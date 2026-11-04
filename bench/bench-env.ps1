@@ -23,6 +23,15 @@ function Get-RegistryValue {
     (Get-ItemProperty -Path $Path -Name $Name -ErrorAction SilentlyContinue).$Name
 }
 
+function Read-ValveKeyValues {
+    param([string]$Path)
+    $values = [ordered]@{}
+    foreach ($line in Get-Content -Path $Path -Encoding UTF8) {
+        if ($line -match '^\s*"([^"]+)"\s+"([^"]*)"\s*$') { $values[$Matches[1]] = $Matches[2] }
+    }
+    $values
+}
+
 function ConvertFrom-PowercfgQuery {
     param([string]$Text)
     $guidPattern = '[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}'
@@ -113,7 +122,6 @@ function Invoke-PresentMonCapture {
     if ($LASTEXITCODE -ne 0) { throw "PresentMon exited with code $LASTEXITCODE" }
     if (-not (Test-Path -Path $OutputFile)) { throw "PresentMon wrote no CSV for $ProcessName (is the process running and the shell elevated?)" }
     [pscustomobject]@{
-        presentMonVersion = (Get-Item -Path $PresentMonPath).VersionInfo.FileVersion
         presentMonSha256 = $sha
         csv = $OutputFile
     }
