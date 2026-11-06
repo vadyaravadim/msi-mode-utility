@@ -94,6 +94,7 @@ function Get-BenchMetadata {
         power = Get-PowerState
         load = if ($Load) { $Load } else { 'none' }
         presentMonVersion = if ($PresentMonVersion) { $PresentMonVersion } else { $null }
+        qpcFrequency = [System.Diagnostics.Stopwatch]::Frequency
     }
 }
 
@@ -187,4 +188,146 @@ function Get-FrameStats {
 function Assert-LoadCanShowDifference {
     param([Parameter(Mandatory)]$Stats)
     if ($Stats.capped) { throw "Run rejected: $((Get-BenchConfig).CappedMessage) ($($Stats.cappedReason))." }
+}
+
+function Find-LogMarker {
+    param([Parameter(Mandatory)][AllowEmptyString()][string]$Text, [Parameter(Mandatory)][string]$Pattern, [int]$From = 0)
+    if ($From -gt $Text.Length) { return -1 }
+    $Text.IndexOf($Pattern, $From, [System.StringComparison]::Ordinal)
+}
+
+function Get-ExtraLaunchFlag {
+    param([string]$CommandLine, [string[]]$Expected)
+    $tokens = @([regex]::Matches("$CommandLine", '"[^"]*"|\S+') | ForEach-Object { $_.Value } | Select-Object -Skip 1)
+    @($tokens | Where-Object { $_ -match '^[-+][A-Za-z_][A-Za-z0-9_]*$' -and $Expected -notcontains $_ } | Select-Object -Unique)
+}
+
+function Get-LoadRecipe {
+    param([Parameter(Mandatory)][string]$Name)
+    $dir = Join-Path $PSScriptRoot 'loads'
+    $path = Join-Path $dir "$Name.json"
+    if (-not (Test-Path -Path $path)) { throw "No load recipe $path. Pick one of: $((Get-ChildItem -Path $dir -Filter *.json | ForEach-Object { $_.BaseName }) -join ', ')." }
+    $recipe = Get-Content -Path $path -Raw -Encoding UTF8 | ConvertFrom-Json
+    if ($recipe.workshop -and ($recipe.timings.loadPauseSeconds + $recipe.timings.captureSeconds) -gt $recipe.workshop.routeSeconds) {
+        throw "$Name.json: load pause plus capture is longer than the $($recipe.workshop.routeSeconds) s route."
+    }
+    $recipe
+}
+
+function Get-RecipeProcessArg {
+    param([Parameter(Mandatory)]$Recipe)
+    $all = @($Recipe.launchArgs)
+    if ($Recipe.game) { return @($all | Select-Object -Skip 2) }
+    $all
+}
+
+function Read-SharedText {
+    param([Parameter(Mandatory)][string]$Path)
+    $stream = New-Object System.IO.FileStream($Path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+    try { (New-Object System.IO.StreamReader($stream)).ReadToEnd() } finally { $stream.Dispose() }
+}
+
+function Wait-LoadStart {
+    param([Parameter(Mandatory)]$Recipe)
+    Write-Host "Waiting for $($Recipe.presentMonProcess) ..."
+    $proc = $null
+    while (-not $proc) {
+        $proc = Get-Process -Name $Recipe.process -ErrorAction SilentlyContinue | Select-Object -First 1
+        if (-not $proc) { Start-Sleep -Milliseconds 500 }
+    }
+    if (-not $Recipe.startMarker) { return $proc }
+    $logPath = [System.IO.Path]::GetFullPath((Join-Path (Split-Path -Parent $proc.Path) $Recipe.startMarker.log))
+    Write-Host "Found $($Recipe.presentMonProcess). Waiting for '$($Recipe.startMarker.pattern)' in $(Split-Path -Leaf $logPath) ..."
+    $from = 0
+    if (Test-Path -Path $logPath) { $from = (Read-SharedText -Path $logPath).Length }
+    $seenLength = $from
+    while ($true) {
+        if ($proc.HasExited) { throw "$($Recipe.presentMonProcess) exited before the route started." }
+        if (Test-Path -Path $logPath) {
+            $text = Read-SharedText -Path $logPath
+            if ($text.Length -lt $seenLength) { $from = 0 }
+            $seenLength = $text.Length
+            if ((Find-LogMarker -Text $text -Pattern $Recipe.startMarker.pattern -From $from) -ge 0) { return $proc }
+        }
+        Start-Sleep -Milliseconds 500
+    }
+}
+
+function Get-VideoConfigMismatch {
+    param([Parameter(Mandatory)][string]$Expected, [Parameter(Mandatory)][string]$Installed, [Parameter(Mandatory)][string]$KeyPrefix)
+    $want = Read-ValveKeyValues -Path $Expected
+    $have = Read-ValveKeyValues -Path $Installed
+    @($want.Keys | Where-Object { $_.StartsWith($KeyPrefix) -and (-not $have.Contains($_) -or $have[$_] -ne $want[$_]) })
+}
+
+function Find-InstalledVideoConfig {
+    param([Parameter(Mandatory)]$Recipe)
+    $steam = Get-RegistryValue 'HKCU:\Software\Valve\Steam' 'SteamPath'
+    if (-not $steam) { return $null }
+    $userdata = Join-Path $steam 'userdata'
+    if (-not (Test-Path -Path $userdata)) { return $null }
+    Get-ChildItem -Path $userdata -Directory |
+        ForEach-Object { Join-Path $_.FullName "$($Recipe.game.steamAppId)\local\cfg\$($Recipe.videoConfig.file)" } |
+        Where-Object { Test-Path -Path $_ } | ForEach-Object { Get-Item -Path $_ } |
+        Sort-Object -Property LastWriteTime -Descending | Select-Object -First 1 | ForEach-Object { $_.FullName }
+}
+
+function Get-VideoConfigCheck {
+    param([Parameter(Mandatory)]$Recipe)
+    if (-not $Recipe.videoConfig) { return $null }
+    $installed = Find-InstalledVideoConfig -Recipe $Recipe
+    if (-not $installed) { return [pscustomobject]@{ found = $false; mismatchedKeys = @() } }
+    $expected = Join-Path (Join-Path $PSScriptRoot 'loads') $Recipe.videoConfig.file
+    [pscustomobject]@{ found = $true; mismatchedKeys = @(Get-VideoConfigMismatch -Expected $expected -Installed $installed -KeyPrefix $Recipe.videoConfig.compareKeyPrefix) }
+}
+
+function Get-GameRejection {
+    param([Parameter(Mandatory)]$Stats, [Parameter(Mandatory)]$Capture, $Video, [Parameter(Mandatory)]$Recipe)
+    $reasons = New-Object System.Collections.Generic.List[string]
+    if ($Stats.capped) { $reasons.Add("$((Get-BenchConfig).CappedMessage) ($($Stats.cappedReason))") }
+    if ($Capture.overflowedPresents -gt 0) { $reasons.Add("PresentMon lost $($Capture.overflowedPresents) frames (present event buffer overflow)") }
+    if ($Video -and -not $Video.found) { $reasons.Add("no installed $($Recipe.videoConfig.file) found under the Steam userdata folder") }
+    if ($Video -and $Video.mismatchedKeys.Count) { $reasons.Add("the installed $($Recipe.videoConfig.file) differs from bench\loads\$($Recipe.videoConfig.file) in $($Video.mismatchedKeys -join ', ')") }
+    if ($reasons.Count) { $reasons -join '; ' } else { $null }
+}
+
+function Get-LoadBuild {
+    param([Parameter(Mandatory)]$Recipe, [Parameter(Mandatory)][string]$ExePath)
+    if ($Recipe.build) {
+        $file = [System.IO.Path]::GetFullPath((Join-Path (Split-Path -Parent $ExePath) $Recipe.build.file))
+        $line = Get-Content -Path $file -ErrorAction SilentlyContinue | Where-Object { $_ -match "^$([regex]::Escape($Recipe.build.key))=" } | Select-Object -First 1
+        if ($line) { return ($line -split '=', 2)[1].Trim() }
+        return $null
+    }
+    (Get-Item -Path $ExePath).VersionInfo.ProductVersion
+}
+
+function Wait-LoadReady {
+    param([Parameter(Mandatory)]$Recipe)
+    $proc = Wait-LoadStart -Recipe $Recipe
+    Write-Host "Load started. Waiting $($Recipe.timings.loadPauseSeconds) s, then capturing $($Recipe.timings.captureSeconds) s. Do not touch the PC."
+    Start-Sleep -Seconds $Recipe.timings.loadPauseSeconds
+    $proc
+}
+
+function Get-LoadRecord {
+    param([Parameter(Mandatory)]$Recipe, [Parameter(Mandatory)][string]$Name, [Parameter(Mandatory)]$Process)
+    $cmd = (Get-CimInstance -ClassName Win32_Process -Filter "ProcessId = $($Process.Id)").CommandLine
+    [pscustomobject]@{
+        name = $Name
+        build = Get-LoadBuild -Recipe $Recipe -ExePath $Process.Path
+        videoConfig = Get-VideoConfigCheck -Recipe $Recipe
+        extraLaunchFlags = @(Get-ExtraLaunchFlag -CommandLine $cmd -Expected (Get-RecipeProcessArg -Recipe $Recipe))
+    }
+}
+
+function Format-Invariant {
+    param([double]$Value)
+    $Value.ToString('0.###', [System.Globalization.CultureInfo]::InvariantCulture)
+}
+
+function Write-CsvFile {
+    param([Parameter(Mandatory)][string]$Path, [Parameter(Mandatory)][string]$Header, [Parameter(Mandatory)][AllowEmptyCollection()][string[]]$Lines)
+    $text = (@($Header) + $Lines) -join "`n"
+    [System.IO.File]::WriteAllText($Path, $text + "`n", (New-Object System.Text.UTF8Encoding($false)))
 }
