@@ -9,6 +9,8 @@ function Get-BenchConfig {
         PresentMonSession = 'rigpolice-bench'
         PresentMonColumns = @('MsBetweenPresents', 'MsGPUBusy', 'MsCPUBusy', 'SyncInterval', 'PresentMode')
         CappedMessage = 'this load cannot show a difference'
+        PresentMonCircularBufferSize = 16384
+        PresentMonOverflowPattern = '(\d+) overflowed present events'
     }
 }
 
@@ -112,18 +114,28 @@ function Invoke-PresentMonCapture {
         [int]$Seconds = 60,
         [string]$ExpectedSha256
     )
+    $cfg = Get-BenchConfig
     $sha = (Get-FileHash -Path $PresentMonPath -Algorithm SHA256).Hash.ToLower()
     if ($ExpectedSha256 -and $sha -ne $ExpectedSha256.ToLower()) {
         throw "PresentMon at $PresentMonPath has SHA256 $sha, expected $ExpectedSha256. Use the pinned release."
     }
     $captureArgs = @('--process_name', $ProcessName, '--output_file', $OutputFile, '--timed', $Seconds, '--terminate_after_timed',
-        '--stop_existing_session', '--session_name', (Get-BenchConfig).PresentMonSession, '--no_console_stats')
-    & $PresentMonPath @captureArgs | Out-Null
+        '--stop_existing_session', '--session_name', $cfg.PresentMonSession, '--no_console_stats',
+        '--set_circular_buffer_size', $cfg.PresentMonCircularBufferSize)
+    $previousPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try { $output = @(& $PresentMonPath @captureArgs 2>&1) } finally { $ErrorActionPreference = $previousPreference }
+    $overflowed = 0
+    foreach ($line in @($output | Where-Object { $_ -is [System.Management.Automation.ErrorRecord] } | ForEach-Object { "$_" })) {
+        Write-Warning $line
+        foreach ($m in [regex]::Matches($line, $cfg.PresentMonOverflowPattern)) { $overflowed += [int]$m.Groups[1].Value }
+    }
     if ($LASTEXITCODE -ne 0) { throw "PresentMon exited with code $LASTEXITCODE" }
     if (-not (Test-Path -Path $OutputFile)) { throw "PresentMon wrote no CSV for $ProcessName (is the process running and the shell elevated?)" }
     [pscustomobject]@{
         presentMonSha256 = $sha
         csv = $OutputFile
+        overflowedPresents = $overflowed
     }
 }
 
