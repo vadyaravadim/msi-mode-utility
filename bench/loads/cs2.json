@@ -13,13 +13,16 @@
   "launchArgs": ["-applaunch", "730", "-novid", "-condebug", "+con_enable", "1", "-console", "+toggleconsole"],
   "menuWaitSeconds": 25,
   "consoleLine": "game_type 3; game_mode 0; sv_skirmish_id 0; sv_game_mode_flags 32; mapgroup @workshop/3240880604/de_dust2; nextlevel de_dust2; map de_dust2 customgamemode=3240880604 nomapvalidation=true; hideconsole",
+  "startMarker": { "log": "../../csgo/console.log", "pattern": "[VProf] VProfLite started." },
+  "build": { "file": "../../csgo/steam.inf", "key": "PatchVersion" },
   "timings": { "loadPauseSeconds": 15, "captureSeconds": 100 },
   "vsync": 0,
   "driverOff": ["AMD Radeon Chill", "AMD Frame Rate Target Control (FRTC)", "AMD Anti-Lag", "NVIDIA Reflex / Low Latency Mode overrides", "any external frame limiter"],
   "bottleneck": "cpu",
   "videoConfig": {
     "file": "cs2_video.txt",
+    "compareKeyPrefix": "setting.",
     "location": "<Steam>\\userdata\\<your Steam id>\\730\\local\\cfg\\cs2_video.txt"
   },
-  "rejectIf": ["SyncInterval above 0", "frame times cluster at the monitor refresh period", "cs2.exe is not the captured process"]
+  "rejectIf": ["SyncInterval above 0", "the installed cs2_video.txt differs from the shipped cs2_video.txt in any setting.* value, or is not found", "frame times cluster at the monitor refresh period", "cs2.exe is not the captured process"]
 }

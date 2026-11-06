@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Compare the shared bench files with the sibling repo
         run: |
-          for f in bench/bench-env.ps1 bench/tools/New-BenchReadme.ps1; do
+          for f in bench/bench-env.ps1 bench/tools/New-BenchReadme.ps1 bench/loads/* bench/tests/bench-env.Tests.ps1 bench/tests/bench-static.Tests.ps1 bench/tests/bench-readme.Tests.ps1; do
             curl -fsSL -o sibling.tmp "https://raw.githubusercontent.com/vadyaravadim/cpu-parking-disabler/main/$f"
             cmp "$f" sibling.tmp || { echo "$f differs from cpu-parking-disabler main: copy the change to both repos"; exit 1; }
           done

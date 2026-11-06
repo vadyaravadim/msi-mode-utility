@@ -131,7 +131,7 @@ Nothing persistent. It reads the registry, `powercfg /qh`, WMI and performance c
 
 ## Result record
 
-Each result stores the bench script name and its SHA256, the OS build, display version and update revision, the active power scheme GUID with every processor setting for AC and DC, the load name and the PresentMon version, next to the measurements. {RECORD} Nothing else is recorded: no process or service list, no driver inventory, no user name or computer name.
+Each result stores the bench script name and its SHA256, the OS build, display version and update revision, the active power scheme GUID with every processor setting for AC and DC, the load name and the PresentMon version, and the QPC timer frequency, next to the measurements. {RECORD} Nothing else is recorded: no process or service list, no driver inventory, no user name or computer name.
 
 ## Reading the result
 

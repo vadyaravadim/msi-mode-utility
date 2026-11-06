@@ -1,6 +1,6 @@
 # MSI mode bench
 
-Reproduce the measurements behind the RigPolice article https://rigpolice.com/system/articles/enable-msi-mode/ . `msi-bench.ps1` records the interrupt mode of every PCI device, ISR and DPC time per driver from a kernel trace, and a stall probe pinned to one CPU. The Superposition load below is the GPU-bound load for it.
+Reproduce the measurements behind the RigPolice article https://rigpolice.com/system/articles/enable-msi-mode/ . `msi-bench.ps1` records the interrupt mode of every PCI device, ISR and DPC time per driver from a kernel trace, and a stall probe that counts every gap of 2 us or more in a spinning thread on a chosen CPU. The Superposition load below is the GPU-bound load for it.
 
 **Same procedure, not same numbers.** A game update, a driver update or a different CPU moves every number. Compare states only inside one series of runs on one machine, never against the published tables.
 
@@ -16,18 +16,18 @@ Reproduce the measurements behind the RigPolice article https://rigpolice.com/sy
 
 1. Make the machine quiet yourself. The bench only measures: it does not check, close or change anything. Reboot, do not open a browser, launcher, updater, VPN or monitoring tool afterwards, and wait the same fixed time after every reboot (write it down) so uptime is comparable between states.
 2. Start the load from the section "Loads" and let it settle.
-3. Run the bench from the elevated shell: `.\msi-bench.ps1 -Phase stock -Seconds 30`, then `.\msi-bench.ps1 -Phase msi -Seconds 30`.
+3. Run the bench from the elevated shell: `.\msi-bench.ps1 -Phase stock -Load superposition -PresentMon <path to PresentMon-2.6.0-x64.exe> -Device dxgkrnl.sys,HDAudBus.sys,Wdf01000.sys`, then the same with `-Phase msi`. Without a load, `-Seconds` sets the window and `-Cpu 0,5` picks the probe CPUs (a load takes its window from the recipe, so `-Seconds` is refused with `-Load`). `-Device` takes the drivers whose interrupts you care about: a 5 s pre-trace finds the CPU that takes most of each driver's ISRs and the probe runs there too. A WDDM GPU logs its ISR as `dxgkrnl.sys`, not as the vendor driver, and `Wdf01000.sys` groups every KMDF device (USB host controller, GPIO). The result holds a histogram of the gaps per probe and `msi-bench-<phase>-stalls.csv` lists every gap of 1 ms or more. Results go next to the script, or to `-OutDir`.
 4. Repeat at least 5 times per state in the order A-B-A-B (never all A then all B), with a reboot before every run.
 
-Frame-time capture of a running load (`-Test game -Load <name>`) is not part of this version yet. The load recipes below are the single source it will read.
+For `-Load` start the bench before the load: it waits for the load's process and, when the recipe names a start line, for that line in the game log, then waits the load pause and captures frame times with PresentMon while the kernel trace and the probes run. Do not touch the PC until it prints the result.
 
 ## What the bench touches
 
-Nothing persistent. It reads the registry, `powercfg /qh`, WMI and performance counters, and it runs one temporary ETW session named "NT Kernel Logger" that it starts and stops itself, and the stall-probe thread. It changes no power, registry, service or boot setting and stops no process. It does not check whether your machine is quiet; that is up to you. A test in `tests\` fails if a changing command is added.
+Nothing persistent. It reads the registry, `powercfg /qh`, WMI and performance counters, and it runs one temporary ETW session named "NT Kernel Logger" that it starts and stops itself (twice with `-Device`: the pre-trace and the main trace), for `-Load` PresentMon with its own ETW session named `rigpolice-bench`, and the stall-probe threads. It changes no power, registry, service or boot setting and stops no process. It does not check whether your machine is quiet; that is up to you. A test in `tests\` fails if a changing command is added.
 
 ## Result record
 
-Each result stores the bench script name and its SHA256, the OS build, display version and update revision, the active power scheme GUID with every processor setting for AC and DC, the load name and the PresentMon version, next to the measurements. The device table names each PCI device and its driver, because the interrupt mode per device is the measurement. Nothing else is recorded: no process or service list, no driver inventory, no user name or computer name.
+Each result stores the bench script name and its SHA256, the OS build, display version and update revision, the active power scheme GUID with every processor setting for AC and DC, the load name and the PresentMon version, and the QPC timer frequency, next to the measurements. `msi-bench.ps1` adds the interrupt mode of every PCI device, the stall probe per CPU (histogram, percentiles, total stalled time, the devices behind each CPU), the trace clock type, the CPU picked per `-Device` driver next to the CPU the main trace shows for it, and, with `-Load`, the load build, whether the installed video config matches the shipped one (mismatched key names only), the names of launch flags outside the recipe (names only, no values), the frame statistics and the count of frames PresentMon lost to a present event buffer overflow (`presentMon.overflowedPresents`; a run that lost any is rejected). The device table names each PCI device and its driver, because the interrupt mode per device is the measurement. Nothing else is recorded: no process or service list, no driver inventory, no user name or computer name.
 
 ## Reading the result
 
@@ -59,7 +59,7 @@ game_type 3; game_mode 0; sv_skirmish_id 0; sv_game_mode_flags 32; mapgroup @wor
 
 The line is fixed; do not edit it. `hideconsole` closes the console so it does not sit over the scene.
 
-Timings: from the start of cs2.exe: load pause 15 s, then capture 100 s.
+Timings: the route has started when the game log `../../csgo/console.log` (relative to the folder of cs2.exe) shows `[VProf] VProfLite started.`. From that line: load pause 15 s, then capture 100 s.
 
 Turn these off in the GPU driver and anywhere else before the run:
 
@@ -82,6 +82,7 @@ The file sets 1280x720 (`setting.defaultres`, `setting.defaultresheight`), `sett
 The bench rejects the run when:
 
 - SyncInterval above 0
+- the installed cs2_video.txt differs from the shipped cs2_video.txt in any setting.* value, or is not found
 - frame times cluster at the monitor refresh period
 - cs2.exe is not the captured process
 

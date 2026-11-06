@@ -1,3 +1,7 @@
+BeforeDiscovery {
+    $script:loadFiles = @(Get-ChildItem -Path (Join-Path $PSScriptRoot '..\loads') -Filter '*.json' -File)
+}
+
 BeforeAll {
     . (Join-Path $PSScriptRoot '..\bench-env.ps1')
     $script:powercfgSample = @'
@@ -127,11 +131,15 @@ Describe 'Get-BenchMetadata' {
         $bare.load | Should -Be 'none'
         $bare.presentMonVersion | Should -BeNullOrEmpty
     }
+    It 'records the QPC frequency the stall and timing numbers were taken at' {
+        $meta.qpcFrequency | Should -Be ([System.Diagnostics.Stopwatch]::Frequency)
+        $meta.qpcFrequency | Should -BeGreaterThan 0
+    }
     It 'holds nothing that identifies the user or the machine' {
         $json = $meta | ConvertTo-Json -Depth 8
         $json | Should -Not -Match ([regex]::Escape($env:USERNAME))
         $json | Should -Not -Match ([regex]::Escape($env:COMPUTERNAME))
-        $meta.PSObject.Properties.Name | Should -Be @('benchScript', 'os', 'power', 'load', 'presentMonVersion')
+        $meta.PSObject.Properties.Name | Should -Be @('benchScript', 'os', 'power', 'load', 'presentMonVersion', 'qpcFrequency')
     }
 }
 
@@ -197,5 +205,139 @@ Describe 'Invoke-PresentMonCapture' {
     }
     It 'refuses a PresentMon whose hash is not the pinned one' {
         { Invoke-PresentMonCapture -PresentMonPath $fakePm -ProcessName 'x.exe' -OutputFile (Join-Path $TestDrive 'b.csv') -ExpectedSha256 ('0' * 64) } | Should -Throw '*SHA256*Use the pinned release*'
+    }
+}
+
+Describe 'Find-LogMarker' {
+    It 'finds the marker only after the offset' {
+        $text = "a`n[VProf] VProfLite started.`nb"
+        Find-LogMarker -Text $text -Pattern '[VProf] VProfLite started.' | Should -Be 2
+        Find-LogMarker -Text $text -Pattern '[VProf] VProfLite started.' -From 5 | Should -Be -1
+    }
+    It 'treats the pattern as plain text, not a regex' {
+        Find-LogMarker -Text 'VProf VProfLite started' -Pattern '[VProf] VProfLite started.' | Should -Be -1
+    }
+    It 'returns -1 when the log is shorter than the offset' {
+        Find-LogMarker -Text 'short' -Pattern 'x' -From 100 | Should -Be -1
+    }
+}
+
+Describe 'Get-ExtraLaunchFlag' {
+    It 'names flags outside the recipe and drops the exe and every value' {
+        $cmd = '"D:\Games\cs2.exe" -steam -novid +con_enable 1 -vulkan -console -name "secret"'
+        Get-ExtraLaunchFlag -CommandLine $cmd -Expected @('-novid', '+con_enable', '1', '-console') | Should -Be @('-steam', '-vulkan', '-name')
+    }
+    It 'returns nothing when the command line matches the recipe' {
+        Get-ExtraLaunchFlag -CommandLine 'cs2.exe -novid' -Expected @('-novid') | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'load recipes for -Test game' {
+    It 'loads <_.BaseName> and fits the capture inside a workshop route' -ForEach $loadFiles {
+        { Get-LoadRecipe -Name $_.BaseName } | Should -Not -Throw
+    }
+    It 'gives <_.BaseName> a process name and a PresentMon process name' -ForEach $loadFiles {
+        $r = Get-LoadRecipe -Name $_.BaseName
+        $r.process | Should -Not -BeNullOrEmpty
+        $r.presentMonProcess | Should -Be "$($r.process).exe"
+    }
+    It 'refuses an unknown load and lists the known ones' {
+        { Get-LoadRecipe -Name 'nope' } | Should -Throw '*cs2*'
+    }
+    It 'drops the Steam -applaunch pair from the args the game process sees' {
+        $r = Get-LoadRecipe -Name 'cs2'
+        $procArgs = Get-RecipeProcessArg -Recipe $r
+        $procArgs | Should -Not -Contain '-applaunch'
+        $procArgs | Should -Contain '-condebug'
+    }
+    It 'keeps every arg for a program started directly' {
+        $r = Get-LoadRecipe -Name 'superposition'
+        (Get-RecipeProcessArg -Recipe $r).Count | Should -Be @($r.launchArgs).Count
+    }
+}
+
+Describe 'Get-VideoConfigMismatch' {
+    BeforeAll {
+        $script:shipped = Join-Path $TestDrive 'shipped.txt'
+        Set-Content -Path $shipped -Value @('"video.cfg"', '{', "`t`"Version`"`t`t`"16`"", "`t`"VendorID`"`t`t`"4098`"", "`t`"setting.defaultres`"`t`t`"1280`"", "`t`"setting.mat_vsync`"`t`t`"0`"", '}')
+    }
+    It 'ignores machine keys outside the prefix and accepts equal settings' {
+        $mine = Join-Path $TestDrive 'mine-ok.txt'
+        Set-Content -Path $mine -Value @('"video.cfg"', '{', "`t`"VendorID`"`t`t`"4318`"", "`t`"setting.defaultres`"`t`t`"1280`"", "`t`"setting.mat_vsync`"`t`t`"0`"", "`t`"setting.extra`"`t`t`"1`"", '}')
+        Get-VideoConfigMismatch -Expected $shipped -Installed $mine -KeyPrefix 'setting.' | Should -BeNullOrEmpty
+    }
+    It 'names each setting that differs or is missing' {
+        $mine = Join-Path $TestDrive 'mine-bad.txt'
+        Set-Content -Path $mine -Value @('"video.cfg"', '{', "`t`"setting.defaultres`"`t`t`"640`"", '}')
+        Get-VideoConfigMismatch -Expected $shipped -Installed $mine -KeyPrefix 'setting.' | Should -Be @('setting.defaultres', 'setting.mat_vsync')
+    }
+}
+
+Describe 'Get-GameRejection' {
+    BeforeAll {
+        $script:recipe = [pscustomobject]@{ videoConfig = [pscustomobject]@{ file = 'video.txt' } }
+        $script:okStats = [pscustomobject]@{ capped = $false; cappedReason = '' }
+    }
+    It 'accepts a run with no capped frames and no lost frames' {
+        Get-GameRejection -Stats $okStats -Capture ([pscustomobject]@{ overflowedPresents = 0 }) -Video $null -Recipe $recipe | Should -BeNullOrEmpty
+    }
+    It 'rejects a run that lost frames to a present event buffer overflow' {
+        $reason = Get-GameRejection -Stats $okStats -Capture ([pscustomobject]@{ overflowedPresents = 130 }) -Video $null -Recipe $recipe
+        $reason | Should -Be 'PresentMon lost 130 frames (present event buffer overflow)'
+    }
+    It 'still rejects a capped run and joins several reasons' {
+        $capped = [pscustomobject]@{ capped = $true; cappedReason = 'vsync' }
+        $reason = Get-GameRejection -Stats $capped -Capture ([pscustomobject]@{ overflowedPresents = 2 }) -Video $null -Recipe $recipe
+        $reason | Should -Match 'vsync'
+        $reason | Should -Match 'lost 2 frames'
+    }
+}
+
+Describe 'Wait-LoadReady' {
+    BeforeAll {
+        $script:readyRecipe = [pscustomobject]@{ title = 'Test load'; consoleLine = 'map x'; presentMonProcess = 'game.exe'; timings = [pscustomobject]@{ loadPauseSeconds = 7; captureSeconds = 30 } }
+    }
+    It 'waits for the load, pauses the recipe load pause and returns the process' {
+        $proc = [pscustomobject]@{ Id = 42 }
+        Mock Wait-LoadStart { $proc }
+        Mock Start-Sleep {}
+        $got = Wait-LoadReady -Recipe $readyRecipe 6>$null
+        $got.Id | Should -Be 42
+        Should -Invoke Wait-LoadStart -Times 1 -Exactly
+        Should -Invoke Start-Sleep -Times 1 -Exactly -ParameterFilter { $Seconds -eq 7 }
+    }
+    It 'starts the pause only after the load is ready' {
+        $script:order = New-Object System.Collections.Generic.List[string]
+        Mock Wait-LoadStart { $script:order.Add('wait'); [pscustomobject]@{ Id = 1 } }
+        Mock Start-Sleep { $script:order.Add('sleep') }
+        Wait-LoadReady -Recipe $readyRecipe 6>$null | Out-Null
+        $script:order -join ',' | Should -Be 'wait,sleep'
+    }
+}
+
+Describe 'Get-LoadRecord' {
+    BeforeAll {
+        $script:recordRecipe = [pscustomobject]@{ launchArgs = @('-applaunch', '730', '-novid') ; game = [pscustomobject]@{ steamAppId = 730 } }
+    }
+    BeforeEach {
+        Mock Get-LoadBuild { '1.2.3' }
+        Mock Get-VideoConfigCheck { [pscustomobject]@{ found = $true; mismatchedKeys = @() } }
+        Mock Get-CimInstance { [pscustomobject]@{ CommandLine = 'cs2.exe -novid -extra +foo' } }
+    }
+    It 'returns name, build, videoConfig and extraLaunchFlags in that order' {
+        $proc = [pscustomobject]@{ Id = 9; Path = 'C:\g\cs2.exe' }
+        $record = Get-LoadRecord -Recipe $recordRecipe -Name 'cs2' -Process $proc
+        @($record.PSObject.Properties.Name) | Should -Be @('name', 'build', 'videoConfig', 'extraLaunchFlags')
+        $record.name | Should -Be 'cs2'
+        $record.build | Should -Be '1.2.3'
+        $record.videoConfig.found | Should -BeTrue
+        @($record.extraLaunchFlags) | Should -Be @('-extra', '+foo')
+        Should -Invoke Get-LoadBuild -Times 1 -Exactly -ParameterFilter { $ExePath -eq 'C:\g\cs2.exe' }
+        Should -Invoke Get-CimInstance -Times 1 -Exactly -ParameterFilter { $Filter -eq 'ProcessId = 9' }
+    }
+    It 'keeps extraLaunchFlags an empty array when the command line matches the recipe' {
+        Mock Get-CimInstance { [pscustomobject]@{ CommandLine = 'cs2.exe -novid' } }
+        $record = Get-LoadRecord -Recipe $recordRecipe -Name 'cs2' -Process ([pscustomobject]@{ Id = 9; Path = 'C:\g\cs2.exe' })
+        @($record.extraLaunchFlags).Count | Should -Be 0
     }
 }
