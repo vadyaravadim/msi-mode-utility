@@ -56,6 +56,10 @@ Describe 'Get-FrameStats' {
         $stats.low1PctMs | Should -Be 8.9
         { Assert-LoadCanShowDifference $stats } | Should -Not -Throw
     }
+    It 'sums the frame intervals into the captured span' {
+        $rows = 1..1000 | ForEach-Object { New-FrameRow (8 + ($_ % 10) / 10) }
+        ($rows | Get-FrameStats -RefreshHz 144).spanSeconds | Should -Be 8.45
+    }
     It 'flags vsync from SyncInterval and rejects the run' {
         $rows = 1..100 | ForEach-Object { New-FrameRow 8 '1' }
         $stats = $rows | Get-FrameStats -RefreshHz 144
@@ -67,6 +71,16 @@ Describe 'Get-FrameStats' {
         $stats = $rows | Get-FrameStats -RefreshHz 60
         $stats.capped | Should -BeTrue
         $stats.cappedReason | Should -Match 'refresh period'
+    }
+    It 'writes the refresh rate in the capped reason with a dot on a comma-decimal culture' {
+        $saved = [System.Threading.Thread]::CurrentThread.CurrentCulture
+        try {
+            [System.Threading.Thread]::CurrentThread.CurrentCulture = [System.Globalization.CultureInfo]::GetCultureInfo('ru-RU')
+            $rows = 1..100 | ForEach-Object { New-FrameRow 16.667 }
+            ($rows | Get-FrameStats -RefreshHz 59.94).cappedReason | Should -Be 'frame times cluster at the 59.9 Hz refresh period'
+        } finally {
+            [System.Threading.Thread]::CurrentThread.CurrentCulture = $saved
+        }
     }
     It 'does not flag a run well below the refresh period' {
         $rows = 1..100 | ForEach-Object { New-FrameRow 1.7 }
@@ -275,8 +289,8 @@ Describe 'Get-VideoConfigMismatch' {
 
 Describe 'Get-GameRejection' {
     BeforeAll {
-        $script:recipe = [pscustomobject]@{ videoConfig = [pscustomobject]@{ file = 'video.txt' } }
-        $script:okStats = [pscustomobject]@{ capped = $false; cappedReason = '' }
+        $script:recipe = [pscustomobject]@{ videoConfig = [pscustomobject]@{ file = 'video.txt' }; timings = [pscustomobject]@{ captureSeconds = 60 } }
+        $script:okStats = [pscustomobject]@{ capped = $false; cappedReason = ''; spanSeconds = 59.9 }
     }
     It 'accepts a run with no capped frames and no lost frames' {
         Get-GameRejection -Stats $okStats -Capture ([pscustomobject]@{ overflowedPresents = 0 }) -Video $null -Recipe $recipe | Should -BeNullOrEmpty
@@ -285,8 +299,19 @@ Describe 'Get-GameRejection' {
         $reason = Get-GameRejection -Stats $okStats -Capture ([pscustomobject]@{ overflowedPresents = 130 }) -Video $null -Recipe $recipe
         $reason | Should -Be 'PresentMon lost 130 frames (present event buffer overflow)'
     }
+    It 'rejects a run whose frames do not cover the capture window' {
+        $short = [pscustomobject]@{ capped = $false; cappedReason = ''; spanSeconds = 12.8 }
+        $reason = Get-GameRejection -Stats $short -Capture ([pscustomobject]@{ overflowedPresents = 0 }) -Video $null -Recipe $recipe
+        $reason | Should -Be 'the captured frames cover 12.8 s of the 60 s window (the load stopped presenting or exited)'
+    }
+    It 'accepts a span at the coverage limit and rejects one just below it' {
+        $edge = [pscustomobject]@{ capped = $false; cappedReason = ''; spanSeconds = 57 }
+        Get-GameRejection -Stats $edge -Capture ([pscustomobject]@{ overflowedPresents = 0 }) -Video $null -Recipe $recipe | Should -BeNullOrEmpty
+        $edge.spanSeconds = 56.9
+        Get-GameRejection -Stats $edge -Capture ([pscustomobject]@{ overflowedPresents = 0 }) -Video $null -Recipe $recipe | Should -Match 'cover 56.9 s'
+    }
     It 'still rejects a capped run and joins several reasons' {
-        $capped = [pscustomobject]@{ capped = $true; cappedReason = 'vsync' }
+        $capped = [pscustomobject]@{ capped = $true; cappedReason = 'vsync'; spanSeconds = 59.9 }
         $reason = Get-GameRejection -Stats $capped -Capture ([pscustomobject]@{ overflowedPresents = 2 }) -Video $null -Recipe $recipe
         $reason | Should -Match 'vsync'
         $reason | Should -Match 'lost 2 frames'

@@ -92,6 +92,7 @@ function Get-LoadSection {
     $out.Add('The bench rejects the run when:')
     $out.Add('')
     foreach ($item in @($Load.rejectIf)) { $out.Add("- $item") }
+    $out.Add(('- the captured frames cover less than {0} s of the {1} s capture (the load stopped presenting or exited)' -f (Format-Invariant ($Load.timings.captureSeconds * (Get-BenchConfig).Limits.CaptureCoverageShare)), $Load.timings.captureSeconds))
     $out.Add('')
     $out -join "`n"
 }
