@@ -3,6 +3,7 @@ function Get-BenchConfig {
         Limits = @{
             RefreshTolerance = 0.03
             RefreshClusterShare = 0.8
+            CaptureCoverageShare = 0.95
             Digits = 3
         }
         ProcessorSubgroup = 'SUB_PROCESSOR'
@@ -11,6 +12,7 @@ function Get-BenchConfig {
         CappedMessage = 'this load cannot show a difference'
         PresentMonCircularBufferSize = 16384
         PresentMonOverflowPattern = '(\d+) overflowed present events'
+        MsPerSecond = 1000.0
     }
 }
 
@@ -163,14 +165,15 @@ function Get-FrameStats {
         $reasons = New-Object System.Collections.Generic.List[string]
         if (@($sync | Where-Object { (ConvertTo-FiniteDouble $_) -gt 0 }).Count) { $reasons.Add('SyncInterval above 0 (vsync)') }
         if ($RefreshHz -gt 0) {
-            $period = 1000.0 / $RefreshHz
+            $period = $cfg.MsPerSecond / $RefreshHz
             $near = @($ft | Where-Object { [math]::Abs($_ - $period) -le $period * $cfg.Limits.RefreshTolerance }).Count
-            if ($near / $ft.Count -ge $cfg.Limits.RefreshClusterShare) { $reasons.Add(("frame times cluster at the {0:N1} Hz refresh period" -f $RefreshHz)) }
+            if ($near / $ft.Count -ge $cfg.Limits.RefreshClusterShare) { $reasons.Add([string]::Format([System.Globalization.CultureInfo]::InvariantCulture, 'frame times cluster at the {0:N1} Hz refresh period', $RefreshHz)) }
         }
         $avg = ($ft | Measure-Object -Average).Average
         [pscustomobject]@{
             frames = $ft.Count
-            avgFps = [math]::Round(1000.0 / $avg, 1)
+            spanSeconds = [math]::Round(($ft | Measure-Object -Sum).Sum / $cfg.MsPerSecond, $cfg.Limits.Digits)
+            avgFps = [math]::Round($cfg.MsPerSecond / $avg, 1)
             p50Ms = Get-Percentile $ft 0.50
             low1PctMs = Get-Percentile $ft 0.99
             low01PctMs = Get-Percentile $ft 0.999
@@ -286,6 +289,8 @@ function Get-GameRejection {
     $reasons = New-Object System.Collections.Generic.List[string]
     if ($Stats.capped) { $reasons.Add("$((Get-BenchConfig).CappedMessage) ($($Stats.cappedReason))") }
     if ($Capture.overflowedPresents -gt 0) { $reasons.Add("PresentMon lost $($Capture.overflowedPresents) frames (present event buffer overflow)") }
+    $window = $Recipe.timings.captureSeconds
+    if ($Stats.spanSeconds -lt $window * (Get-BenchConfig).Limits.CaptureCoverageShare) { $reasons.Add("the captured frames cover $($Stats.spanSeconds) s of the $window s window (the load stopped presenting or exited)") }
     if ($Video -and -not $Video.found) { $reasons.Add("no installed $($Recipe.videoConfig.file) found under the Steam userdata folder") }
     if ($Video -and $Video.mismatchedKeys.Count) { $reasons.Add("the installed $($Recipe.videoConfig.file) differs from bench\loads\$($Recipe.videoConfig.file) in $($Video.mismatchedKeys -join ', ')") }
     if ($reasons.Count) { $reasons -join '; ' } else { $null }

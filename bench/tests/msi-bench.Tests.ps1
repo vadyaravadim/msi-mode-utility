@@ -298,3 +298,69 @@ Describe 'Assert-LoadArgument' {
         { Assert-LoadArgument -Load 'superposition' -PresentMon 'pm.exe' -SecondsGiven $true } | Should -Throw '*-Seconds*'
     }
 }
+
+Describe 'Get-IrqMode' {
+    It 'reports one message-signaled vector' {
+        $mode = Get-IrqMode -Irq @(-5)
+        $mode.kind | Should -Be 'message'
+        $mode.text | Should -Be 'message-signaled, 1 vector'
+    }
+    It 'reports several message-signaled vectors' {
+        $mode = Get-IrqMode -Irq @(-5, -6, -7)
+        $mode.kind | Should -Be 'message'
+        $mode.text | Should -Be 'message-signaled, 3 vectors'
+    }
+    It 'reports a line IRQ' {
+        $mode = Get-IrqMode -Irq @(16)
+        $mode.kind | Should -Be 'line'
+        $mode.text | Should -Be 'line IRQ 16'
+    }
+    It 'reports a mixed device as line with the non-negative IRQs only' {
+        $mode = Get-IrqMode -Irq @(-5, 16)
+        $mode.kind | Should -Be 'line'
+        $mode.text | Should -Be 'line IRQ 16'
+    }
+    It 'reports no IRQ for an empty list' {
+        $mode = Get-IrqMode -Irq @()
+        $mode.kind | Should -Be 'none'
+        $mode.text | Should -Be 'no IRQ assigned'
+    }
+    It 'reports no IRQ for a device missing from the resource table' {
+        $mode = Get-IrqMode -Irq $null
+        $mode.kind | Should -Be 'none'
+        $mode.text | Should -Be 'no IRQ assigned'
+    }
+}
+
+Describe 'Get-DeviceIrq' {
+    BeforeAll {
+        function New-AllocatedResource {
+            param([string]$ClassName, [string]$DeviceId, [int64]$Irq)
+            [pscustomobject]@{
+                Antecedent = [pscustomobject]@{
+                    CimClass  = [pscustomobject]@{ CimClassName = $ClassName }
+                    IRQNumber = $Irq
+                }
+                Dependent  = [pscustomobject]@{ DeviceID = $DeviceId }
+            }
+        }
+    }
+    It 'converts an unsigned message vector to its signed value' {
+        Mock Get-CimInstance { New-AllocatedResource 'Win32_IRQResource' 'PCI\DEV_A' 4294967291 }
+        $irqs = Get-DeviceIrq
+        $irqs['PCI\DEV_A'].Count | Should -Be 1
+        $irqs['PCI\DEV_A'][0] | Should -Be -5
+    }
+    It 'ignores rows whose antecedent is not an IRQ resource' {
+        Mock Get-CimInstance { New-AllocatedResource 'Win32_DeviceMemoryAddress' 'PCI\DEV_A' 16 }
+        (Get-DeviceIrq).Count | Should -Be 0
+    }
+    It 'keeps two IRQs of one device' {
+        Mock Get-CimInstance {
+            New-AllocatedResource 'Win32_IRQResource' 'PCI\DEV_A' 16
+            New-AllocatedResource 'Win32_IRQResource' 'PCI\DEV_A' 17
+        }
+        $irqs = Get-DeviceIrq
+        @($irqs['PCI\DEV_A']) | Should -Be @(16, 17)
+    }
+}

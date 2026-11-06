@@ -39,7 +39,8 @@
          for the recipe's capture time while the kernel trace and the probes run in the same window.
          -Seconds is not allowed with -Load: the recipe sets the window. The result adds load,
          presentMon, frames and rejected, and the bench throws after saving the JSON when the run is
-         rejected (capped frame rate, lost frames or a video config that differs from the recipe).
+         rejected (capped frame rate, lost frames, frames that stop short of the capture window or a
+         video config that differs from the recipe).
 
     Results print to the console and are saved as msi-bench-<phase>.json in -OutDir (default: next
     to this script). Pair it with PresentMon for frame times. These are the tools behind the
@@ -226,10 +227,7 @@ public static class KernelCsv {
 }
 '@
 
-function Get-InterruptTable {
-    $names = @{}
-    Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -like 'PCI\*' } | ForEach-Object { $names[$_.InstanceId] = $_ }
-
+function Get-DeviceIrq {
     $irqs = @{}
     Get-CimInstance Win32_PNPAllocatedResource | ForEach-Object {
         if ($_.Antecedent.CimClass.CimClassName -ne 'Win32_IRQResource') { return }
@@ -239,6 +237,29 @@ function Get-InterruptTable {
         if (-not $irqs.ContainsKey($id)) { $irqs[$id] = New-Object System.Collections.Generic.List[int64] }
         $irqs[$id].Add($n)
     }
+    $irqs
+}
+
+function Get-IrqMode {
+    param([int64[]]$Irq)
+    $known = @($Irq | Where-Object { $null -ne $_ })
+    $neg = @($known | Where-Object { $_ -lt 0 })
+    $pos = @($known | Where-Object { $_ -ge 0 })
+    if ($neg.Count -gt 0 -and $pos.Count -eq 0) {
+        $text = if ($neg.Count -eq 1) { 'message-signaled, 1 vector' } else { "message-signaled, $($neg.Count) vectors" }
+        [pscustomobject]@{ kind = 'message'; text = $text }
+    } elseif ($pos.Count -gt 0) {
+        [pscustomobject]@{ kind = 'line'; text = "line IRQ $($pos -join ',')" }
+    } else {
+        [pscustomobject]@{ kind = 'none'; text = 'no IRQ assigned' }
+    }
+}
+
+function Get-InterruptTable {
+    $names = @{}
+    Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -like 'PCI\*' } | ForEach-Object { $names[$_.InstanceId] = $_ }
+
+    $irqs = Get-DeviceIrq
 
     $lineOwners = @{}
     foreach ($id in $irqs.Keys) {
@@ -256,14 +277,9 @@ function Get-InterruptTable {
         $msi = (Get-ItemProperty "$key\MessageSignaledInterruptProperties" -Name MSISupported -ErrorAction SilentlyContinue).MSISupported
         $setting = if ($null -eq $msi) { 'default' } elseif ($msi -eq 1) { 'on' } else { 'off' }
 
-        $vectors = if ($irqs.ContainsKey($id)) { $irqs[$id] } else { @() }
-        $neg = @($vectors | Where-Object { $_ -lt 0 })
+        $vectors = @(if ($irqs.ContainsKey($id)) { $irqs[$id] })
         $pos = @($vectors | Where-Object { $_ -ge 0 })
-        $mode = if ($neg.Count -gt 0 -and $pos.Count -eq 0) {
-            if ($neg.Count -eq 1) { 'message-signaled, 1 vector' } else { "message-signaled, $($neg.Count) vectors" }
-        } elseif ($pos.Count -gt 0) {
-            "line IRQ $($pos -join ',')"
-        } else { 'no IRQ assigned' }
+        $mode = (Get-IrqMode -Irq $vectors).text
 
         $shared = @()
         foreach ($n in $pos) {

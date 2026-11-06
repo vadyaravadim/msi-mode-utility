@@ -85,6 +85,7 @@ The bench rejects the run when:
 - the installed cs2_video.txt differs from the shipped cs2_video.txt in any setting.* value, or is not found
 - frame times cluster at the monitor refresh period
 - cs2.exe is not the captured process
+- the captured frames cover less than 95 s of the 100 s capture (the load stopped presenting or exited)
 
 ### Unigine Superposition 1.1 (free), infinite scene (`superposition`)
 
@@ -114,3 +115,4 @@ The bench rejects the run when:
 - SyncInterval above 0
 - frame times cluster at the monitor refresh period
 - superposition.exe is not the captured process
+- the captured frames cover less than 57 s of the 60 s capture (the load stopped presenting or exited)
