@@ -165,8 +165,35 @@ Describe 'Invoke-PresentMonCapture' {
         $capture = Invoke-PresentMonCapture -PresentMonPath $fakePm -ProcessName 'x.exe' -OutputFile $out -Seconds 1 -ExpectedSha256 $fakeSha
         $capture.presentMonSha256 | Should -Be $fakeSha
         $capture.csv | Should -Be $out
-        $capture.PSObject.Properties.Name | Should -Be @('presentMonSha256', 'csv')
+        $capture.PSObject.Properties.Name | Should -Be @('presentMonSha256', 'csv', 'overflowedPresents')
+        $capture.overflowedPresents | Should -Be 0
         Test-Path $out | Should -BeTrue
+    }
+    It 'passes a power-of-two present event circular buffer larger than the PresentMon default' {
+        $size = (Get-BenchConfig).PresentMonCircularBufferSize
+        $size | Should -BeGreaterThan 2048
+        ($size -band ($size - 1)) | Should -Be 0
+        $argsFile = Join-Path $TestDrive 'pm-args.txt'
+        $pm = Join-Path $TestDrive 'PresentMon-args.cmd'
+        [System.IO.File]::WriteAllText($pm, "@echo off`r`necho MsBetweenPresents> %4`r`necho %*> `"$argsFile`"`r`n")
+        Invoke-PresentMonCapture -PresentMonPath $pm -ProcessName 'x.exe' -OutputFile (Join-Path $TestDrive 'args.csv') -Seconds 1 | Out-Null
+        (Get-Content -Raw $argsFile) | Should -Match "--set_circular_buffer_size $size"
+    }
+    It 'sums the overflowed present events from every PresentMon stderr line without throwing under Stop' {
+        $pm = Join-Path $TestDrive 'PresentMon-overflow.cmd'
+        [System.IO.File]::WriteAllText($pm, "@echo off`r`necho MsBetweenPresents> %4``necho 123 overflowed present events detected. This could be due to a high-fps application. 1>&2``necho 7 overflowed present events detected. 1>&2``n")
+        $previous = $ErrorActionPreference
+        $ErrorActionPreference = 'Stop'
+        try {
+            $capture = Invoke-PresentMonCapture -PresentMonPath $pm -ProcessName 'x.exe' -OutputFile (Join-Path $TestDrive 'overflow.csv') -Seconds 1 -WarningAction SilentlyContinue
+        } finally { $ErrorActionPreference = $previous }
+        $capture.overflowedPresents | Should -Be 130
+    }
+    It 're-emits PresentMon stderr as warnings' {
+        $pm = Join-Path $TestDrive 'PresentMon-warn.cmd'
+        [System.IO.File]::WriteAllText($pm, "@echo off`r`necho MsBetweenPresents> %4``necho 5 overflowed present events detected. 1>&2``n")
+        $null = Invoke-PresentMonCapture -PresentMonPath $pm -ProcessName 'x.exe' -OutputFile (Join-Path $TestDrive 'warn.csv') -Seconds 1 -WarningVariable pmWarnings -WarningAction SilentlyContinue
+        ($pmWarnings -join ' ') | Should -Match '5 overflowed present events'
     }
     It 'refuses a PresentMon whose hash is not the pinned one' {
         { Invoke-PresentMonCapture -PresentMonPath $fakePm -ProcessName 'x.exe' -OutputFile (Join-Path $TestDrive 'b.csv') -ExpectedSha256 ('0' * 64) } | Should -Throw '*SHA256*Use the pinned release*'
