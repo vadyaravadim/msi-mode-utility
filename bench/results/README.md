@@ -1,17 +1,18 @@
 # Raw results behind the MSI mode numbers
 
-Every MSI mode number we publish comes from the files in [`msi-retest/`](msi-retest/). They are the unedited output
-of [`../msi-bench.ps1`](../msi-bench.ps1), 32 runs recorded across 32 boots between 2026-11-06 18:31 and 23:15. The
-per-frame PresentMon logs are in the release
-[`bench-data-msi-retest`](https://github.com/vadyaravadim/msi-mode-utility/releases/tag/bench-data-msi-retest) as
-`msi-retest-presentmon.zip`, SHA256 `9cc32fbd91c40af9d6eeafc9b50ccf3bc0809fc9ac495bca805e4910d1e611ba`.
+Every MSI mode number we publish comes from the files in [`msi-retest/`](msi-retest/). The `msi-bench` files are the
+unedited output of [`../msi-bench.ps1`](../msi-bench.ps1); the runner's records (`bootNN-state00-msi.json`,
+`journal.jsonl`) are trimmed to the fields listed below. 32 runs were recorded across 32 boots between 2026-11-06
+18:31 and 23:15.
 
 ## Testbed
 
 - Intel Core i9-14900F (8 P-cores, 16 E-cores, 32 logical CPUs), MSI MAG B760M MORTAR II (BIOS 1.C0), AMD Radeon
   RX 7800 XT (driver 32.0.32015.7029), 180 Hz monitor.
-- Windows 11 Pro 26H2, build 26300.9818, Memory Integrity on, power plan High performance (no core parking). Every
-  result file records the full environment.
+- Windows 11 Pro 26H2, build 26300.9818, Memory Integrity on, power plan High performance (no core parking).
+  The runner's records keep only the testbed fields the tables need (CPU name, board and BIOS version, GPU driver,
+  HVCI, microcode and timer flags). No program, process, service or device inventory of the PC is published, beyond
+  the PCI interrupt-mode table and the per-driver ISR and DPC table, which are the measurement.
 - The devices that change state: the GPU, the USB 3.2 xHCI host controller (mouse, keyboard and a Samsung T7 SSD
   hang off it), the motherboard's HD Audio controller (Realtek codec) and the GPU's HD Audio controller.
 
@@ -104,15 +105,17 @@ What the tables show:
 
 Names are `bootNN-state00-...`: the boot index (0 to 31); every boot measured one state.
 
-- `bootNN-state00-msi.json`: the runner's record of the run: the state applied, the environment, CPU time per
-  process, the background load figures (tone, SSD read rate) and the list of bench files.
+- `bootNN-state00-msi.json`: the runner's record of the run: the state applied, the testbed fields the tables need
+  (CPU name, board and BIOS version, GPU driver, HVCI, microcode and timer flags), the background load figures (tone,
+  SSD read rate) and the list of bench files.
 - `bootNN-state00-msi-bench.log`: the console output of the bench.
 - `msi-bench-bootNN-state00.json`: the interrupt mode table, the CPU each driver was found on, the per-driver ISR and
-  DPC statistics with per-CPU counts, the stall probes with histograms, and the frame statistics. The matching
-  `-presentmon.csv` is in the release archive.
+  DPC statistics with per-CPU counts, the stall probes with histograms, and the frame statistics.
 - `msi-bench-bootNN-state00-stalls.csv`: every probe gap of 1 ms or more, with its offset in the window.
 - `journal.jsonl`: the runner's log of every boot. `plan.json`: the full plan, with the state of each boot.
-- User names, the machine name and account IDs are removed from every file; profile paths read `%USERPROFILE%`.
+- No program, process, service or device inventory of the PC is published, beyond the PCI interrupt-mode table and the
+  per-driver ISR and DPC table, which are the measurement. User names, the machine name and account IDs are removed
+  from every file; profile paths read `%USERPROFILE%`.
 
 ## Caveats
 
