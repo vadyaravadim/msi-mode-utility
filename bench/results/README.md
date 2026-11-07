@@ -11,8 +11,9 @@ unedited output of [`../msi-bench.ps1`](../msi-bench.ps1); the runner's records 
   RX 7800 XT (driver 32.0.32015.7029), 180 Hz monitor.
 - Windows 11 Pro 26H2, build 26300.9818, Memory Integrity on, power plan High performance (no core parking).
   The runner's records keep only the testbed fields the tables need (CPU name, board and BIOS version, GPU driver,
-  HVCI, microcode and timer flags). No program, process, service or device inventory of the PC is published, beyond
-  the PCI interrupt-mode table and the per-driver ISR and DPC table, which are the measurement.
+  HD Audio device drivers, HVCI, microcode and timer flags) and the drivers of the two HD Audio controllers, which set
+  their `MSISupported` value. No program, process, service or device inventory of the PC is published, beyond the PCI
+  interrupt-mode table and the per-driver ISR and DPC table, which are the measurement.
 - The devices that change state: the GPU, the USB 3.2 xHCI host controller (mouse, keyboard and a Samsung T7 SSD
   hang off it), the motherboard's HD Audio controller (Realtek codec) and the GPU's HD Audio controller.
 
@@ -106,8 +107,8 @@ What the tables show:
 Names are `bootNN-state00-...`: the boot index (0 to 31); every boot measured one state.
 
 - `bootNN-state00-msi.json`: the runner's record of the run: the state applied, the testbed fields the tables need
-  (CPU name, board and BIOS version, GPU driver, HVCI, microcode and timer flags), the background load figures (tone,
-  SSD read rate) and the list of bench files.
+  (CPU name, board and BIOS version, GPU driver, HD Audio device drivers, HVCI, microcode and timer flags), the drivers
+  of the two HD Audio controllers, the background load figures (tone, SSD read rate) and the list of bench files.
 - `bootNN-state00-msi-bench.log`: the console output of the bench.
 - `msi-bench-bootNN-state00.json`: the interrupt mode table, the CPU each driver was found on, the per-driver ISR and
   DPC statistics with per-CPU counts, the stall probes with histograms, and the frame statistics.
