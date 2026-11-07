@@ -368,23 +368,9 @@ function Get-FileMap {
         @{ table = 'USB reads'; files = 'msi-bench-bootNN-stateNN.json'; fields = 'background.usbRead.mibPerSecond'; runner = $false }
         @{ table = 'Testbed: OS, power, present mode, load, PresentMon'; files = 'msi-bench-bootNN-stateNN.json'; fields = 'metadata.*, frames.presentModes, load'; runner = $false }
         @{ table = 'Testbed: CPU, BIOS, drivers, explicit power settings'; files = 'bootNN-stateNN-msi.json'; fields = 'environment.*'; runner = $true }
-        @{ table = 'Testbed: background services and tasks'; files = 'journal.jsonl'; fields = 'start event'; runner = $true }
+        @{ table = 'Testbed: counts of disabled services, tasks and startup items'; files = 'journal.jsonl'; fields = 'start event services, tasks, startup counts'; runner = $true }
         @{ table = 'State labels and device modes'; files = 'plan.json'; fields = 'boots[].label, boots[].states[].devices[]'; runner = $true }
     ) | ForEach-Object { [pscustomobject]$_ }
-}
-
-function Format-JournalValue {
-    param($Value)
-    if ($Value -is [array]) {
-        if (-not $Value.Count) { return '0' }
-        $names = foreach ($entry in $Value) {
-            if ($entry -is [string]) { $entry }
-            elseif ($entry.PSObject.Properties['path']) { "$($entry.path)$($entry.name)" }
-            else { [string]$entry.name }
-        }
-        return "$($Value.Count): $($names -join ', ')"
-    }
-    [string]$Value
 }
 
 function Get-Testbed {
@@ -413,9 +399,8 @@ function Get-Testbed {
     $start = @($Journal | Where-Object { $_.event -eq 'start' }) | Select-Object -First 1
     if ($start) {
         foreach ($key in 'services', 'tasks', 'startup') {
-            $names = $start.PSObject.Properties['disabled' + $key.Substring(0, 1).ToUpper() + $key.Substring(1)]
             $counts = $start.PSObject.Properties[$key]
-            if ($names) { $rows["Disabled $key"] = Format-JournalValue $names.Value } elseif ($counts) { $rows["Disabled $key"] = Format-JournalValue $counts.Value }
+            if ($counts) { $rows["Disabled $key"] = [string][int]$counts.Value }
         }
     }
     $rows

@@ -512,7 +512,7 @@ Describe 'starting and stopping the background loads' {
         $stats = $script:readerStats
         $script:readerFails = @{ value = $false }
         $fails = $script:readerFails
-        Mock Get-PlaybackDevice { $calls.Add('device'); [pscustomobject]@{ deviceName = 'Speakers'; deviceInstanceId = 'SWD\MMDEVAPI\x'; controllerInstanceId = 'PCI\VEN_8086&DEV_7A50\1' } }.GetNewClosure()
+        Mock Get-PlaybackDevice { $calls.Add('device'); [pscustomobject]@{ deviceName = 'Speakers'; controllerInstanceId = 'PCI\VEN_8086&DEV_7A50\1' } }.GetNewClosure()
         Mock Start-BenchTonePlayback { param($Wave) $calls.Add("tone-start $($Wave.Length)"); [pscustomobject]@{ Id = 'player' } }.GetNewClosure()
         Mock Stop-BenchTonePlayback { $calls.Add('tone-stop') }.GetNewClosure()
         Mock New-BenchUsbReader {
@@ -551,12 +551,12 @@ Describe 'starting and stopping the background loads' {
         $result = Stop-BenchBackground -Handle $handle
         $calls.ToArray() | Should -Be @('reader-stop 10000', 'tone-stop')
         @($result.Keys) | Should -Be @('tone', 'usbRead')
-        @($result.tone.Keys) | Should -Be @('frequencyHz', 'dbfs', 'sampleRate', 'deviceName', 'deviceInstanceId', 'controllerInstanceId')
+        @($result.tone.Keys) | Should -Be @('frequencyHz', 'dbfs', 'sampleRate', 'deviceName', 'controllerInstanceId')
         $result.tone.frequencyHz | Should -Be 440
         $result.tone.dbfs | Should -Be -40
         $result.tone.sampleRate | Should -Be 48000
         $result.tone.deviceName | Should -Be 'Speakers'
-        $result.tone.deviceInstanceId | Should -Be 'SWD\MMDEVAPI\x'
+        $result.tone.Contains('deviceInstanceId') | Should -BeFalse
         $result.tone.controllerInstanceId | Should -Be 'PCI\VEN_8086&DEV_7A50\1'
         @($result.usbRead.Keys) | Should -Be @('bytesRead', 'wraps', 'seconds', 'mibPerSecond', 'blockBytes', 'error')
         $result.usbRead.bytesRead | Should -Be 100MB
@@ -635,14 +635,15 @@ Describe 'the playback device record' {
         Find-PciAncestor -InstanceId 'a' | Should -BeNullOrEmpty
         Should -Invoke Get-ParentInstanceId -Exactly 8
     }
-    It 'builds the endpoint instance ID and names the controller' {
+    It 'builds the endpoint instance ID for the controller lookup and returns no endpoint ID' {
         Mock Get-DefaultPlaybackEndpointId { '{0.0.0.00000000}.{abc}' }
         Mock Get-PnpDevice { [pscustomobject]@{ FriendlyName = 'Speakers (Realtek)' } }
         Mock Get-ParentInstanceId { 'PCI\VEN_8086&DEV_7A50\a' }
         $device = Get-PlaybackDevice
-        $device.deviceInstanceId | Should -Be 'SWD\MMDEVAPI\{0.0.0.00000000}.{abc}'
         $device.deviceName | Should -Be 'Speakers (Realtek)'
+        $device.PSObject.Properties.Name | Should -Not -Contain 'deviceInstanceId'
         $device.controllerInstanceId | Should -Be 'PCI\VEN_8086&DEV_7A50\a'
+        Should -Invoke Get-ParentInstanceId -ParameterFilter { $InstanceId -eq 'SWD\MMDEVAPI\{0.0.0.00000000}.{abc}' }
     }
 }
 

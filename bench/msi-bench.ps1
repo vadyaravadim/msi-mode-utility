@@ -728,7 +728,6 @@ function Get-PlaybackDevice {
     $device = Get-PnpDevice -InstanceId $instanceId -ErrorAction SilentlyContinue
     [pscustomobject]@{
         deviceName           = $device.FriendlyName
-        deviceInstanceId     = $instanceId
         controllerInstanceId = Find-PciAncestor -InstanceId $instanceId
     }
 }
@@ -783,7 +782,6 @@ function Stop-BenchBackground {
             dbfs                 = $toneDbfs
             sampleRate           = $toneSampleRate
             deviceName           = $Handle.Device.deviceName
-            deviceInstanceId     = $Handle.Device.deviceInstanceId
             controllerInstanceId = $Handle.Device.controllerInstanceId
         }
     }

@@ -19,7 +19,7 @@ verbatim into the release and fails the release if the tag has no section here.
   there as well. The kernel trace uses the performance-counter clock.
 - `-Background tone,usb-read -UsbReadFile <path>` (with `-Load`, needs admin) plays a 440 Hz tone at -40 dBFS on the default
   output and reads a file in a loop with the file cache bypassed, from the load pause until the trace stops. The
-  result adds `background` with the playback device, the PCI controller behind it and the read rate. A read
+  result adds `background` with the playback device name, the PCI controller behind it and the read rate. A read
   error rejects the run.
 - With `-ProcessCpu` (needs `-Load`), the result lists `processCpu`: each process that used at least 0.05 CPU-seconds
   inside the capture window, largest first, so a background job that ran during a measurement shows up in the file.

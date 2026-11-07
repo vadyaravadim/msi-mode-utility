@@ -53,7 +53,7 @@ BeforeAll {
         }
         $plan = [ordered]@{ series = 'fixture'; settleSeconds = 300; background = @('tone', 'usb-read'); toneController = $script:audioOne; boots = @($planBoots) }
         $journal = New-Object System.Collections.Generic.List[object]
-        $journal.Add([ordered]@{ event = 'start'; boots = $Layout.Count; disabledServices = @('svcA', 'svcB'); disabledTasks = @([ordered]@{ path = '\'; name = 'killswitch' }, [ordered]@{ path = '\'; name = 'killswitch-alert' }, [ordered]@{ path = '\'; name = 'AMD Install Manager - Check For Updates' }); disabledStartup = @() })
+        $journal.Add([ordered]@{ event = 'start'; boots = $Layout.Count; services = 2; tasks = 3; startup = 0 })
         for ($boot = 0; $boot -lt $Layout.Count; $boot++) {
             $label = $Layout[$boot]
             $name = ('boot{0:00}-state00' -f $boot)
@@ -226,8 +226,8 @@ Describe 'the report of a clean series' {
         $report.Summary.testbed['CPU'] | Should -Be 'Test CPU'
         $report.Summary.testbed['GPU driver'] | Should -Be 'GPU 1.2.3'
         $report.Summary.testbed['Power scheme'] | Should -Be 'scheme-1'
-        $report.Summary.testbed['Disabled services'] | Should -Be '2: svcA, svcB'
-        $report.Summary.testbed['Disabled tasks'] | Should -Be '3: \killswitch, \killswitch-alert, \AMD Install Manager - Check For Updates'
+        $report.Summary.testbed['Disabled services'] | Should -Be '2'
+        $report.Summary.testbed['Disabled tasks'] | Should -Be '3'
         $report.Summary.testbed['Disabled startup'] | Should -Be '0'
         $report.Summary.testbed['Boots'] | Should -Be '4'
     }
@@ -526,7 +526,7 @@ Describe 'the series refusals' {
 }
 
 Describe 'the testbed journal block' {
-    It 'falls back to the counts when the start event has no name lists' {
+    It 'prints the start event counts' {
         $root = New-Series -Root (Join-Path $TestDrive 'j-counts') -MutateJournal {
             param($j)
             $j[0] = [ordered]@{ event = 'start'; boots = 4; services = 11; tasks = 2; startup = 0 }
@@ -536,14 +536,24 @@ Describe 'the testbed journal block' {
         $testbed['Disabled tasks'] | Should -Be '2'
         $testbed['Disabled startup'] | Should -Be '0'
     }
-    It 'prefers the name lists over the counts' {
+    It 'refuses a start event whose services value is an array of names' {
+        $root = New-Series -Root (Join-Path $TestDrive 'j-names') -MutateJournal {
+            param($j)
+            $j[0] = [ordered]@{ event = 'start'; boots = 4; services = @('svcA', 'svcB'); tasks = 2; startup = 0 }
+        }
+        { New-SeriesReport -SeriesPath $root } | Should -Throw
+    }
+    It 'prints only the counts when the start event carries disabled names' {
         $root = New-Series -Root (Join-Path $TestDrive 'j-both') -MutateJournal {
             param($j)
-            $j[0] = [ordered]@{ event = 'start'; boots = 4; services = 9; disabledServices = @('svcA'); tasks = 1; disabledTasks = @('taskA') }
+            $j[0] = [ordered]@{ event = 'start'; boots = 4; services = 9; disabledServices = @('svcA'); tasks = 1; disabledTasks = @([ordered]@{ path = '\'; name = 'taskA' }); startup = 0; disabledStartup = @('startA') }
         }
-        $testbed = (New-SeriesReport -SeriesPath $root).Summary.testbed
-        $testbed['Disabled services'] | Should -Be '1: svcA'
-        $testbed['Disabled tasks'] | Should -Be '1: taskA'
+        $report = New-SeriesReport -SeriesPath $root
+        $report.Summary.testbed['Disabled services'] | Should -Be '9'
+        $report.Summary.testbed['Disabled tasks'] | Should -Be '1'
+        $report.Summary.testbed['Disabled startup'] | Should -Be '0'
+        $text = $report.Markdown + ($report.Summary | ConvertTo-Json -Depth 10)
+        $text | Should -Not -Match 'svcA|taskA|startA'
     }
 }
 
