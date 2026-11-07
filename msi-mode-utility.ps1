@@ -206,8 +206,6 @@ foreach ($dev in $present) {
         $hidden++; continue
     }
 
-    # Absent key/value = no explicit override: the driver default applies,
-    # and MSI-X-capable devices may already run in MSI-X mode regardless.
     $msiPath = "$imPath\MessageSignaledInterruptProperties"
     $v = (Get-ItemProperty -Path $msiPath -Name 'MSISupported' -ErrorAction SilentlyContinue).MSISupported
     $setting = 'Default'

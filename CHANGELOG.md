@@ -9,19 +9,40 @@ verbatim into the release and fails the release if the tag has no section here.
 
 ## [Unreleased]
 
+### Added
+
+- `bench/msi-bench.ps1` records frame times with PresentMon while a load runs (`-Load superposition -PresentMon <path>`).
+  It waits for the load and the recipe's load pause, then captures frames for the recipe's window while the
+  kernel trace and the stall probes run. The load recipes live in `bench/loads/*.json`, and `bench/README.md` is
+  generated from them.
+- The stall probe counts every gap of 2 microseconds or more and keeps a histogram of the gaps. With `-Device <driver.sys>`, a short pre-trace finds the CPU that takes that driver's interrupts and pins a probe
+  there as well. The kernel trace uses the performance-counter clock.
+- Every result carries a metadata block: the hash of the bench script, the OS build, the power scheme values and
+  the PresentMon version.
+- `bench/results/msi-retest/` holds the raw output of a 32-boot retest (four interrupt-mode states, 8 boots
+  each).
+
+### Changed
+
+- If another program already holds the NT Kernel Logger session, the bench now stops and names the problem instead of killing that program's trace.
+- PresentMon runs with a larger circular buffer, and the bench counts the presents it lost to a buffer overflow.
+  A run that lost any is rejected.
+- A run is also rejected when its frames cover less than 95% of the capture window, which happens when the load
+  exits or stops presenting. Before, such a run passed.
+
 ## [1.2.0] - 2026-10-03
 
 ### Added
 
 - `bench/msi-bench.ps1` - the interrupt benchmark used to measure this tweak: the interrupt mode of every PCI
   device, per-driver ISR and DPC times from the built-in NT Kernel Logger, and a stall probe pinned to one
-  core. The numbers in the README can be reproduced on your own machine rather than taken on trust.
+  core. You can run the same measurement on your own machine with `bench/msi-bench.ps1`.
   The raw results of our own runs are published next to it in `bench/results/`.
 - A **Mode** column shows the interrupt mode each device actually runs in this boot: `MSI`, or
-  `Line IRQ n` plus the devices sharing that line. The `MSI` column only shows the registry setting, and
-  "Default" there often hides a device that already runs in MSI mode - most GPUs, USB and network
-  controllers on Windows 11 do - so people enabled MSI where there was nothing to gain. Devices on a line
-  now sort to the top.
+  `Line IRQ n` plus the devices sharing that line. The `MSI` column only shows the registry setting,
+  so people enabled MSI where there was nothing to gain. On our Windows 11 testbed the INFs of the AMD GPU
+  and the USB xHCI controller write 1, and Windows' own HD Audio driver writes 0. Devices on a line now
+  sort to the top.
 - `-Status` prints the same list to the console and changes nothing. It needs no admin rights, so checking
   after the reboot that a device really switched no longer costs a UAC prompt and a grid you have to
   cancel.
@@ -193,8 +214,8 @@ verbatim into the release and fails the release if the tag has no section here.
 
 - First public release. Lists your PCI devices with their MSI (Message Signaled Interrupts) status
   in a grid and switches the devices you pick to MSI mode by writing the documented `MSISupported`
-  value. On Windows 10 and 11 the ones worth switching are usually the GPU, network, USB and audio
-  controllers.
+  value. On Windows 10 and 11, check which devices run on a legacy line. The default grid lists the GPU,
+  network, USB and audio controllers.
 - `-Disable` sets the selected devices to MSI off instead of on; `-ShowAll` drops the default filter
   and lists every MSI-capable PCI device, including the bridges and abstract controllers hidden
   otherwise.

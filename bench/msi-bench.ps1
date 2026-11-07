@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
     MSI-mode micro-benchmark: interrupt mode per device, per-driver ISR/DPC times, and how long
-    interrupts stall a CPU core. Built-in Windows tools only, nothing to install.
+    interrupts stall a CPU core. The trace and the probe use built-in Windows tools; -Load also needs PresentMon and the load.
 
 .DESCRIPTION
     Run it once per state you want to compare (stock / after msi-mode-utility / a device forced
@@ -16,8 +16,7 @@
       2. Kernel trace (needs admin, skipped otherwise). The built-in NT Kernel Logger records
          every ISR and DPC for -Seconds seconds on the performance-counter clock; tracerpt decodes
          it and the script attributes each one to its driver. Per driver: ISR count (also per CPU),
-         DPC count, max / p99 / mean durations in microseconds and the interrupt vectors seen, the
-         same data LatencyMon shows on its Drivers tab. ETW logs two ISR event types: "isrMessage"
+         DPC count, max / p99 / mean durations in microseconds and the interrupt vectors seen. ETW logs two ISR event types: "isrMessage"
          is a driver that connected a message-based routine (always MSI), "isrPlain" is everything
          else. KMDF drivers (Wdf01000.sys: USB xHCI, GPIO) log as plain even in MSI mode, so the
          interrupt mode table above is the ground truth of the mode, not this split.
@@ -43,7 +42,7 @@
          video config that differs from the recipe).
 
     Results print to the console and are saved as msi-bench-<phase>.json in -OutDir (default: next
-    to this script). Pair it with PresentMon for frame times. These are the tools behind the
+    to this script). These are the tools behind the
     numbers in the RigPolice article: https://rigpolice.com/system/articles/enable-msi-mode/
 
 .EXAMPLE

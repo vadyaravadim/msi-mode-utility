@@ -29,7 +29,7 @@ per-frame PresentMon logs are in the release
 - Load, the same in every run, so all three devices were busy at once:
   - GPU: Unigine Superposition 1.1, 2560x1440 fullscreen, DirectX 11, no vsync, about 120 fps and GPU-bound.
   - Audio: a 440 Hz tone at -40 dBFS looping on the Realtek output, which keeps the HD Audio controller
-    interrupting (114 interrupts/s against 14 with no sound).
+    interrupting (114 interrupts/s).
   - USB: back-to-back 64 KiB reads from a file on the T7 SSD with the Windows file cache bypassed, about 8,000
     xHCI interrupts/s, the range of a mouse polled at 8 kHz.
 - 20 s after the load started, the bench ran a 5 s kernel trace to find the CPU that takes each device's interrupts,
@@ -50,8 +50,8 @@ per-frame PresentMon logs are in the release
 | `usb-line` | MSI | line IRQ 17, shared | **line IRQ 16** | 8 |
 
 `stock` is what the drivers install on this board: Windows' HD Audio bus driver sets `MSISupported` to 0 for the
-motherboard controller, the GPU's audio driver sets nothing (which also means a line), and the GPU and USB drivers set
-1. `audio-msi` is what `msi-mode-utility.ps1` changes here. `gpu-line` and `usb-line` force a device that already runs
+motherboard controller, and the GPU's audio driver includes the same HD Audio section, so it also writes 0. The GPU and USB
+drivers set 1. `audio-msi` is what `msi-mode-utility.ps1` changes here. `gpu-line` and `usb-line` force a device that already runs
 in MSI mode back onto a legacy line, to show the ceiling of the effect, not a setting anyone ships.
 
 ## Results
@@ -119,13 +119,5 @@ Names are `bootNN-state00-...`: the boot index (0 to 31); every boot measured on
 - **Most runs carry one long gap.** Both probes paused for 8 to 13 ms at the same instant once per run: in 21 of the
   24 `stock`, `audio-msi` and `gpu-line` runs 58.5 to 59.9 s into the 60 s window, as PresentMon finishes its
   capture; in `usb-line` 5 of 8 runs about 9.3 s in and one at the start, none at the end. We did not find the
-  cause. The [`hitch/`](hitch/) runs below, where PresentMon stops after the probes, show no gap over 1.6 ms. The
-  tables quote no probe maximum for this reason.
-- **A desktop stall did not reproduce.** An earlier session on this PC showed a once-a-second 50 to 100 ms freeze
-  while the mouse moved in circles. We repeated it on a clean desktop with every device in MSI mode: the
-  [WebGL Aquarium](https://webglsamples.org/aquarium/aquarium.html?numFish=10000) in Chrome (10,000 fish, held at
-  180 fps by the monitor), the mouse circled by hand at 1,000 Hz and 8,000 Hz polling (986 and about 7,800 USB
-  interrupts/s), with probes on CPUs 0, 1, 8, 16 and 28, then on CPU 1 alone. No Chrome frame took 40 ms or more and
-  no probe paused for 20 ms. The files are in [`hitch/`](hitch/) (`idle-a`, `idle-b`: mouse untouched;
-  `mouse-1000hz`, `mouse-8000hz`, `mouse-8000hz-cpu1`); these were run by hand, so they carry no runner record.
+  cause. The tables quote no probe maximum for this reason.
 - One machine, one GPU, one load. Treat it as one careful data point, and run the bench on your own PC.
