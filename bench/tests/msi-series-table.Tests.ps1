@@ -515,6 +515,18 @@ Describe 'the series refusals' {
         $root = New-Series -Root (Join-Path $TestDrive 'r-notone') -Mutate { param($ctx) if ($ctx.Boot -eq 0) { $ctx.Bench.background.Remove('tone') } }
         { New-SeriesReport -SeriesPath $root } | Should -Throw '*boot 0 has no field background.tone.controllerInstanceId*'
     }
+    It 'refuses an empty audio driver list when the plan plays the tone' {
+        $root = New-Series -Root (Join-Path $TestDrive 'r-audio-empty') -Mutate { param($ctx) $ctx.Wrapper.environment.drivers.audio = @() }
+        { New-SeriesReport -SeriesPath $root } | Should -Throw '*boot 0 wrapper field environment.drivers.audio is empty*'
+    }
+    It 'refuses a missing audio driver list when the plan plays the tone' {
+        $root = New-Series -Root (Join-Path $TestDrive 'r-audio-missing') -Mutate { param($ctx) $ctx.Wrapper.environment.drivers.Remove('audio') }
+        { New-SeriesReport -SeriesPath $root } | Should -Throw '*boot 0 wrapper field environment.drivers.audio is empty*'
+    }
+    It 'accepts an empty audio driver list when the plan does not play the tone' {
+        $root = New-Series -Root (Join-Path $TestDrive 'r-audio-notone') -Mutate { param($ctx) $ctx.Wrapper.environment.drivers.audio = @() } -MutatePlan { param($plan) $plan.background = @('usb-read') }
+        { New-SeriesReport -SeriesPath $root } | Should -Not -Throw
+    }
     It 'refuses a USB read error' {
         $root = New-Series -Root (Join-Path $TestDrive 'r-usb') -Mutate { param($ctx) if ($ctx.Boot -eq 2) { $ctx.Bench.background.usbRead.error = 'device lost' } }
         { New-SeriesReport -SeriesPath $root } | Should -Throw "*boot 2 bench field background.usbRead.error is 'device lost'*"

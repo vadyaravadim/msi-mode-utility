@@ -68,8 +68,25 @@
                                                     }
                                                 ],
                                         "audio":  [
-
-                                                  ]
+                                                      {
+                                                          "device":  "Realtek High Definition Audio",
+                                                          "version":  "6.0.10007.1"
+                                                      },
+                                                      {
+                                                          "device":  "AMD High Definition Audio Device",
+                                                          "version":  "10.0.1.41"
+                                                      }
+                                                  ],
+                                        "chipset":  [
+                                                        {
+                                                            "device":  "High Definition Audio Controller",
+                                                            "version":  "10.0.26100.9818"
+                                                        },
+                                                        {
+                                                            "device":  "High Definition Audio Bus",
+                                                            "version":  "25.30.0.1"
+                                                        }
+                                                    ]
                                     },
                         "hvciEnabled":  1,
                         "clockFlags":  {

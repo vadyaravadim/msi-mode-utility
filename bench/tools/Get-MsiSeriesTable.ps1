@@ -163,6 +163,7 @@ function Assert-ToneController {
     param([Parameter(Mandatory)]$Plan, [Parameter(Mandatory)]$Boot)
     if (@($Plan.background) -notcontains 'tone') { return }
     $where = "boot $($Boot.Boot)"
+    if (@(Get-OptionalField $Boot.Wrapper 'environment.drivers.audio' | Where-Object { $null -ne $_ }).Count -eq 0) { throw "$where wrapper field environment.drivers.audio is empty, the plan plays the tone" }
     $planned = [string](Get-Field $Plan 'toneController' 'plan.json')
     $actual = [string](Get-Field $Boot.Bench 'background.tone.controllerInstanceId' $where)
     if ($actual -ne $planned) { throw "$where bench field background.tone.controllerInstanceId is '$actual', the plan puts the tone on '$planned'" }
