@@ -38,7 +38,7 @@ jobs:
             echo "::error::CHANGELOG.md has no '## [$VER]' section - add one before tagging $GITHUB_REF_NAME."
             exit 1
           fi
-          PREV=$(git describe --tags --abbrev=0 "$GITHUB_REF_NAME^" 2>/dev/null || true)
+          PREV=$(git describe --tags --abbrev=0 --match 'v[0-9]*' "$GITHUB_REF_NAME^" 2>/dev/null || true)
           if [ -n "$PREV" ]; then
             printf '\n**Full Changelog**: %s/%s/compare/%s...%s\n' \
               "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$PREV" "$GITHUB_REF_NAME" >> RELEASE_NOTES.md
