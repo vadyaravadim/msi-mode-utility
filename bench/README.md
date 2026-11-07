@@ -39,10 +39,10 @@ The result files hold only the fields above and the measurements, so they can be
 
 ## Loads
 
-### Counter-Strike 2, workshop map CS2 FPS BENCHMARK (Angel) (`cs2`)
+### Counter-Strike 2, workshop benchmark map (`cs2`)
 
 - PresentMon 2.6.0, SHA256 `b2a706bc6ad475749e3b7e3409263aa1e6906d45bdcf993f6dbc0f660188f1af` (https://github.com/GameTechDev/PresentMon/releases/tag/v2.6.0).
-- Steam app 730 (free), workshop map 3240880604 ("CS2 FPS BENCHMARK" by Angel). The map is a 131 s camera route over de_dust2 and ends with a disconnect by itself.
+- Steam app 730 (free), workshop map 3240880604 ("CS2 FPS BENCHMARK DUST2"). The map is a 131 s camera route over de_dust2 and ends with a disconnect by itself.
 - Bottleneck: CPU. vsync: 0 (off).
 
 Launch arguments:

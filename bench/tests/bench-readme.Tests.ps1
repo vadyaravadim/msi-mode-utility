@@ -31,6 +31,16 @@ Describe 'README matches bench/loads' {
         if ($load.consoleLine) { $readme | Should -Match ([regex]::Escape($load.consoleLine)) }
         if ($load.workshop) { $readme | Should -Match ([regex]::Escape($load.workshop.id)) }
     }
+    It 'names the workshop map of <_.BaseName> by its Steam Workshop title' -ForEach $loadFiles {
+        $load = Get-Content -Path $_.FullName -Raw | ConvertFrom-Json
+        if ($load.workshop) {
+            $load.workshop.title | Should -Not -BeNullOrEmpty
+            $readme | Should -Match ([regex]::Escape(('workshop map {0} ("{1}")' -f $load.workshop.id, $load.workshop.title)))
+        }
+        if ($load.workshop.id -eq '3240880604') {
+            $load.workshop.title | Should -BeExactly 'CS2 FPS BENCHMARK DUST2' -Because 'the Steam Workshop page of item 3240880604 is titled so'
+        }
+    }
     It 'ships the video config file of <_.BaseName> and keeps its vsync equal to the load vsync' -ForEach $loadFiles {
         $load = Get-Content -Path $_.FullName -Raw | ConvertFrom-Json
         if ($load.videoConfig) {

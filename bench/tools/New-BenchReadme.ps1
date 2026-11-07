@@ -51,7 +51,7 @@ function Get-LoadSection {
         $out.Add(('- Program: Unigine Superposition {0}, installer `{1}`, SHA256 `{2}`, installed to `{3}`.' -f $Load.program.version, $Load.program.installerFile, $Load.program.installerSha256, $Load.program.installDir))
     }
     if ($Load.workshop) {
-        $out.Add(('- Steam app {0} (free), workshop map {1} ("CS2 FPS BENCHMARK" by Angel). The map is a {2} s camera route over {3} and ends with a disconnect by itself.' -f $Load.game.steamAppId, $Load.workshop.id, $Load.workshop.routeSeconds, $Load.workshop.mapName))
+        $out.Add(('- Steam app {0} (free), workshop map {1} ("{4}"). The map is a {2} s camera route over {3} and ends with a disconnect by itself.' -f $Load.game.steamAppId, $Load.workshop.id, $Load.workshop.routeSeconds, $Load.workshop.mapName, $Load.workshop.title))
     }
     $out.Add(('- Bottleneck: {0}. vsync: {1} (off).' -f $Load.bottleneck.ToUpper(), $Load.vsync))
     $out.Add('')
