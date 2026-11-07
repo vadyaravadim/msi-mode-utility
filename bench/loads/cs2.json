@@ -1,9 +1,9 @@
 {
   "name": "cs2",
-  "title": "Counter-Strike 2, workshop map CS2 FPS BENCHMARK (Angel)",
+  "title": "Counter-Strike 2, workshop benchmark map",
   "process": "cs2",
   "presentMonProcess": "cs2.exe",
-  "workshop": { "id": "3240880604", "mapName": "de_dust2", "routeSeconds": 131 },
+  "workshop": { "id": "3240880604", "title": "CS2 FPS BENCHMARK DUST2", "mapName": "de_dust2", "routeSeconds": 131 },
   "game": { "steamAppId": 730, "price": "free" },
   "presentMon": {
     "version": "2.6.0",
