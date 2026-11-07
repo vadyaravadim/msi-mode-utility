@@ -17,6 +17,18 @@ verbatim into the release and fails the release if the tag has no section here.
   generated from them.
 - The stall probe counts every gap of 2 microseconds or more and keeps a histogram of the gaps. With `-Device <driver.sys>`, a short pre-trace finds the CPU that takes that driver's interrupts and pins a probe
   there as well. The kernel trace uses the performance-counter clock.
+- `-Background tone,usb-read -UsbReadFile <path>` (with `-Load`, needs admin) plays a 440 Hz tone at -40 dBFS on the default
+  output and reads a file in a loop with the file cache bypassed, from the load pause until the trace stops. The
+  result adds `background` with the playback device, the PCI controller behind it and the read rate. A read
+  error rejects the run.
+- With `-ProcessCpu` (needs `-Load`), the result lists `processCpu`: each process that used at least 0.05 CPU-seconds
+  inside the capture window, largest first, so a background job that ran during a measurement shows up in the file.
+  Without the switch the result holds no process list.
+- `bench/tools/Get-MsiSeriesTable.ps1` turns a folder of six-state boots into per-state median [min-max] tables and a
+  `summary.json`, and refuses a series that mixes setups.
+- With `-Load`, the result carries `systemCpu`: the whole-system busy and idle CPU seconds over the capture window and the
+  logical CPU count, so work from processes that start and exit inside the window still shows.
+- Every driver row carries `isrTotalUs` and `dpcTotalUs`, the summed time of its interrupt and deferred routines.
 - Every result carries a metadata block: the hash of the bench script, the OS build, the power scheme values and
   the PresentMon version.
 - `bench/results/msi-retest/` holds the raw output of a 32-boot retest (four interrupt-mode states, 8 boots

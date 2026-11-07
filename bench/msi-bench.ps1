@@ -41,6 +41,15 @@
          rejected (capped frame rate, lost frames, frames that stop short of the capture window or a
          video config that differs from the recipe).
 
+      6. -Background tone,usb-read -UsbReadFile <path> (needs admin, with -Load): plays a 440 Hz tone
+         at -40 dBFS on the default output and reads <path> in a loop with the file cache bypassed,
+         from the load pause until the trace stops. The result adds background with the playback
+         device and the read rate; a read error rejects the run.
+
+      7. -ProcessCpu (with -Load): also records the CPU time each process used inside the capture
+         window, with its name and PID, so a runner can reject a run on a background burst. Off by
+         default, so a result holds no process list.
+
     Results print to the console and are saved as msi-bench-<phase>.json in -OutDir (default: next
     to this script). These are the tools behind the
     numbers in the RigPolice article: https://rigpolice.com/system/articles/enable-msi-mode/
@@ -65,6 +74,9 @@ param(
     [double]$GapThresholdUs = 2,
     [string]$Load,
     [string]$PresentMon,
+    [ValidateSet('tone', 'usb-read')][string[]]$Background,
+    [string]$UsbReadFile,
+    [switch]$ProcessCpu,
     [switch]$SkipTrace
 )
 $ErrorActionPreference = 'Stop'
@@ -76,15 +88,28 @@ $preTraceSeconds = 5
 $defaultProbeCpu = 0
 $histogramEdgesUs = @(5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000)
 $roundDigits = 1
+$toneFrequencyHz = 440
+$toneDbfs = -40
+$toneSampleRate = 48000
+$toneSeconds = 1
+$usbReadBlockBytes = 64KB
+$usbReadStopTimeoutMs = 10000
+$usbReadMinBytes = 1GB
+$mebibyteBytes = 1MB
+$processCpuMinSeconds = 0.05
+$fileTimeTicksPerSecond = 10000000
+$pnpParentMaxDepth = 8
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
 $msiBenchSource = @'
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 
 public class StallProbe {
@@ -222,6 +247,216 @@ public static class KernelCsv {
             }
         }
         return data;
+    }
+}
+
+public static class ToneWave {
+    const int HeaderBytes = 44;
+    const int FormatChunkBytes = 16;
+    const short PcmFormat = 1;
+    const short MonoChannels = 1;
+    const short BitsPerSample = 16;
+    const short BytesPerSample = 2;
+
+    public static byte[] Build(int frequencyHz, double dbfs, int sampleRate, int seconds) {
+        int count = sampleRate * seconds;
+        int dataBytes = count * BytesPerSample;
+        double amplitude = short.MaxValue * Math.Pow(10.0, dbfs / 20.0);
+        byte[] wave = new byte[HeaderBytes + dataBytes];
+        using (MemoryStream stream = new MemoryStream(wave))
+        using (BinaryWriter writer = new BinaryWriter(stream)) {
+            writer.Write(Encoding.ASCII.GetBytes("RIFF"));
+            writer.Write(wave.Length - 8);
+            writer.Write(Encoding.ASCII.GetBytes("WAVE"));
+            writer.Write(Encoding.ASCII.GetBytes("fmt "));
+            writer.Write(FormatChunkBytes);
+            writer.Write(PcmFormat);
+            writer.Write(MonoChannels);
+            writer.Write(sampleRate);
+            writer.Write(sampleRate * BytesPerSample);
+            writer.Write(BytesPerSample);
+            writer.Write(BitsPerSample);
+            writer.Write(Encoding.ASCII.GetBytes("data"));
+            writer.Write(dataBytes);
+            for (int i = 0; i < count; i++) {
+                double phase = 2.0 * Math.PI * frequencyHz * i / sampleRate;
+                writer.Write((short)Math.Round(amplitude * Math.Sin(phase)));
+            }
+        }
+        return wave;
+    }
+}
+
+public sealed class UsbReadStats {
+    public long BytesRead;
+    public long Wraps;
+    public double Seconds;
+    public string Error;
+}
+
+public sealed class UsbReader {
+    const uint GenericRead = 0x80000000;
+    const uint ShareReadWrite = 3;
+    const uint OpenExisting = 3;
+    const uint NoBuffering = 0x20000000;
+    const uint MemCommitReserve = 0x3000;
+    const uint MemRelease = 0x8000;
+    const uint PageReadWrite = 4;
+    const uint FileBegin = 0;
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern IntPtr CreateFileW(string name, uint access, uint share, IntPtr security, uint disposition, uint flags, IntPtr template);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    static extern bool ReadFile(IntPtr file, IntPtr buffer, uint toRead, out uint read, IntPtr overlapped);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    static extern bool SetFilePointerEx(IntPtr file, long distance, IntPtr newPosition, uint method);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    static extern bool CloseHandle(IntPtr handle);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern IntPtr VirtualAlloc(IntPtr address, UIntPtr size, uint type, uint protect);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    static extern bool VirtualFree(IntPtr address, UIntPtr size, uint type);
+
+    readonly string path;
+    readonly uint blockBytes;
+    readonly Stopwatch watch = new Stopwatch();
+    IntPtr handle = IntPtr.Zero;
+    IntPtr buffer = IntPtr.Zero;
+    Thread thread;
+    volatile bool stopRequested;
+    volatile string error;
+    long bytesRead;
+    long wraps;
+
+    public UsbReader(string path, int blockBytes) {
+        if (blockBytes <= 0) throw new ArgumentException("blockBytes must be positive");
+        this.path = path;
+        this.blockBytes = (uint)blockBytes;
+    }
+
+    public long BytesRead {
+        get { return Interlocked.Read(ref bytesRead); }
+    }
+
+    static string Describe(string what, int code) {
+        return what + ": " + new Win32Exception(code).Message;
+    }
+
+    public void Start() {
+        if (thread != null) throw new InvalidOperationException("the reader is already started");
+        handle = CreateFileW(path, GenericRead, ShareReadWrite, IntPtr.Zero, OpenExisting, NoBuffering, IntPtr.Zero);
+        if (handle == new IntPtr(-1)) {
+            int code = Marshal.GetLastWin32Error();
+            handle = IntPtr.Zero;
+            throw new IOException("cannot open " + path + ": " + new Win32Exception(code).Message);
+        }
+        buffer = VirtualAlloc(IntPtr.Zero, new UIntPtr(blockBytes), MemCommitReserve, PageReadWrite);
+        if (buffer == IntPtr.Zero) {
+            int code = Marshal.GetLastWin32Error();
+            CloseHandle(handle);
+            handle = IntPtr.Zero;
+            throw new IOException(Describe("cannot allocate the read buffer", code));
+        }
+        watch.Start();
+        thread = new Thread(Run);
+        thread.IsBackground = true;
+        thread.Name = "msi-bench-usb-read";
+        thread.Start();
+    }
+
+    void Run() {
+        try {
+            bool progressSinceWrap = false;
+            while (!stopRequested) {
+                uint read;
+                if (!ReadFile(handle, buffer, blockBytes, out read, IntPtr.Zero)) {
+                    error = Describe("ReadFile failed", Marshal.GetLastWin32Error());
+                    break;
+                }
+                if (read == 0) {
+                    if (!progressSinceWrap) {
+                        error = "the file is empty";
+                        break;
+                    }
+                    if (!SetFilePointerEx(handle, 0, IntPtr.Zero, FileBegin)) {
+                        error = Describe("SetFilePointerEx failed", Marshal.GetLastWin32Error());
+                        break;
+                    }
+                    Interlocked.Increment(ref wraps);
+                    progressSinceWrap = false;
+                    continue;
+                }
+                progressSinceWrap = true;
+                Interlocked.Add(ref bytesRead, read);
+            }
+        } catch (Exception ex) {
+            error = ex.Message;
+        } finally {
+            watch.Stop();
+            CloseHandle(handle);
+            VirtualFree(buffer, UIntPtr.Zero, MemRelease);
+        }
+    }
+
+    public UsbReadStats Stop(int timeoutMilliseconds) {
+        stopRequested = true;
+        if (thread != null && !thread.Join(timeoutMilliseconds) && error == null) {
+            error = "the reader thread did not stop within " + timeoutMilliseconds + " ms";
+        }
+        UsbReadStats stats = new UsbReadStats();
+        stats.BytesRead = Interlocked.Read(ref bytesRead);
+        stats.Wraps = Interlocked.Read(ref wraps);
+        stats.Seconds = watch.Elapsed.TotalSeconds;
+        stats.Error = error;
+        return stats;
+    }
+}
+
+[ComImport, Guid("D666063F-1587-4E43-81F1-B948E807363F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+interface IMMDevice {
+    int Activate(ref Guid iid, int context, IntPtr parameters, [MarshalAs(UnmanagedType.IUnknown)] out object result);
+    int OpenPropertyStore(int access, out IntPtr store);
+    int GetId([MarshalAs(UnmanagedType.LPWStr)] out string id);
+}
+
+[ComImport, Guid("A95664D2-9614-4F35-A746-DE8DB63617E6"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+interface IMMDeviceEnumerator {
+    int EnumAudioEndpoints(int dataFlow, int stateMask, out IntPtr devices);
+    int GetDefaultAudioEndpoint(int dataFlow, int role, out IMMDevice device);
+}
+
+public static class SystemTimes {
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern bool GetSystemTimes(out long idle, out long kernel, out long user);
+
+    public static long[] Read() {
+        long idle, kernel, user;
+        if (!GetSystemTimes(out idle, out kernel, out user)) throw new Win32Exception(Marshal.GetLastWin32Error());
+        return new long[] { idle, kernel, user };
+    }
+}
+
+public static class PlaybackEndpoint {
+    const int Render = 0;
+    const int Console = 0;
+    const string EnumeratorClsid = "BCDE0395-E52F-467C-8E3D-C4579291692E";
+
+    public static string DefaultId() {
+        IMMDeviceEnumerator enumerator = (IMMDeviceEnumerator)Activator.CreateInstance(Type.GetTypeFromCLSID(new Guid(EnumeratorClsid)));
+        IMMDevice device;
+        Marshal.ThrowExceptionForHR(enumerator.GetDefaultAudioEndpoint(Render, Console, out device));
+        string id;
+        Marshal.ThrowExceptionForHR(device.GetId(out id));
+        return id;
     }
 }
 '@
@@ -450,10 +685,230 @@ function Get-StallSummary {
 }
 
 function Assert-LoadArgument {
-    param([string]$Load, [string]$PresentMon, [Parameter(Mandatory)][bool]$SecondsGiven)
+    param([string]$Load, [string]$PresentMon, [Parameter(Mandatory)][bool]$SecondsGiven, [string[]]$Background, [string]$UsbReadFile, [switch]$ProcessCpu)
     if ($Load -and -not $PresentMon) { throw '-Load needs -PresentMon <path to the pinned PresentMon exe>.' }
     if ($PresentMon -and -not $Load) { throw '-PresentMon needs -Load <name> (a file in bench\loads).' }
     if ($Load -and $SecondsGiven) { throw "-Seconds cannot be combined with -Load: the window is the recipe's capture time." }
+    if ($Background.Count -and -not $Load) { throw '-Background needs -Load <name>: the loads run from the load pause to the end of the capture.' }
+    if ($ProcessCpu -and -not $Load) { throw '-ProcessCpu needs -Load <name>: the process list covers the load capture window.' }
+    if ((@($Background) -contains 'usb-read') -and -not $UsbReadFile) { throw '-Background usb-read needs -UsbReadFile <path to the file to read>.' }
+    if ($UsbReadFile -and (@($Background) -notcontains 'usb-read')) { throw '-UsbReadFile needs -Background usb-read.' }
+}
+
+function Assert-UsbReadFile {
+    param([Parameter(Mandatory)][string]$Path, [long]$MinBytes = $usbReadMinBytes)
+    if (-not (Test-Path -LiteralPath $Path)) { throw "the USB read file $Path is missing" }
+    $length = (Get-Item -LiteralPath $Path).Length
+    if ($length -lt $MinBytes) { throw "the USB read file $Path is smaller than $MinBytes bytes ($length)" }
+}
+
+function Get-DefaultPlaybackEndpointId {
+    [PlaybackEndpoint]::DefaultId()
+}
+
+function Get-ParentInstanceId {
+    param([Parameter(Mandatory)][string]$InstanceId)
+    (Get-PnpDeviceProperty -InstanceId $InstanceId -KeyName 'DEVPKEY_Device_Parent' -ErrorAction Stop).Data
+}
+
+function Find-PciAncestor {
+    param([Parameter(Mandatory)][string]$InstanceId)
+    $current = $InstanceId
+    for ($depth = 0; $depth -lt $pnpParentMaxDepth; $depth++) {
+        $parent = Get-ParentInstanceId -InstanceId $current
+        if (-not $parent) { return $null }
+        if ($parent -like 'PCI\*') { return $parent }
+        $current = $parent
+    }
+    $null
+}
+
+function Get-PlaybackDevice {
+    $instanceId = "SWD\MMDEVAPI\$(Get-DefaultPlaybackEndpointId)"
+    $device = Get-PnpDevice -InstanceId $instanceId -ErrorAction SilentlyContinue
+    [pscustomobject]@{
+        deviceName           = $device.FriendlyName
+        deviceInstanceId     = $instanceId
+        controllerInstanceId = Find-PciAncestor -InstanceId $instanceId
+    }
+}
+
+function Start-BenchTonePlayback {
+    param([Parameter(Mandatory)][byte[]]$Wave)
+    $player = New-Object System.Media.SoundPlayer -ArgumentList (New-Object System.IO.MemoryStream -ArgumentList (, $Wave))
+    $player.Load()
+    $player.PlayLooping()
+    $player
+}
+
+function Stop-BenchTonePlayback {
+    param([Parameter(Mandatory)]$Player)
+    $Player.Stop()
+    $Player.Dispose()
+}
+
+function New-BenchUsbReader {
+    param([Parameter(Mandatory)][string]$Path, [Parameter(Mandatory)][int]$BlockBytes)
+    New-Object UsbReader -ArgumentList $Path, $BlockBytes
+}
+
+function Start-BenchBackground {
+    param([Parameter(Mandatory)][string[]]$Name, [string]$UsbReadFile)
+    $handle = [pscustomobject]@{ Tone = $null; Device = $null; Reader = $null }
+    try {
+        if ($Name -contains 'tone') {
+            $handle.Device = Get-PlaybackDevice
+            $wave = [ToneWave]::Build($toneFrequencyHz, $toneDbfs, $toneSampleRate, $toneSeconds)
+            $handle.Tone = Start-BenchTonePlayback -Wave $wave
+        }
+        if ($Name -contains 'usb-read') {
+            $handle.Reader = New-BenchUsbReader -Path $UsbReadFile -BlockBytes $usbReadBlockBytes
+            $handle.Reader.Start()
+        }
+    } catch {
+        Stop-BenchBackground -Handle $handle | Out-Null
+        throw
+    }
+    $handle
+}
+
+function Stop-BenchBackground {
+    param([Parameter(Mandatory)]$Handle)
+    $stats = [ordered]@{}
+    $read = if ($Handle.Reader) { $Handle.Reader.Stop($usbReadStopTimeoutMs) }
+    if ($Handle.Tone) {
+        Stop-BenchTonePlayback -Player $Handle.Tone
+        $stats.tone = [ordered]@{
+            frequencyHz          = $toneFrequencyHz
+            dbfs                 = $toneDbfs
+            sampleRate           = $toneSampleRate
+            deviceName           = $Handle.Device.deviceName
+            deviceInstanceId     = $Handle.Device.deviceInstanceId
+            controllerInstanceId = $Handle.Device.controllerInstanceId
+        }
+    }
+    if ($read) {
+        $rate = if ($read.Seconds -gt 0) { $read.BytesRead / $mebibyteBytes / $read.Seconds } else { 0 }
+        $stats.usbRead = [ordered]@{
+            bytesRead    = $read.BytesRead
+            wraps        = $read.Wraps
+            seconds      = [math]::Round($read.Seconds, 1)
+            mibPerSecond = [math]::Round($rate, 1)
+            blockBytes   = $usbReadBlockBytes
+            error        = $read.Error
+        }
+    }
+    $stats
+}
+
+function Get-BackgroundRejection {
+    param($Background)
+    if ($Background -and $Background.Contains('usbRead') -and $Background.usbRead.error) { "the USB read failed: $($Background.usbRead.error)" }
+}
+
+function Join-Rejection {
+    param([AllowNull()][string[]]$Reason)
+    $reasons = @($Reason | Where-Object { $_ })
+    if ($reasons.Count) { $reasons -join '; ' } else { $null }
+}
+
+function Start-LoadWithBackground {
+    param([Parameter(Mandatory)]$Recipe, [string[]]$Background, [string]$UsbReadFile)
+    $process = Wait-LoadStart -Recipe $Recipe
+    $handle = if ($Background.Count) { Start-BenchBackground -Name $Background -UsbReadFile $UsbReadFile }
+    $paused = $false
+    try {
+        Write-Host "Load started. Waiting $($Recipe.timings.loadPauseSeconds) s, then capturing $($Recipe.timings.captureSeconds) s. Do not touch the PC."
+        Start-Sleep -Seconds $Recipe.timings.loadPauseSeconds
+        $paused = $true
+    } finally {
+        if (-not $paused -and $handle) { Stop-BenchBackground -Handle $handle | Out-Null }
+    }
+    [pscustomobject]@{ Process = $process; Background = $handle }
+}
+
+function Get-ProcessCpuSnapshot {
+    foreach ($process in Get-Process) {
+        try { $seconds = $process.TotalProcessorTime.TotalSeconds } catch { continue }
+        [pscustomobject]@{ id = $process.Id; name = $process.ProcessName; seconds = $seconds }
+    }
+}
+
+function Get-ProcessCpuDelta {
+    param(
+        [AllowEmptyCollection()][object[]]$Before,
+        [AllowEmptyCollection()][object[]]$After,
+        [double]$MinSeconds = $processCpuMinSeconds
+    )
+    $start = @{}
+    foreach ($process in $Before) { $start["$($process.id)|$($process.name)"] = $process.seconds }
+    $rows = foreach ($process in $After) {
+        $key = "$($process.id)|$($process.name)"
+        $from = if ($start.ContainsKey($key)) { $start[$key] } else { 0 }
+        $delta = $process.seconds - $from
+        if ($delta -ge $MinSeconds) {
+            [pscustomobject]@{ name = $process.name; pid = $process.id; cpuSeconds = [math]::Round($delta, 3) }
+        }
+    }
+    @($rows | Sort-Object cpuSeconds -Descending)
+}
+
+function Get-SystemCpuSnapshot {
+    $times = [SystemTimes]::Read()
+    [pscustomobject]@{ idle = $times[0]; kernel = $times[1]; user = $times[2] }
+}
+
+function Get-SystemCpuDelta {
+    param(
+        [Parameter(Mandatory)]$Before,
+        [Parameter(Mandatory)]$After,
+        [Parameter(Mandatory)][double]$WindowSeconds,
+        [Parameter(Mandatory)][int]$LogicalCpus
+    )
+    $idle = $After.idle - $Before.idle
+    $busy = ($After.kernel - $Before.kernel) - $idle + ($After.user - $Before.user)
+    [ordered]@{
+        windowSeconds = [math]::Round($WindowSeconds, 3)
+        busySeconds   = [math]::Round($busy / $fileTimeTicksPerSecond, 3)
+        idleSeconds   = [math]::Round($idle / $fileTimeTicksPerSecond, 3)
+        logicalCpus   = $LogicalCpus
+    }
+}
+
+function Add-ProcessCpuField {
+    param([Parameter(Mandatory)]$Result, [switch]$ProcessCpu, $Before, $After)
+    if ($ProcessCpu) { $Result.processCpu = @(Get-ProcessCpuDelta -Before $Before -After $After) }
+}
+
+function Stop-CaptureWindow {
+    param([Parameter(Mandatory)][bool]$Trace, [Parameter(Mandatory)]$Watch, $Background, [switch]$ProcessCpu)
+    if ($Trace) { Stop-KernelTrace }
+    $seconds = $Watch.Elapsed.TotalSeconds
+    $systemAfter = Get-SystemCpuSnapshot
+    $cpuAfter = if ($ProcessCpu) { @(Get-ProcessCpuSnapshot) } else { @() }
+    $stats = if ($Background) { Stop-BenchBackground -Handle $Background }
+    [pscustomobject]@{ Seconds = $seconds; SystemCpuAfter = $systemAfter; ProcessCpuAfter = $cpuAfter; Background = $stats }
+}
+
+function Get-DriverRow {
+    param([Parameter(Mandatory)]$Stat)
+    $isrSorted = [double[]]($Stat.IsrUs | Sort-Object)
+    $dpcSorted = [double[]]($Stat.DpcUs | Sort-Object)
+    [pscustomobject]@{
+        driver     = $Stat.Module
+        isrPlain   = $Stat.IsrLine
+        isrMessage = $Stat.IsrMsi
+        isrPerCpu  = @($Stat.IsrPerCpu.GetEnumerator() | Sort-Object Key | ForEach-Object { [pscustomobject]@{ cpu = $_.Key; isr = $_.Value } })
+        vectors    = (($Stat.Vectors.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 3 | ForEach-Object { "$($_.Key):$($_.Value)" }) -join " ")
+        isrMaxUs   = if ($isrSorted.Count) { [math]::Round($isrSorted[-1], 1) } else { 0 }
+        isrMeanUs  = if ($isrSorted.Count) { [math]::Round(($Stat.IsrUs | Measure-Object -Average).Average, 2) } else { 0 }
+        isrTotalUs = [math]::Round([double]($Stat.IsrUs | Measure-Object -Sum).Sum, 1)
+        dpcCount   = $Stat.DpcCount
+        dpcMaxUs   = if ($dpcSorted.Count) { [math]::Round($dpcSorted[-1], 1) } else { 0 }
+        dpcP99Us   = Get-Percentile $dpcSorted 0.99 1
+        dpcMeanUs  = if ($dpcSorted.Count) { [math]::Round(($Stat.DpcUs | Measure-Object -Average).Average, 2) } else { 0 }
+        dpcTotalUs = [math]::Round([double]($Stat.DpcUs | Measure-Object -Sum).Sum, 1)
+    }
 }
 
 function Get-StallTimelineLine {
@@ -469,7 +924,8 @@ function Get-StallTimelineLine {
 
 if ($MyInvocation.InvocationName -ne '.') {
     if (-not (Test-Path -LiteralPath $OutDir -PathType Container)) { throw "-OutDir '$OutDir' does not exist." }
-    Assert-LoadArgument -Load $Load -PresentMon $PresentMon -SecondsGiven $PSBoundParameters.ContainsKey('Seconds')
+    Assert-LoadArgument -Load $Load -PresentMon $PresentMon -SecondsGiven $PSBoundParameters.ContainsKey('Seconds') -Background $Background -UsbReadFile $UsbReadFile -ProcessCpu:$ProcessCpu
+    if ($Background -contains 'usb-read') { Assert-UsbReadFile -Path $UsbReadFile }
     $recipe = if ($Load) { Get-LoadRecipe -Name $Load } else { $null }
     $windowSeconds = if ($recipe) { [int]$recipe.timings.captureSeconds } else { $Seconds }
     $cpuList = @(ConvertTo-ListArgument $Cpu | ForEach-Object { [int]$_ })
@@ -488,50 +944,65 @@ if ($MyInvocation.InvocationName -ne '.') {
     if (-not $isAdmin) { Write-Host 'Not elevated: the kernel trace needs admin, running the stall probe only.' -ForegroundColor Yellow }
 
     $loadRecord = $null
-    if ($recipe) {
-        Write-Host "Load: $($recipe.title). Start it as bench\README.md says; this window waits."
-        if ($recipe.consoleLine) { Write-Host "Console line: $($recipe.consoleLine)" }
-        $loadProcess = Wait-LoadReady -Recipe $recipe
-        $loadRecord = Get-LoadRecord -Recipe $recipe -Name $Load -Process $loadProcess
-    }
-
-    $picks = @()
-    if ($deviceList.Count) {
-        Write-Host "Pre-trace for $preTraceSeconds s to find the CPU of each -Device driver..."
-        $preEtl = Join-Path $env:TEMP "msi-bench-$Phase-pick.etl"
-        Start-KernelTrace -Etl $preEtl
-        try { Start-Sleep -Seconds $preTraceSeconds } finally { Stop-KernelTrace }
-        $preTrace = Read-KernelTrace -Etl $preEtl
-        $picks = @(Get-DeviceCpuPick -Stats $preTrace.Stats -Driver $deviceList)
-        $preTrace = $null
-        foreach ($pick in $picks) { Write-Host ("{0}: CPU {1} ({2} of {3} ISRs)" -f $pick.driver, $pick.cpu, $pick.isrOnCpu, $pick.isrTotal) }
-    }
-
-    $plan = @(Get-ProbePlan -Cpu $cpuList -Pick $picks -ProcessorCount $processorCount -DefaultCpu $defaultProbeCpu)
-    $probes = @($plan | ForEach-Object { New-Object StallProbe -ArgumentList $_.cpu, $windowSeconds, $GapThresholdUs })
-    $etl = Join-Path $env:TEMP "msi-bench-$Phase.etl"
-
-    Write-Host "Measuring for $windowSeconds s on CPU $(($plan | ForEach-Object { $_.cpu }) -join ','), keep your load running..."
-    $spans = New-Object 'double[]' $probes.Count
-    $gapSets = New-Object 'object[]' $probes.Count
-    $traceSeconds = 0.0
-    $capture = $null
-    $presentMonCsvName = "msi-bench-$Phase-presentmon.csv"
-    if ($doTrace) { Start-KernelTrace -Etl $etl }
-    $traceWatch = [System.Diagnostics.Stopwatch]::StartNew()
+    $backgroundHandle = $null
     try {
-        foreach ($p in $probes) { $p.Start() }
         if ($recipe) {
-            $capture = Invoke-PresentMonCapture -PresentMonPath $PresentMon -ProcessName $recipe.presentMonProcess -OutputFile (Join-Path $OutDir $presentMonCsvName) -Seconds $windowSeconds -ExpectedSha256 $recipe.presentMon.sha256
+            Write-Host "Load: $($recipe.title). Start it as bench\README.md says; this window waits."
+            if ($recipe.consoleLine) { Write-Host "Console line: $($recipe.consoleLine)" }
+            $started = Start-LoadWithBackground -Recipe $recipe -Background $Background -UsbReadFile $UsbReadFile
+            $backgroundHandle = $started.Background
+            $loadRecord = Get-LoadRecord -Recipe $recipe -Name $Load -Process $started.Process
         }
-        for ($i = 0; $i -lt $probes.Count; $i++) {
-            $span = 0.0
-            $gapSets[$i] = $probes[$i].Stop([ref]$span)
-            $spans[$i] = $span
+
+        $picks = @()
+        if ($deviceList.Count) {
+            Write-Host "Pre-trace for $preTraceSeconds s to find the CPU of each -Device driver..."
+            $preEtl = Join-Path $env:TEMP "msi-bench-$Phase-pick.etl"
+            Start-KernelTrace -Etl $preEtl
+            try { Start-Sleep -Seconds $preTraceSeconds } finally { Stop-KernelTrace }
+            $preTrace = Read-KernelTrace -Etl $preEtl
+            $picks = @(Get-DeviceCpuPick -Stats $preTrace.Stats -Driver $deviceList)
+            $preTrace = $null
+            foreach ($pick in $picks) { Write-Host ("{0}: CPU {1} ({2} of {3} ISRs)" -f $pick.driver, $pick.cpu, $pick.isrOnCpu, $pick.isrTotal) }
+        }
+
+        $plan = @(Get-ProbePlan -Cpu $cpuList -Pick $picks -ProcessorCount $processorCount -DefaultCpu $defaultProbeCpu)
+        $probes = @($plan | ForEach-Object { New-Object StallProbe -ArgumentList $_.cpu, $windowSeconds, $GapThresholdUs })
+        $etl = Join-Path $env:TEMP "msi-bench-$Phase.etl"
+
+        Write-Host "Measuring for $windowSeconds s on CPU $(($plan | ForEach-Object { $_.cpu }) -join ','), keep your load running..."
+        $spans = New-Object 'double[]' $probes.Count
+        $gapSets = New-Object 'object[]' $probes.Count
+        $traceSeconds = 0.0
+        $capture = $null
+        $presentMonCsvName = "msi-bench-$Phase-presentmon.csv"
+        $backgroundStats = $null
+        $systemBefore = Get-SystemCpuSnapshot
+        $cpuBefore = if ($ProcessCpu) { @(Get-ProcessCpuSnapshot) } else { @() }
+        $cpuAfter = @()
+        $systemAfter = $null
+        if ($doTrace) { Start-KernelTrace -Etl $etl }
+        $traceWatch = [System.Diagnostics.Stopwatch]::StartNew()
+        try {
+            foreach ($p in $probes) { $p.Start() }
+            if ($recipe) {
+                $capture = Invoke-PresentMonCapture -PresentMonPath $PresentMon -ProcessName $recipe.presentMonProcess -OutputFile (Join-Path $OutDir $presentMonCsvName) -Seconds $windowSeconds -ExpectedSha256 $recipe.presentMon.sha256
+            }
+            for ($i = 0; $i -lt $probes.Count; $i++) {
+                $span = 0.0
+                $gapSets[$i] = $probes[$i].Stop([ref]$span)
+                $spans[$i] = $span
+            }
+        } finally {
+            $window = Stop-CaptureWindow -Trace $doTrace -Watch $traceWatch -Background $backgroundHandle -ProcessCpu:$ProcessCpu
+            $backgroundHandle = $null
+            $cpuAfter = $window.ProcessCpuAfter
+            $backgroundStats = $window.Background
+            $traceSeconds = $window.Seconds
+            $systemAfter = $window.SystemCpuAfter
         }
     } finally {
-        if ($doTrace) { Stop-KernelTrace }
-        $traceSeconds = $traceWatch.Elapsed.TotalSeconds
+        if ($backgroundHandle) { Stop-BenchBackground -Handle $backgroundHandle | Out-Null }
     }
 
     $probeResults = New-Object System.Collections.Generic.List[object]
@@ -564,23 +1035,7 @@ if ($MyInvocation.InvocationName -ne '.') {
     if ($doTrace) {
         Write-Host 'Decoding the kernel trace...'
         $data = Read-KernelTrace -Etl $etl
-        $drivers = foreach ($s in $data.Stats.Values) {
-            $isrSorted = [double[]]($s.IsrUs | Sort-Object)
-            $dpcSorted = [double[]]($s.DpcUs | Sort-Object)
-            [pscustomobject]@{
-                driver     = $s.Module
-                isrPlain   = $s.IsrLine
-                isrMessage = $s.IsrMsi
-                isrPerCpu  = @($s.IsrPerCpu.GetEnumerator() | Sort-Object Key | ForEach-Object { [pscustomobject]@{ cpu = $_.Key; isr = $_.Value } })
-                vectors    = (($s.Vectors.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 3 | ForEach-Object { "$($_.Key):$($_.Value)" }) -join " ")
-                isrMaxUs   = if ($isrSorted.Count) { [math]::Round($isrSorted[-1], 1) } else { 0 }
-                isrMeanUs  = if ($isrSorted.Count) { [math]::Round(($s.IsrUs | Measure-Object -Average).Average, 2) } else { 0 }
-                dpcCount   = $s.DpcCount
-                dpcMaxUs   = if ($dpcSorted.Count) { [math]::Round($dpcSorted[-1], 1) } else { 0 }
-                dpcP99Us   = Get-Percentile $dpcSorted 0.99 1
-                dpcMeanUs  = if ($dpcSorted.Count) { [math]::Round(($s.DpcUs | Measure-Object -Average).Average, 2) } else { 0 }
-            }
-        }
+        $drivers = foreach ($s in $data.Stats.Values) { Get-DriverRow -Stat $s }
         $drivers = @($drivers | Sort-Object dpcMaxUs -Descending)
         $trace = [pscustomobject]@{
             seconds          = [math]::Round($traceSeconds, 1)
@@ -631,11 +1086,14 @@ if ($MyInvocation.InvocationName -ne '.') {
     }
     if ($recipe) {
         $stats = Import-Csv -Path $capture.csv | Get-FrameStats
-        $rejected = Get-GameRejection -Stats $stats -Capture $capture -Video $loadRecord.videoConfig -Recipe $recipe
+        $rejected = Join-Rejection -Reason @((Get-GameRejection -Stats $stats -Capture $capture -Video $loadRecord.videoConfig -Recipe $recipe), (Get-BackgroundRejection -Background $backgroundStats))
         $files += $presentMonCsvName
         $result.load = $loadRecord
         $result.presentMon = [pscustomobject]@{ sha256 = $capture.presentMonSha256; overflowedPresents = $capture.overflowedPresents }
         $result.frames = $stats
+        $result.systemCpu = Get-SystemCpuDelta -Before $systemBefore -After $systemAfter -WindowSeconds $traceSeconds -LogicalCpus $processorCount
+        Add-ProcessCpuField -Result $result -ProcessCpu:$ProcessCpu -Before $cpuBefore -After $cpuAfter
+        if ($backgroundStats) { $result.background = $backgroundStats }
         $result.rejected = $rejected
         Write-Host ("Frames: {0} at {1} fps avg, p50 {2} ms, 1% low {3} ms, {4} lost to present buffer overflow" -f $stats.frames, $stats.avgFps, $stats.p50Ms, $stats.low1PctMs, $capture.overflowedPresents)
     }
