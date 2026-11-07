@@ -1,0 +1,76 @@
+Phase: boot06-state00
+
+Device                                                          MSISupported Mode                         SharedWith                      
+------                                                          ------------ ----                         ----------                      
+AMD Radeon RX 7800 XT                                           on           message-signaled, 1 vector                                   
+Standard SATA AHCI Controller                                   on           message-signaled, 1 vector                                   
+Realtek 8852BE Wireless LAN WiFi 6 PCI-E NIC                    on           message-signaled, 1 vector                                   
+Realtek Gaming 2.5GbE Family Controller #2                      on           message-signaled, 16 vectors                                 
+Standard NVM Express Controller                                 on           message-signaled, 33 vectors                                 
+Standard NVM Express Controller                                 on           message-signaled, 17 vectors                                 
+High Definition Audio Bus                                       off          line IRQ 17                  High Definition Audio Controller
+High Definition Audio Controller                                off          line IRQ 17                  High Definition Audio Bus       
+Intel(R) GNA Scoring Accelerator module                         on           message-signaled, 1 vector                                   
+Intel(R) Management Engine Interface #1                         on           message-signaled, 1 vector                                   
+Intel(R) PCI Express Root Port #1 - 7A38                        default      no IRQ assigned                                              
+Intel(R) PCI Express Root Port #15 - 7A36                       default      no IRQ assigned                                              
+Intel(R) PCI Express Root Port #5 - 7A3C                        default      no IRQ assigned                                              
+Intel(R) PCIe RC 010 G5 - A70D                                  default      no IRQ assigned                                              
+Intel(R) PCIe RC 060 (x4) G4 - A74D                             default      no IRQ assigned                                              
+Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft) on           message-signaled, 1 vector                                   
+
+
+
+Load: Unigine Superposition 1.1 (free), infinite scene. Start it as bench\README.md says; this window waits.
+Waiting for superposition.exe ...
+Load started. Waiting 20 s, then capturing 60 s. Do not touch the PC.
+Pre-trace for 5 s to find the CPU of each -Device driver...
+dxgkrnl.sys: CPU 1 (5739 of 5739 ISRs)
+HDAudBus.sys: CPU 0 (1392 of 1392 ISRs)
+Wdf01000.sys: CPU 0 (50771 of 50771 ISRs)
+Measuring for 60 s on CPU 0,1, keep your load running...
+Stall probe (gaps in a spinning time-critical thread):
+
+cpu devices                   seconds gapsPerSecond gapP50Us gapP99Us gapP999Us gapMaxUs stalledUs stalledPct
+--- -------                   ------- ------------- -------- -------- --------- -------- --------- ----------
+  0 HDAudBus.sys,Wdf01000.sys      60        8967.2      3.8     28.3     631.1   8122.7 3491945.7       5.82
+  1 dxgkrnl.sys                    60        1093.7     15.4    822.8     867.2   8317.6 3450157.8       5.75
+
+
+
+Decoding the kernel trace...
+Kernel trace: 514802 plain ISRs, 64271 message-based ISRs, 853051 DPCs in 60.4 s (0 undecodable events dropped)
+Plain ISRs land on: CPU 0: 514802
+Message-based ISRs land on: CPU 1: 56457, CPU 28: 5754, CPU 18: 470, CPU 19: 285
+
+driver        isrPlain isrMessage isrMaxUs isrMeanUs dpcCount dpcMaxUs dpcP99Us dpcMeanUs vectors                
+------        -------- ---------- -------- --------- -------- -------- -------- --------- -------                
+ndis.sys             0       1652    638.8        10     4706   1261.3    648.4    184.85 81:1652                
+ntoskrnl.exe         0          0        0         0    24411    682.5     31.8     12.03                        
+amdkmdag.sys         0          0        0         0    57967    658.3    202.1     32.02                        
+Wdf01000.sys    501020          0    613.5      0.18   501020    646.2      3.8      2.47 80:501020              
+HDAudBus.sys     13782          0    651.4       7.4     6893    621.2     10.7      2.73 162:13782              
+tcpip.sys            0          0        0         0      128    135.5    118.9     21.14                        
+dxgkrnl.sys          0      54802    569.2     21.12    66220    125.9      8.4      1.48 112:54802              
+storport.sys         0       7817      5.2      0.94   175753     34.8      9.9      3.41 160:6564 144:1247 128:4
+CLASSPNP.SYS         0          0        0         0      167     31.8     28.6      6.39                        
+fastfat.SYS          0          0        0         0        1     24.7     24.7      24.7                        
+symcryptk.dll        0          0        0         0      610      9.3        3         2                        
+Ndu.sys              0          0        0         0       47      8.4      8.4      3.03                        
+stornvme.sys         0          0        0         0     7778      6.2      2.3      1.47                        
+UnionFS.sys          0          0        0         0        1      4.6      4.6       4.6                        
+dxgmms2.sys          0          0        0         0       30      3.6      3.6       2.2                        
+
+
+
+
+driver       cpu isrOnCpu isrTotal mainTraceCpu
+------       --- -------- -------- ------------
+dxgkrnl.sys    1     5739     5739            1
+HDAudBus.sys   0     1392     1392            0
+Wdf01000.sys   0    50771    50771            0
+
+
+
+Frames: 7201 at 120.1 fps avg, p50 8.272 ms, 1% low 9.023 ms, 0 lost to present buffer overflow
+Saved msi-bench-boot06-state00.json

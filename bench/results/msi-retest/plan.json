@@ -1,0 +1,890 @@
+{
+    "series":  "msi-retest",
+    "benchPath":  "E:\\Sources\\msi-mode-utility\\bench",
+    "settleSeconds":  300,
+    "load":  "superposition",
+    "captureSeconds":  60,
+    "allow":  [
+
+              ],
+    "probeDrivers":  [
+                         "dxgkrnl.sys",
+                         "HDAudBus.sys",
+                         "Wdf01000.sys"
+                     ],
+    "isrFloorPerSecond":  {
+                              "dxgkrnl.sys":  300,
+                              "HDAudBus.sys":  60,
+                              "Wdf01000.sys":  3000
+                          },
+    "background":  [
+                       "tone",
+                       "usb-read"
+                   ],
+    "boots":  [
+                  {
+                      "label":  "S",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "A",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "U",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "G",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  0
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "A",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "G",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  0
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "S",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "U",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "G",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  0
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "U",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "A",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "S",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "U",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "S",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "G",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  0
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "A",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "U",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "S",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "G",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  0
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "A",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "G",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  0
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "U",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "A",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "S",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "A",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "G",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  0
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "S",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "U",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "S",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "A",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "U",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  1
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  },
+                  {
+                      "label":  "G",
+                      "states":  [
+                                     {
+                                         "kind":  "msi",
+                                         "devices":  [
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                                             "msiSupported":  0
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                                             "msiSupported":  1
+                                                         },
+                                                         {
+                                                             "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                                             "msiSupported":  0
+                                                         }
+                                                     ],
+                                         "step":  "msi"
+                                     }
+                                 ]
+                  }
+              ]
+}

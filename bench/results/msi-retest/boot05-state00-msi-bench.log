@@ -1,0 +1,76 @@
+Phase: boot05-state00
+
+Device                                                          MSISupported Mode                         SharedWith                      
+------                                                          ------------ ----                         ----------                      
+AMD Radeon RX 7800 XT                                           off          line IRQ 16                                                  
+Standard SATA AHCI Controller                                   on           message-signaled, 1 vector                                   
+Realtek 8852BE Wireless LAN WiFi 6 PCI-E NIC                    on           message-signaled, 1 vector                                   
+Realtek Gaming 2.5GbE Family Controller #2                      on           message-signaled, 16 vectors                                 
+Standard NVM Express Controller                                 on           message-signaled, 33 vectors                                 
+Standard NVM Express Controller                                 on           message-signaled, 17 vectors                                 
+High Definition Audio Bus                                       off          line IRQ 17                  High Definition Audio Controller
+High Definition Audio Controller                                off          line IRQ 17                  High Definition Audio Bus       
+Intel(R) GNA Scoring Accelerator module                         on           message-signaled, 1 vector                                   
+Intel(R) Management Engine Interface #1                         on           message-signaled, 1 vector                                   
+Intel(R) PCI Express Root Port #1 - 7A38                        default      no IRQ assigned                                              
+Intel(R) PCI Express Root Port #15 - 7A36                       default      no IRQ assigned                                              
+Intel(R) PCI Express Root Port #5 - 7A3C                        default      no IRQ assigned                                              
+Intel(R) PCIe RC 010 G5 - A70D                                  default      no IRQ assigned                                              
+Intel(R) PCIe RC 060 (x4) G4 - A74D                             default      no IRQ assigned                                              
+Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft) on           message-signaled, 1 vector                                   
+
+
+
+Load: Unigine Superposition 1.1 (free), infinite scene. Start it as bench\README.md says; this window waits.
+Waiting for superposition.exe ...
+Load started. Waiting 20 s, then capturing 60 s. Do not touch the PC.
+Pre-trace for 5 s to find the CPU of each -Device driver...
+dxgkrnl.sys: CPU 1 (4908 of 4908 ISRs)
+HDAudBus.sys: CPU 0 (1410 of 1410 ISRs)
+Wdf01000.sys: CPU 0 (51126 of 51126 ISRs)
+Measuring for 60 s on CPU 0,1, keep your load running...
+Stall probe (gaps in a spinning time-critical thread):
+
+cpu devices                   seconds gapsPerSecond gapP50Us gapP99Us gapP999Us gapMaxUs stalledUs stalledPct
+--- -------                   ------- ------------- -------- -------- --------- -------- --------- ----------
+  0 HDAudBus.sys,Wdf01000.sys      60        8870.8      3.7       20     632.6  10703.3 3325374.2       5.54
+  1 dxgkrnl.sys                    60          1236     16.7    671.3     861.4   9419.8 3473057.6       5.79
+
+
+
+Decoding the kernel trace...
+Kernel trace: 568487 plain ISRs, 9421 message-based ISRs, 865287 DPCs in 60.4 s (0 undecodable events dropped)
+Plain ISRs land on: CPU 0: 515713, CPU 1: 52774
+Message-based ISRs land on: CPU 25: 5699, CPU 1: 1661, CPU 16: 498, CPU 17: 304
+
+driver        isrPlain isrMessage isrMaxUs isrMeanUs dpcCount dpcMaxUs dpcP99Us dpcMeanUs vectors                
+------        -------- ---------- -------- --------- -------- -------- -------- --------- -------                
+ndis.sys             0       1661    745.3     11.72     4782     1251    652.4    191.86 81:1661                
+amdkmdag.sys         0          0        0         0    47479    819.7    192.2     24.13                        
+ntoskrnl.exe         0          0        0         0    32804    656.9    115.8     16.22                        
+Wdf01000.sys    501859          0    623.9      0.18   501859      653      3.7      2.41 80:501859              
+HDAudBus.sys     13854          0      635      8.48     6883    602.8     10.8       2.7 162:13854              
+dxgkrnl.sys      52774          0    128.7     20.96    74629    131.3    113.5      3.29 112:52774              
+amdfendr.sys         0          0        0         0    12331    124.8        2      1.23                        
+CLASSPNP.SYS         0          0        0         0      166     99.7     35.4      7.17                        
+tcpip.sys            0          0        0         0       50     86.3     86.3     26.55                        
+storport.sys         0       7760      5.3      0.97   175841       37      9.6      3.33 144:6740 160:1013 128:5
+Ndu.sys              0          0        0         0       48     28.7     28.7      2.81                        
+fastfat.SYS          0          0        0         0        1       16       16        16                        
+stornvme.sys         0          0        0         0     7727     12.4      2.3      1.47                        
+ReFS.SYS             0          0        0         0        4      5.3      5.3      4.15                        
+symcryptk.dll        0          0        0         0      630      4.1      2.7      1.78                        
+
+
+
+
+driver       cpu isrOnCpu isrTotal mainTraceCpu
+------       --- -------- -------- ------------
+dxgkrnl.sys    1     4908     4908            1
+HDAudBus.sys   0     1410     1410            0
+Wdf01000.sys   0    51126    51126            0
+
+
+
+Frames: 7286 at 121.5 fps avg, p50 8.19 ms, 1% low 8.914 ms, 0 lost to present buffer overflow
+Saved msi-bench-boot05-state00.json

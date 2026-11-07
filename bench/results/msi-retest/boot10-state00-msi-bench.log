@@ -1,0 +1,76 @@
+Phase: boot10-state00
+
+Device                                                          MSISupported Mode                         SharedWith
+------                                                          ------------ ----                         ----------
+AMD Radeon RX 7800 XT                                           on           message-signaled, 1 vector             
+Standard SATA AHCI Controller                                   on           message-signaled, 1 vector             
+Realtek 8852BE Wireless LAN WiFi 6 PCI-E NIC                    on           message-signaled, 1 vector             
+Realtek Gaming 2.5GbE Family Controller #2                      on           message-signaled, 16 vectors           
+Standard NVM Express Controller                                 on           message-signaled, 33 vectors           
+Standard NVM Express Controller                                 on           message-signaled, 17 vectors           
+High Definition Audio Bus                                       on           message-signaled, 1 vector             
+High Definition Audio Controller                                on           message-signaled, 1 vector             
+Intel(R) GNA Scoring Accelerator module                         on           message-signaled, 1 vector             
+Intel(R) Management Engine Interface #1                         on           message-signaled, 1 vector             
+Intel(R) PCI Express Root Port #1 - 7A38                        default      no IRQ assigned                        
+Intel(R) PCI Express Root Port #15 - 7A36                       default      no IRQ assigned                        
+Intel(R) PCI Express Root Port #5 - 7A3C                        default      no IRQ assigned                        
+Intel(R) PCIe RC 010 G5 - A70D                                  default      no IRQ assigned                        
+Intel(R) PCIe RC 060 (x4) G4 - A74D                             default      no IRQ assigned                        
+Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft) on           message-signaled, 1 vector             
+
+
+
+Load: Unigine Superposition 1.1 (free), infinite scene. Start it as bench\README.md says; this window waits.
+Waiting for superposition.exe ...
+Load started. Waiting 20 s, then capturing 60 s. Do not touch the PC.
+Pre-trace for 5 s to find the CPU of each -Device driver...
+dxgkrnl.sys: CPU 1 (5792 of 5792 ISRs)
+HDAudBus.sys: CPU 1 (696 of 696 ISRs)
+Wdf01000.sys: CPU 0 (50789 of 50789 ISRs)
+Measuring for 60 s on CPU 0,1, keep your load running...
+Stall probe (gaps in a spinning time-critical thread):
+
+cpu devices                  seconds gapsPerSecond gapP50Us gapP99Us gapP999Us gapMaxUs stalledUs stalledPct
+--- -------                  ------- ------------- -------- -------- --------- -------- --------- ----------
+  0 Wdf01000.sys                  60        8868.8      3.7     25.7     661.1  10418.6 3401973.1       5.67
+  1 dxgkrnl.sys,HDAudBus.sys      60          1207     17.7      630     838.6   9143.7 3512934.3       5.85
+
+
+
+Decoding the kernel trace...
+Kernel trace: 500511 plain ISRs, 70270 message-based ISRs, 858023 DPCs in 60.4 s (0 undecodable events dropped)
+Plain ISRs land on: CPU 0: 500511
+Message-based ISRs land on: CPU 1: 60907, CPU 25: 5702, CPU 0: 1664, CPU 18: 507
+
+driver        isrPlain isrMessage isrMaxUs isrMeanUs dpcCount dpcMaxUs dpcP99Us dpcMeanUs vectors               
+------        -------- ---------- -------- --------- -------- -------- -------- --------- -------               
+ndis.sys             0       1657     15.9      9.32     4723   1248.4    649.8    188.55 162:1657              
+amdkmdag.sys         0          0        0         0    58266    848.6    201.1     32.24                       
+ntoskrnl.exe         0          0        0         0    24164    672.8     31.4     10.69                       
+dxgkrnl.sys          0      54016    749.7     21.73    72111      659      3.8      1.35 112:54016             
+tcpip.sys            0          0        0         0       81    125.9    125.9     20.22                       
+CLASSPNP.SYS         0          0        0         0      167     47.9     27.5      6.58                       
+storport.sys         0       7706      5.1      0.91   175432     35.7      9.8      3.37 144:6915 160:785 128:4
+Wdf01000.sys    500511          0     17.5      0.18   500511     26.7      3.9      2.37 80:500511             
+HDAudBus.sys         0       6891    618.1     15.01     6891     23.9      7.2      1.95 81:6891               
+symcryptk.dll        0          0        0         0      611     10.5      3.4      2.08                       
+fastfat.SYS          0          0        0         0        1     10.2     10.2      10.2                       
+Ndu.sys              0          0        0         0       35      7.4      7.4      2.18                       
+stornvme.sys         0          0        0         0     7669      6.8      2.4       1.5                       
+dxgmms2.sys          0          0        0         0       30      3.5      3.5      1.91                       
+hvservice.sys        0          0        0         0        2      3.5      3.5       3.4                       
+
+
+
+
+driver       cpu isrOnCpu isrTotal mainTraceCpu
+------       --- -------- -------- ------------
+dxgkrnl.sys    1     5792     5792            1
+HDAudBus.sys   1      696      696            1
+Wdf01000.sys   0    50789    50789            0
+
+
+
+Frames: 7242 at 120.8 fps avg, p50 8.263 ms, 1% low 8.8 ms, 0 lost to present buffer overflow
+Saved msi-bench-boot10-state00.json

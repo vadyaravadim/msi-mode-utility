@@ -1,0 +1,1621 @@
+{
+    "series":  "msi-retest",
+    "boot":  3,
+    "stateIndex":  0,
+    "state":  {
+                  "kind":  "msi",
+                  "devices":  [
+                                  {
+                                      "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                      "msiSupported":  0
+                                  },
+                                  {
+                                      "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                      "msiSupported":  0
+                                  },
+                                  {
+                                      "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                      "msiSupported":  1
+                                  },
+                                  {
+                                      "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                      "msiSupported":  0
+                                  }
+                              ],
+                  "step":  "msi"
+              },
+    "load":  "superposition",
+    "capturedAt":  "2026-11-06T19:06:39",
+    "preflight":  "passed",
+    "bench":  {
+                  "exitCode":  0,
+                  "resultFile":  "msi-bench-boot03-state00.json",
+                  "files":  [
+                                "msi-bench-boot03-state00.json",
+                                "msi-bench-boot03-state00-presentmon.csv",
+                                "msi-bench-boot03-state00-stalls.csv"
+                            ],
+                  "log":  "boot03-state00-msi-bench.log"
+              },
+    "background":  {
+                       "tone":  {
+                                    "frequencyHz":  440,
+                                    "dbfs":  -40,
+                                    "sampleRate":  48000
+                                },
+                       "usbRead":  {
+                                       "bytesRead":  22679126016,
+                                       "wraps":  21,
+                                       "seconds":  123.4,
+                                       "mibPerSecond":  175.3,
+                                       "blockBytes":  65536,
+                                       "error":  null
+                                   }
+                   },
+    "environment":  {
+                        "capturedAt":  "2026-11-06T19:04:29",
+                        "psVersion":  "5.1.26100.9818",
+                        "os":  {
+                                   "productName":  "Windows 10 Pro",
+                                   "build":  "26300",
+                                   "ubr":  9818,
+                                   "displayVersion":  "26H2",
+                                   "buildLab":  "26100.1.amd64fre.ge_release.240331-1435",
+                                   "insiderBranch":  null,
+                                   "insiderContentType":  null,
+                                   "insiderRing":  null
+                               },
+                        "cpu":  {
+                                    "name":  "Intel(R) Core(TM) i9-14900F",
+                                    "cores":  24,
+                                    "logical":  32
+                                },
+                        "microcodeRaw":  "37-01-00-00",
+                        "bios":  {
+                                     "vendor":  "American Megatrends International, LLC.",
+                                     "version":  "1.C0",
+                                     "date":  "2026-08-25",
+                                     "board":  "Micro-Star International Co., Ltd. MAG B760M MORTAR II (MS-7E13)"
+                                 },
+                        "drivers":  {
+                                        "gpu":  [
+                                                    {
+                                                        "device":  "AMD Radeon RX 7800 XT",
+                                                        "manufacturer":  "Advanced Micro Devices, Inc.",
+                                                        "version":  "32.0.32015.7029",
+                                                        "date":  "2026-10-18"
+                                                    }
+                                                ],
+                                        "audio":  [
+                                                      {
+                                                          "device":  "Realtek High Definition Audio",
+                                                          "manufacturer":  "Microsoft",
+                                                          "version":  "6.0.10007.1",
+                                                          "date":  "2026-06-23"
+                                                      },
+                                                      {
+                                                          "device":  "Microsoft Bluetooth Hands-Free Audio device",
+                                                          "manufacturer":  "Microsoft",
+                                                          "version":  "10.0.26100.9818",
+                                                          "date":  "2026-10-25"
+                                                      },
+                                                      {
+                                                          "device":  "Microsoft Bluetooth A2dp Source",
+                                                          "manufacturer":  "Microsoft",
+                                                          "version":  "10.0.26100.1",
+                                                          "date":  "2024-03-31"
+                                                      },
+                                                      {
+                                                          "device":  "AMD High Definition Audio Device",
+                                                          "manufacturer":  "Advanced Micro Devices",
+                                                          "version":  "10.0.1.41",
+                                                          "date":  "2025-05-26"
+                                                      },
+                                                      {
+                                                          "device":  "AMD Streaming Audio Device",
+                                                          "manufacturer":  "AMD",
+                                                          "version":  "1.0.0.14",
+                                                          "date":  "2024-05-06"
+                                                      }
+                                                  ],
+                                        "usb":  [
+                                                    {
+                                                        "device":  "Generic USB Hub",
+                                                        "manufacturer":  "(Standard USB HUBs)",
+                                                        "version":  "10.0.26100.9818",
+                                                        "date":  "2026-10-25"
+                                                    },
+                                                    {
+                                                        "device":  "USB Composite Device",
+                                                        "manufacturer":  "(Стандартный USB хост-контроллер)",
+                                                        "version":  "10.0.26100.9818",
+                                                        "date":  "2006-06-21"
+                                                    },
+                                                    {
+                                                        "device":  "LIGHTSPEED Receiver",
+                                                        "manufacturer":  "Logitech",
+                                                        "version":  "1.1.91.2790",
+                                                        "date":  "2026-06-17"
+                                                    },
+                                                    {
+                                                        "device":  "Generic SuperSpeed USB Hub",
+                                                        "manufacturer":  "(Standard USB HUBs)",
+                                                        "version":  "10.0.26100.9818",
+                                                        "date":  "2026-10-25"
+                                                    },
+                                                    {
+                                                        "device":  "USB Root Hub (USB 3.0)",
+                                                        "manufacturer":  "(Standard USB HUBs)",
+                                                        "version":  "10.0.26100.9818",
+                                                        "date":  "2026-10-25"
+                                                    },
+                                                    {
+                                                        "device":  "USB xHCI Compliant Host Controller",
+                                                        "manufacturer":  "Generic USB xHCI Host Controller",
+                                                        "version":  "10.0.26100.9818",
+                                                        "date":  "2026-10-25"
+                                                    }
+                                                ],
+                                        "network":  [
+                                                        {
+                                                            "device":  "WAN Miniport (Network Monitor)",
+                                                            "manufacturer":  "Microsoft",
+                                                            "version":  "10.0.26100.1",
+                                                            "date":  "2006-06-21"
+                                                        },
+                                                        {
+                                                            "device":  "WAN Miniport (IPv6)",
+                                                            "manufacturer":  "Microsoft",
+                                                            "version":  "10.0.26100.1",
+                                                            "date":  "2006-06-21"
+                                                        },
+                                                        {
+                                                            "device":  "WAN Miniport (IP)",
+                                                            "manufacturer":  "Microsoft",
+                                                            "version":  "10.0.26100.1",
+                                                            "date":  "2006-06-21"
+                                                        },
+                                                        {
+                                                            "device":  "WAN Miniport (PPPOE)",
+                                                            "manufacturer":  "Microsoft",
+                                                            "version":  "10.0.26100.1",
+                                                            "date":  "2006-06-21"
+                                                        },
+                                                        {
+                                                            "device":  "WAN Miniport (PPTP)",
+                                                            "manufacturer":  "Microsoft",
+                                                            "version":  "10.0.26100.1",
+                                                            "date":  "2006-06-21"
+                                                        },
+                                                        {
+                                                            "device":  "WAN Miniport (L2TP)",
+                                                            "manufacturer":  "Microsoft",
+                                                            "version":  "10.0.26100.1",
+                                                            "date":  "2006-06-21"
+                                                        },
+                                                        {
+                                                            "device":  "WAN Miniport (IKEv2)",
+                                                            "manufacturer":  "Microsoft",
+                                                            "version":  "10.0.26100.1",
+                                                            "date":  "2006-06-21"
+                                                        },
+                                                        {
+                                                            "device":  "WAN Miniport (SSTP)",
+                                                            "manufacturer":  "Microsoft",
+                                                            "version":  "10.0.26100.1",
+                                                            "date":  "2006-06-21"
+                                                        },
+                                                        {
+                                                            "device":  "Hyper-V Virtual Switch Extension Adapter",
+                                                            "manufacturer":  "Microsoft",
+                                                            "version":  "10.0.26100.1",
+                                                            "date":  "2006-06-21"
+                                                        },
+                                                        {
+                                                            "device":  "Realtek Gaming 2.5GbE Family Controller",
+                                                            "manufacturer":  "Realtek",
+                                                            "version":  "10.79.50.1003",
+                                                            "date":  "2025-03-10"
+                                                        },
+                                                        {
+                                                            "device":  "Microsoft Wi-Fi Direct Virtual Adapter",
+                                                            "manufacturer":  "Microsoft",
+                                                            "version":  "10.0.26100.9818",
+                                                            "date":  "2006-06-21"
+                                                        },
+                                                        {
+                                                            "device":  "Realtek 8852BE Wireless LAN WiFi 6 PCI-E NIC",
+                                                            "manufacturer":  "Realtek Semiconductor Corp.",
+                                                            "version":  "6001.15.153.0",
+                                                            "date":  "2024-04-07"
+                                                        },
+                                                        {
+                                                            "device":  "Bluetooth Device (Personal Area Network)",
+                                                            "manufacturer":  "Microsoft",
+                                                            "version":  "10.0.26100.9818",
+                                                            "date":  "2006-06-21"
+                                                        },
+                                                        {
+                                                            "device":  "Microsoft Kernel Debug Network Adapter",
+                                                            "manufacturer":  "Microsoft",
+                                                            "version":  "10.0.26100.8521",
+                                                            "date":  "2006-06-21"
+                                                        },
+                                                        {
+                                                            "device":  "OpenVPN Data Channel Offload",
+                                                            "manufacturer":  "OpenVPN, Inc",
+                                                            "version":  "2.8.2.0",
+                                                            "date":  "2026-02-17"
+                                                        },
+                                                        {
+                                                            "device":  "TAP-Windows Adapter V9",
+                                                            "manufacturer":  "TAP-Windows Provider V9",
+                                                            "version":  "9.27.0.0",
+                                                            "date":  "2024-02-27"
+                                                        }
+                                                    ],
+                                        "chipset":  [
+                                                        {
+                                                            "device":  "Intel(R) SPI (flash) Controller - 7A24",
+                                                            "manufacturer":  "INTEL",
+                                                            "version":  "10.1.46.5",
+                                                            "date":  "1968-07-18"
+                                                        },
+                                                        {
+                                                            "device":  "Intel(R) SMBus - 7A23",
+                                                            "manufacturer":  "INTEL",
+                                                            "version":  "10.1.46.5",
+                                                            "date":  "1968-07-18"
+                                                        },
+                                                        {
+                                                            "device":  "High Definition Audio Controller",
+                                                            "manufacturer":  "Microsoft",
+                                                            "version":  "10.0.26100.9818",
+                                                            "date":  "2026-10-25"
+                                                        },
+                                                        {
+                                                            "device":  "Intel(R) LPC Controller/eSPI Controller - 7A06",
+                                                            "manufacturer":  "INTEL",
+                                                            "version":  "10.1.46.5",
+                                                            "date":  "1968-07-18"
+                                                        },
+                                                        {
+                                                            "device":  "Intel(R) PCI Express Root Port #15 - 7A36",
+                                                            "manufacturer":  "INTEL",
+                                                            "version":  "10.1.46.5",
+                                                            "date":  "1968-07-18"
+                                                        },
+                                                        {
+                                                            "device":  "Intel(R) PCI Express Root Port #5 - 7A3C",
+                                                            "manufacturer":  "INTEL",
+                                                            "version":  "10.1.46.5",
+                                                            "date":  "1968-07-18"
+                                                        },
+                                                        {
+                                                            "device":  "Intel(R) PCI Express Root Port #1 - 7A38",
+                                                            "manufacturer":  "INTEL",
+                                                            "version":  "10.1.46.5",
+                                                            "date":  "1968-07-18"
+                                                        },
+                                                        {
+                                                            "device":  "Intel(R) Management Engine Interface #1",
+                                                            "manufacturer":  "Intel",
+                                                            "version":  "2540.8.7.0",
+                                                            "date":  "2025-09-28"
+                                                        },
+                                                        {
+                                                            "device":  "Intel(R) Shared SRAM - 7A27",
+                                                            "manufacturer":  "INTEL",
+                                                            "version":  "10.1.46.5",
+                                                            "date":  "1968-07-18"
+                                                        },
+                                                        {
+                                                            "device":  "Intel(R) Platform Monitoring Technology Driver",
+                                                            "manufacturer":  "Intel(R) Platform Monitoring Technology Device",
+                                                            "version":  "10.0.26100.9818",
+                                                            "date":  "2006-06-21"
+                                                        },
+                                                        {
+                                                            "device":  "Intel(R) GNA Scoring Accelerator module",
+                                                            "manufacturer":  "Intel Corporation",
+                                                            "version":  "3.5.0.1578",
+                                                            "date":  "2023-11-14"
+                                                        },
+                                                        {
+                                                            "device":  "Intel(R) PCIe RC 060 (x4) G4 - A74D",
+                                                            "manufacturer":  "INTEL",
+                                                            "version":  "10.1.49.10",
+                                                            "date":  "1968-07-18"
+                                                        },
+                                                        {
+                                                            "device":  "High Definition Audio Bus",
+                                                            "manufacturer":  "AMD",
+                                                            "version":  "25.30.0.1",
+                                                            "date":  "2025-08-21"
+                                                        },
+                                                        {
+                                                            "device":  "PCI Express Downstream Switch Port",
+                                                            "manufacturer":  "(Standard system devices)",
+                                                            "version":  "10.0.26100.9818",
+                                                            "date":  "2006-06-21"
+                                                        },
+                                                        {
+                                                            "device":  "PCI Express Upstream Switch Port",
+                                                            "manufacturer":  "(Standard system devices)",
+                                                            "version":  "10.0.26100.9818",
+                                                            "date":  "2006-06-21"
+                                                        },
+                                                        {
+                                                            "device":  "Intel(R) PCIe RC 010 G5 - A70D",
+                                                            "manufacturer":  "INTEL",
+                                                            "version":  "10.1.49.10",
+                                                            "date":  "1968-07-18"
+                                                        },
+                                                        {
+                                                            "device":  "PCI standard host CPU bridge",
+                                                            "manufacturer":  "(Стандартные системные устройства)",
+                                                            "version":  "10.0.26100.9818",
+                                                            "date":  "2006-06-21"
+                                                        }
+                                                    ]
+                                    },
+                        "hvciEnabled":  1,
+                        "clockFlags":  {
+                                           "useplatformclock":  "not set",
+                                           "useplatformtick":  "not set",
+                                           "disabledynamictick":  "not set",
+                                           "tscsyncpolicy":  "not set",
+                                           "hypervisorlaunchtype":  "Auto"
+                                       },
+                        "power":  {
+                                      "schemeGuid":  "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+                                      "overlayAc":  "00000000-0000-0000-0000-000000000000",
+                                      "overlayDc":  null,
+                                      "processorSettings":  [
+                                                                {
+                                                                    "guid":  "06cadf0e-64ed-448a-8927-ce7bf90eb35d",
+                                                                    "alias":  "PERFINCTHRESHOLD",
+                                                                    "name":  "Processor performance increase threshold",
+                                                                    "ac":  30,
+                                                                    "dc":  30
+                                                                },
+                                                                {
+                                                                    "guid":  "06cadf0e-64ed-448a-8927-ce7bf90eb35e",
+                                                                    "alias":  "PERFINCTHRESHOLD1",
+                                                                    "name":  "Processor performance increase threshold for Processor Power Efficiency Class 1",
+                                                                    "ac":  60,
+                                                                    "dc":  90
+                                                                },
+                                                                {
+                                                                    "guid":  "0cc5b647-c1df-4637-891a-dec35c318583",
+                                                                    "alias":  "CPMINCORES",
+                                                                    "name":  "Processor performance core parking min cores",
+                                                                    "ac":  100,
+                                                                    "dc":  100
+                                                                },
+                                                                {
+                                                                    "guid":  "0cc5b647-c1df-4637-891a-dec35c318584",
+                                                                    "alias":  "CPMINCORES1",
+                                                                    "name":  "Processor performance core parking min cores for Processor Power Efficiency Class 1",
+                                                                    "ac":  100,
+                                                                    "dc":  100
+                                                                },
+                                                                {
+                                                                    "guid":  "12a0ab44-fe28-4fa9-b3bd-4b64f44960a6",
+                                                                    "alias":  "PERFDECTHRESHOLD",
+                                                                    "name":  "Processor performance decrease threshold",
+                                                                    "ac":  10,
+                                                                    "dc":  10
+                                                                },
+                                                                {
+                                                                    "guid":  "12a0ab44-fe28-4fa9-b3bd-4b64f44960a7",
+                                                                    "alias":  "PERFDECTHRESHOLD1",
+                                                                    "name":  "Processor performance decrease threshold for Processor Power Efficiency Class 1",
+                                                                    "ac":  20,
+                                                                    "dc":  30
+                                                                },
+                                                                {
+                                                                    "guid":  "12fd031f-53d2-4bf4-ac6d-c699fc9538c7",
+                                                                    "alias":  "HETEROCONTAINMENTHYBRIDIMPUTILTHRESHOLD",
+                                                                    "name":  "Hybrid containment zone important utility percentage",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "1a98ad09-af22-42ca-8e61-f0a5802c270a",
+                                                                    "alias":  "RESTRICTIONCOUNT",
+                                                                    "name":  "Processor Restriction Count",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "1facfc65-a930-4bc5-9f38-504ec097bbc0",
+                                                                    "alias":  "HETEROCLASS1INITIALPERF",
+                                                                    "name":  "Initial performance for Processor Power Efficiency Class 1 when unparked",
+                                                                    "ac":  100,
+                                                                    "dc":  100
+                                                                },
+                                                                {
+                                                                    "guid":  "2430ab6f-a520-44a2-9601-f7f23b5134b1",
+                                                                    "alias":  "CPCONCURRENCY",
+                                                                    "name":  "Processor performance core parking concurrency threshold",
+                                                                    "ac":  95,
+                                                                    "dc":  95
+                                                                },
+                                                                {
+                                                                    "guid":  "2ddd5a84-5a71-437e-912a-db0b8c788732",
+                                                                    "alias":  "CPINCREASETIME",
+                                                                    "name":  "Processor performance core parking increase time",
+                                                                    "ac":  1,
+                                                                    "dc":  1
+                                                                },
+                                                                {
+                                                                    "guid":  "36687f9e-e3a5-4dbf-b1dc-15eb381c6863",
+                                                                    "alias":  "PERFEPP",
+                                                                    "name":  "Processor energy performance preference policy",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "36687f9e-e3a5-4dbf-b1dc-15eb381c6864",
+                                                                    "alias":  "PERFEPP1",
+                                                                    "name":  "Processor energy performance preference policy for Processor Power Efficiency Class 1",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "36687f9e-e3a5-4dbf-b1dc-15eb381c6865",
+                                                                    "alias":  "PERFEPP2",
+                                                                    "name":  "Processor energy performance preference policy for Processor Power Efficiency Class 2",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "3b04d4fd-1cc7-4f23-ab1c-d1337819c4bb",
+                                                                    "alias":  "THROTTLING",
+                                                                    "name":  "Allow Throttle States",
+                                                                    "ac":  2,
+                                                                    "dc":  2
+                                                                },
+                                                                {
+                                                                    "guid":  "4009efa7-e72d-4cba-9edf-91084ea8cbc3",
+                                                                    "alias":  "HETEROINCREASETIME",
+                                                                    "name":  "Processor performance increase time for Processor Power Efficiency Class 1",
+                                                                    "ac":  1,
+                                                                    "dc":  1
+                                                                },
+                                                                {
+                                                                    "guid":  "40fbefc7-2e9d-4d25-a185-0cfd8574bac6",
+                                                                    "alias":  "PERFDECPOL",
+                                                                    "name":  "Processor performance decrease policy",
+                                                                    "ac":  1,
+                                                                    "dc":  1
+                                                                },
+                                                                {
+                                                                    "guid":  "40fbefc7-2e9d-4d25-a185-0cfd8574bac7",
+                                                                    "alias":  "PERFDECPOL1",
+                                                                    "name":  "Processor performance decrease policy for Processor Power Efficiency Class 1",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "43f278bc-0f8a-46d0-8b31-9a23e615d713",
+                                                                    "alias":  "LONGTHREADARCHCLASSLOWERTHRESHOLD",
+                                                                    "name":  "Long running threads\u0027 processor architecture lower limit",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "447235c7-6a8d-4cc0-8e24-9eaf70b96e2b",
+                                                                    "alias":  "CPPERF",
+                                                                    "name":  "Processor performance core parking parked performance state",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "447235c7-6a8d-4cc0-8e24-9eaf70b96e2c",
+                                                                    "alias":  "CPPERF1",
+                                                                    "name":  "Processor performance core parking parked performance state for Processor Power Efficiency Class 1",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "45bcc044-d885-43e2-8605-ee0ec6e96b59",
+                                                                    "alias":  "PERFBOOSTPOL",
+                                                                    "name":  "Processor performance boost policy",
+                                                                    "ac":  100,
+                                                                    "dc":  100
+                                                                },
+                                                                {
+                                                                    "guid":  "465e1f50-b610-473a-ab58-00d1077dc418",
+                                                                    "alias":  "PERFINCPOL",
+                                                                    "name":  "Processor performance increase policy",
+                                                                    "ac":  2,
+                                                                    "dc":  2
+                                                                },
+                                                                {
+                                                                    "guid":  "465e1f50-b610-473a-ab58-00d1077dc419",
+                                                                    "alias":  "PERFINCPOL1",
+                                                                    "name":  "Processor performance increase policy for Processor Power Efficiency Class 1",
+                                                                    "ac":  3,
+                                                                    "dc":  3
+                                                                },
+                                                                {
+                                                                    "guid":  "4b70f900-cdd9-4e66-aa26-ae8417f98173",
+                                                                    "alias":  "LATENCYHINTEPP",
+                                                                    "name":  "Latency sensitivity hint processor energy performance preference",
+                                                                    "ac":  100,
+                                                                    "dc":  100
+                                                                },
+                                                                {
+                                                                    "guid":  "4b70f900-cdd9-4e66-aa26-ae8417f98174",
+                                                                    "alias":  "LATENCYHINTEPP1",
+                                                                    "name":  "Latency sensitivity hint processor energy performance preference for Processor Power Efficiency Class 1",
+                                                                    "ac":  100,
+                                                                    "dc":  100
+                                                                },
+                                                                {
+                                                                    "guid":  "4b70f900-cdd9-4e66-aa26-ae8417f98175",
+                                                                    "alias":  "LATENCYHINTEPP2",
+                                                                    "name":  "Latency sensitivity hint processor energy performance preference for Processor Power Efficiency Class 2",
+                                                                    "ac":  100,
+                                                                    "dc":  100
+                                                                },
+                                                                {
+                                                                    "guid":  "4b92d758-5a24-4851-a470-815d78aee119",
+                                                                    "alias":  "IDLEDEMOTE",
+                                                                    "name":  "Processor idle demote threshold",
+                                                                    "ac":  40,
+                                                                    "dc":  40
+                                                                },
+                                                                {
+                                                                    "guid":  "4bdaf4e9-d103-46d7-a5f0-6280121616ef",
+                                                                    "alias":  "CPDISTRIBUTION",
+                                                                    "name":  "Processor performance core parking distribution threshold",
+                                                                    "ac":  90,
+                                                                    "dc":  90
+                                                                },
+                                                                {
+                                                                    "guid":  "4d2b0152-7d5c-498b-88e2-34345392a2c5",
+                                                                    "alias":  "PERFCHECK",
+                                                                    "name":  "Processor performance time check interval",
+                                                                    "ac":  15,
+                                                                    "dc":  15
+                                                                },
+                                                                {
+                                                                    "guid":  "4e4450b3-6179-4e91-b8f1-5bb9938f81a1",
+                                                                    "alias":  "PERFDUTYCYCLING",
+                                                                    "name":  "Processor duty cycling",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "53824d46-87bd-4739-aa1b-aa793fac36d6",
+                                                                    "alias":  "SHORTTHREADARCHCLASSLOWERTHRESHOLD",
+                                                                    "name":  "Short running threads\u0027 processor architecture lower limit",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "5ba7419a-295c-4b02-841b-66799388d6da",
+                                                                    "alias":  "WPSMINEFFICIENCYTHRESHOLD",
+                                                                    "name":  "WPS minimum efficiency score for small cores",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "5d76a2ca-e8c0-402f-a133-2158492d58ad",
+                                                                    "alias":  "IDLEDISABLE",
+                                                                    "name":  "Processor idle disable",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "603fe9ce-8d01-4b48-a968-1d706c28fd5c",
+                                                                    "alias":  "RESOURCEPRIORITY",
+                                                                    "name":  "Processor resource priority",
+                                                                    "ac":  100,
+                                                                    "dc":  100
+                                                                },
+                                                                {
+                                                                    "guid":  "603fe9ce-8d01-4b48-a968-1d706c28fd5d",
+                                                                    "alias":  "RESOURCEPRIORITY1",
+                                                                    "name":  "Processor resource priority for Processor Power Efficiency Class 1",
+                                                                    "ac":  100,
+                                                                    "dc":  100
+                                                                },
+                                                                {
+                                                                    "guid":  "603fe9ce-8d01-4b48-a968-1d706c28fd5e",
+                                                                    "alias":  "RESOURCEPRIORITY2",
+                                                                    "name":  "Processor resource priority for Processor Power Efficiency Class 2",
+                                                                    "ac":  100,
+                                                                    "dc":  100
+                                                                },
+                                                                {
+                                                                    "guid":  "60fbe21b-efd9-49f2-b066-8674d8e9f423",
+                                                                    "alias":  "HETEROCONTAINMENTPOLICY",
+                                                                    "name":  "Hetero containment policy.",
+                                                                    "ac":  1,
+                                                                    "dc":  1
+                                                                },
+                                                                {
+                                                                    "guid":  "616cdaa5-695e-4545-97ad-97dc2d1bdd88",
+                                                                    "alias":  "LATENCYHINTUNPARK",
+                                                                    "name":  "Latency sensitivity hint min unparked cores/packages",
+                                                                    "ac":  50,
+                                                                    "dc":  50
+                                                                },
+                                                                {
+                                                                    "guid":  "616cdaa5-695e-4545-97ad-97dc2d1bdd89",
+                                                                    "alias":  "LATENCYHINTUNPARK1",
+                                                                    "name":  "Latency sensitivity hint min unparked cores/packages for Processor Power Efficiency Class 1",
+                                                                    "ac":  50,
+                                                                    "dc":  50
+                                                                },
+                                                                {
+                                                                    "guid":  "619b7505-003b-4e82-b7a6-4dd29c300971",
+                                                                    "alias":  "LATENCYHINTPERF",
+                                                                    "name":  "Latency sensitivity hint processor performance",
+                                                                    "ac":  99,
+                                                                    "dc":  99
+                                                                },
+                                                                {
+                                                                    "guid":  "619b7505-003b-4e82-b7a6-4dd29c300972",
+                                                                    "alias":  "LATENCYHINTPERF1",
+                                                                    "name":  "Latency sensitivity hint processor performance for Processor Power Efficiency Class 1",
+                                                                    "ac":  99,
+                                                                    "dc":  99
+                                                                },
+                                                                {
+                                                                    "guid":  "619b7505-003b-4e82-b7a6-4dd29c300973",
+                                                                    "alias":  "LATENCYHINTPERF2",
+                                                                    "name":  "Latency sensitivity hint processor performance for Processor Power Efficiency Class 2",
+                                                                    "ac":  50,
+                                                                    "dc":  50
+                                                                },
+                                                                {
+                                                                    "guid":  "64fcee6b-5b1f-45a4-a76a-19b2c36ee290",
+                                                                    "alias":  "HETEROCONTAINMENTINCREASETIME",
+                                                                    "name":  "Processor performance increase time for a containment zone",
+                                                                    "ac":  1,
+                                                                    "dc":  1
+                                                                },
+                                                                {
+                                                                    "guid":  "6788488b-1b90-4d11-8fa7-973e470dff47",
+                                                                    "alias":  "HETEROHYBRIDCONTAINMENTTHRESHOLD",
+                                                                    "name":  "Processor hybrid containment concurrency threshold",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "69439b22-221b-4830-bd34-f7bcece24583",
+                                                                    "alias":  "HETEROEFFICIENCYCONTAINMENTTHRESHOLD",
+                                                                    "name":  "Processor efficiency containment concurrency threshold",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "6c2993b0-8f48-481f-bcc6-00dd2742aa06",
+                                                                    "alias":  "IDLESCALING",
+                                                                    "name":  "Processor idle threshold scaling",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "6ece9e1f-b6dd-42bf-b1b7-5a512b10c092",
+                                                                    "alias":  "HETEROCONTAINMENTEFFICIENCYIMPUTILTHRESHOLD",
+                                                                    "name":  "Efficiency containment zone important utility percentage",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "6ff13aeb-7897-4356-9999-dd9930af065f",
+                                                                    "alias":  "HETEROCONTAINMENTDECREASETIME",
+                                                                    "name":  "Processor performance decrease time for a containment zone.",
+                                                                    "ac":  1,
+                                                                    "dc":  1
+                                                                },
+                                                                {
+                                                                    "guid":  "71021b41-c749-4d21-be74-a00f335d582b",
+                                                                    "alias":  "CPDECREASEPOL",
+                                                                    "name":  "Processor performance core parking decrease policy",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "75b0ae3f-bce0-45a7-8c89-c9611c25e100",
+                                                                    "alias":  "PROCFREQMAX",
+                                                                    "name":  "Maximum processor frequency",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "75b0ae3f-bce0-45a7-8c89-c9611c25e101",
+                                                                    "alias":  "PROCFREQMAX1",
+                                                                    "name":  "Maximum processor frequency for Processor Power Efficiency Class 1",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "75b0ae3f-bce0-45a7-8c89-c9611c25e102",
+                                                                    "alias":  "PROCFREQMAX2",
+                                                                    "name":  "Maximum processor frequency for Processor Power Efficiency Class 2",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "7b224883-b3cc-4d79-819f-8374152cbe7c",
+                                                                    "alias":  "IDLEPROMOTE",
+                                                                    "name":  "Processor idle promote threshold",
+                                                                    "ac":  60,
+                                                                    "dc":  60
+                                                                },
+                                                                {
+                                                                    "guid":  "7d24baa7-0b84-480f-840c-1b0743c00f5f",
+                                                                    "alias":  "PERFHISTORY",
+                                                                    "name":  "Processor performance history count",
+                                                                    "ac":  1,
+                                                                    "dc":  1
+                                                                },
+                                                                {
+                                                                    "guid":  "7d24baa7-0b84-480f-840c-1b0743c00f60",
+                                                                    "alias":  "PERFHISTORY1",
+                                                                    "name":  "Processor performance history count for Processor Power Efficiency Class 1",
+                                                                    "ac":  1,
+                                                                    "dc":  1
+                                                                },
+                                                                {
+                                                                    "guid":  "7f2492b6-60b1-45e5-ae55-773f8cd5caec",
+                                                                    "alias":  "HETERODECREASETIME",
+                                                                    "name":  "Processor performance decrease time for Processor Power Efficiency Class 1",
+                                                                    "ac":  3,
+                                                                    "dc":  3
+                                                                },
+                                                                {
+                                                                    "guid":  "7f2f5cfa-f10c-4823-b5e1-e93ae85f46b5",
+                                                                    "alias":  "HETEROPOLICY",
+                                                                    "name":  "Heterogeneous policy in effect",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "828423eb-8662-4344-90f7-52bf15870f5a",
+                                                                    "alias":  "SHORTTHREADARCHCLASSUPPERTHRESHOLD",
+                                                                    "name":  "Short running threads\u0027 processor architecture upper limit",
+                                                                    "ac":  255,
+                                                                    "dc":  255
+                                                                },
+                                                                {
+                                                                    "guid":  "893dee8e-2bef-41e0-89c6-b55d0929964c",
+                                                                    "alias":  "PROCTHROTTLEMIN",
+                                                                    "name":  "Minimum processor state",
+                                                                    "ac":  100,
+                                                                    "dc":  5
+                                                                },
+                                                                {
+                                                                    "guid":  "893dee8e-2bef-41e0-89c6-b55d0929964d",
+                                                                    "alias":  "PROCTHROTTLEMIN1",
+                                                                    "name":  "Minimum processor state for Processor Power Efficiency Class 1",
+                                                                    "ac":  100,
+                                                                    "dc":  5
+                                                                },
+                                                                {
+                                                                    "guid":  "893dee8e-2bef-41e0-89c6-b55d0929964e",
+                                                                    "alias":  "PROCTHROTTLEMIN2",
+                                                                    "name":  "Minimum processor state for Processor Power Efficiency Class 2",
+                                                                    "ac":  100,
+                                                                    "dc":  5
+                                                                },
+                                                                {
+                                                                    "guid":  "8baa4a8a-14c6-4451-8e8b-14bdbd197537",
+                                                                    "alias":  "PERFAUTONOMOUS",
+                                                                    "name":  "Processor performance autonomous mode",
+                                                                    "ac":  1,
+                                                                    "dc":  1
+                                                                },
+                                                                {
+                                                                    "guid":  "93b8b6dc-0698-4d1c-9ee4-0644e900c85d",
+                                                                    "alias":  "SCHEDPOLICY",
+                                                                    "name":  "Heterogeneous thread scheduling policy",
+                                                                    "ac":  5,
+                                                                    "dc":  5
+                                                                },
+                                                                {
+                                                                    "guid":  "943c8cb6-6f93-4227-ad87-e9a3feec08d1",
+                                                                    "alias":  "CPOVERUTIL",
+                                                                    "name":  "Processor performance core parking overutilization threshold",
+                                                                    "ac":  60,
+                                                                    "dc":  60
+                                                                },
+                                                                {
+                                                                    "guid":  "94d3a615-a899-4ac5-ae2b-e4d8f634367f",
+                                                                    "alias":  "SYSCOOLPOL",
+                                                                    "name":  "System cooling policy",
+                                                                    "ac":  1,
+                                                                    "dc":  1
+                                                                },
+                                                                {
+                                                                    "guid":  "97cfac41-2217-47eb-992d-618b1977c907",
+                                                                    "alias":  "SOFTPARKLATENCY",
+                                                                    "name":  "Processor performance core parking soft park latency",
+                                                                    "ac":  1000,
+                                                                    "dc":  1000
+                                                                },
+                                                                {
+                                                                    "guid":  "984cf492-3bed-4488-a8f9-4286c97bf5aa",
+                                                                    "alias":  "PERFINCTIME",
+                                                                    "name":  "Processor performance increase time",
+                                                                    "ac":  1,
+                                                                    "dc":  1
+                                                                },
+                                                                {
+                                                                    "guid":  "984cf492-3bed-4488-a8f9-4286c97bf5ab",
+                                                                    "alias":  "PERFINCTIME1",
+                                                                    "name":  "Processor performance increase time for Processor Power Efficiency Class 1",
+                                                                    "ac":  1,
+                                                                    "dc":  1
+                                                                },
+                                                                {
+                                                                    "guid":  "9943e905-9a30-4ec1-9b99-44dd3b76f7a2",
+                                                                    "alias":  "IDLESTATEMAX",
+                                                                    "name":  "Processor idle state maximum",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "b000397d-9b0b-483d-98c9-692a6060cfbf",
+                                                                    "alias":  "HETEROINCREASETHRESHOLD",
+                                                                    "name":  "Processor performance level increase threshold for Processor Power Efficiency Class 1 processor count increase",
+                                                                    "ac":  254,
+                                                                    "dc":  254
+                                                                },
+                                                                {
+                                                                    "guid":  "b000397d-9b0b-483d-98c9-692a6060cfc0",
+                                                                    "alias":  "HETEROINCREASETHRESHOLD1",
+                                                                    "name":  "Processor performance level increase threshold for Processor Power Efficiency Class 2 processor count increase",
+                                                                    "ac":  255,
+                                                                    "dc":  255
+                                                                },
+                                                                {
+                                                                    "guid":  "b0deaf6b-59c0-4523-8a45-ca7f40244114",
+                                                                    "alias":  "MODULEUNPARKPOLICY",
+                                                                    "name":  "Module unpark policy",
+                                                                    "ac":  1,
+                                                                    "dc":  1
+                                                                },
+                                                                {
+                                                                    "guid":  "b28a6829-c5f7-444e-8f61-10e24e85c532",
+                                                                    "alias":  "SMTUNPARKPOLICY",
+                                                                    "name":  "Smt threads unpark policy",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "b669a5e9-7b1d-4132-baaa-49190abcfeb6",
+                                                                    "alias":  "COMPLEXUNPARKPOLICY",
+                                                                    "name":  "Complex unpark policy",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "bae08b81-2d5e-4688-ad6a-13243356654b",
+                                                                    "alias":  "SHORTSCHEDPOLICY",
+                                                                    "name":  "Heterogeneous short running thread scheduling policy",
+                                                                    "ac":  5,
+                                                                    "dc":  5
+                                                                },
+                                                                {
+                                                                    "guid":  "bc5038f7-23e0-4960-96da-33abaf5935ec",
+                                                                    "alias":  "PROCTHROTTLEMAX",
+                                                                    "name":  "Maximum processor state",
+                                                                    "ac":  100,
+                                                                    "dc":  100
+                                                                },
+                                                                {
+                                                                    "guid":  "bc5038f7-23e0-4960-96da-33abaf5935ed",
+                                                                    "alias":  "PROCTHROTTLEMAX1",
+                                                                    "name":  "Maximum processor state for Processor Power Efficiency Class 1",
+                                                                    "ac":  100,
+                                                                    "dc":  100
+                                                                },
+                                                                {
+                                                                    "guid":  "bc5038f7-23e0-4960-96da-33abaf5935ee",
+                                                                    "alias":  "PROCTHROTTLEMAX2",
+                                                                    "name":  "Maximum processor state for Processor Power Efficiency Class 2",
+                                                                    "ac":  100,
+                                                                    "dc":  100
+                                                                },
+                                                                {
+                                                                    "guid":  "be337238-0d82-4146-a960-4f3749d470c7",
+                                                                    "alias":  "PERFBOOSTMODE",
+                                                                    "name":  "Processor performance boost mode",
+                                                                    "ac":  2,
+                                                                    "dc":  2
+                                                                },
+                                                                {
+                                                                    "guid":  "bf903d33-9d24-49d3-a468-e65e0325046a",
+                                                                    "alias":  "LONGTHREADARCHCLASSUPPERTHRESHOLD",
+                                                                    "name":  "Long running threads\u0027 processor architecture upper limit",
+                                                                    "ac":  255,
+                                                                    "dc":  255
+                                                                },
+                                                                {
+                                                                    "guid":  "c4581c31-89ab-4597-8e2b-9c9cab440e6b",
+                                                                    "alias":  "IDLECHECK",
+                                                                    "name":  "Processor idle time check",
+                                                                    "ac":  50000,
+                                                                    "dc":  50000
+                                                                },
+                                                                {
+                                                                    "guid":  "c7be0679-2817-4d69-9d02-519a537ed0c6",
+                                                                    "alias":  "CPINCREASEPOL",
+                                                                    "name":  "Processor performance core parking increase policy",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "cfeda3d0-7697-4566-a922-a9086cd49dfa",
+                                                                    "alias":  "PERFAUTONOMOUSWINDOW",
+                                                                    "name":  "Processor autonomous activity window",
+                                                                    "ac":  30000,
+                                                                    "dc":  30000
+                                                                },
+                                                                {
+                                                                    "guid":  "d8edeb9b-95cf-4f95-a73c-b061973693c8",
+                                                                    "alias":  "PERFDECTIME",
+                                                                    "name":  "Processor performance decrease time",
+                                                                    "ac":  1,
+                                                                    "dc":  1
+                                                                },
+                                                                {
+                                                                    "guid":  "d8edeb9b-95cf-4f95-a73c-b061973693c9",
+                                                                    "alias":  "PERFDECTIME1",
+                                                                    "name":  "Processor performance decrease time for Processor Power Efficiency Class 1",
+                                                                    "ac":  2,
+                                                                    "dc":  2
+                                                                },
+                                                                {
+                                                                    "guid":  "d92998c2-6a48-49ca-85d4-8cceec294570",
+                                                                    "alias":  "SHORTTHREADRUNTIMETHRESHOLD",
+                                                                    "name":  "Short vs. long running thread threshold",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "dfd10d17-d5eb-45dd-877a-9a34ddd15c82",
+                                                                    "alias":  "CPDECREASETIME",
+                                                                    "name":  "Processor performance core parking decrease time",
+                                                                    "ac":  3,
+                                                                    "dc":  3
+                                                                },
+                                                                {
+                                                                    "guid":  "e0007330-f589-42ed-a401-5ddb10e785d3",
+                                                                    "alias":  "DISTRIBUTEUTIL",
+                                                                    "name":  "Processor performance core parking utility distribution",
+                                                                    "ac":  0,
+                                                                    "dc":  0
+                                                                },
+                                                                {
+                                                                    "guid":  "ea062031-0e34-4ff1-9b6d-eb1059334028",
+                                                                    "alias":  "CPMAXCORES",
+                                                                    "name":  "Processor performance core parking max cores",
+                                                                    "ac":  100,
+                                                                    "dc":  100
+                                                                },
+                                                                {
+                                                                    "guid":  "ea062031-0e34-4ff1-9b6d-eb1059334029",
+                                                                    "alias":  "CPMAXCORES1",
+                                                                    "name":  "Processor performance core parking max cores for Processor Power Efficiency Class 1",
+                                                                    "ac":  100,
+                                                                    "dc":  100
+                                                                },
+                                                                {
+                                                                    "guid":  "f735a673-2066-4f80-a0c5-ddee0cf1bf5d",
+                                                                    "alias":  "CPHEADROOM",
+                                                                    "name":  "Processor performance core parking concurrency headroom threshold",
+                                                                    "ac":  50,
+                                                                    "dc":  50
+                                                                },
+                                                                {
+                                                                    "guid":  "f8861c27-95e7-475c-865b-13c0cb3f9d6b",
+                                                                    "alias":  "HETERODECREASETHRESHOLD",
+                                                                    "name":  "Processor performance level decrease threshold for Processor Power Efficiency Class 1 processor count decrease",
+                                                                    "ac":  254,
+                                                                    "dc":  254
+                                                                },
+                                                                {
+                                                                    "guid":  "f8861c27-95e7-475c-865b-13c0cb3f9d6c",
+                                                                    "alias":  "HETERODECREASETHRESHOLD1",
+                                                                    "name":  "Processor performance level decrease threshold for Processor Power Efficiency Class 2 processor count decrease",
+                                                                    "ac":  255,
+                                                                    "dc":  255
+                                                                },
+                                                                {
+                                                                    "guid":  "fddc842b-8364-4edc-94cf-c17f60de1c80",
+                                                                    "alias":  "HETEROCLASS0FLOORPERF",
+                                                                    "name":  "A floor performance for Processor Power Efficiency Class 0 when there are Processor Power Efficiency Class 1 processors unparked",
+                                                                    "ac":  100,
+                                                                    "dc":  100
+                                                                }
+                                                            ]
+                                  },
+                        "uptimeSeconds":  320,
+                        "stopwatchFrequency":  10000000,
+                        "etwSessions":  [
+                                            "Circular Kernel Context Logger",
+                                            "Eventlog-Security",
+                                            "CimFSUnionFS-Filter",
+                                            "DiagLog",
+                                            "Diagtrack-Listener",
+                                            "EventLog-Application",
+                                            "EventLog-Microsoft-Windows-CodeIntegrity-Verbose",
+                                            "EventLog-System",
+                                            "FilterMgr-Logger",
+                                            "LwtNetLog",
+                                            "Microsoft-Windows-Rdp-Graphics-RdpIdd-Trace",
+                                            "NetCore",
+                                            "NtfsLog",
+                                            "RadioMgr",
+                                            "ReFSLog",
+                                            "UBPM",
+                                            "WdiContextLog",
+                                            "WiFiDriverIHVSession",
+                                            "WiFiDriverIHVSessionRepro",
+                                            "WiFiSession",
+                                            "SleepStudyTraceSession",
+                                            "CldFltLog",
+                                            "NetCfgTrace",
+                                            "8696EAC4-1288-4288-A4EE-49EE431B0AD9",
+                                            "WindowsUpdate_trace_log",
+                                            "MpWppCoreTracing-20261106-185920-00000003-100000000",
+                                            "MpWppUpdateLogging",
+                                            "MpWppTracing-20261106-155920-00000003-fffffffeffffffff",
+                                            "1DSListener",
+                                            "DefenderApiLoggerLowPriv",
+                                            "ScreenOnPowerStudyTraceSession",
+                                            "GamingServices",
+                                            "SHS-11062026-185931-7-1ff",
+                                            "WINNETESP",
+                                            "UpdateSessionOrchestration",
+                                            "MoUxCoreWorker",
+                                            "WinDiag-Realtime-Session"
+                                        ],
+                        "pendingFileOperations":  [
+                                                      {
+                                                          "source":  "C:\\Windows\\System32\\gamingservicesproxy_17.dll.0",
+                                                          "destination":  "",
+                                                          "isRename":  false
+                                                      }
+                                                  ],
+                        "processes":  [
+                                          {
+                                              "name":  "ApplicationFrameHost",
+                                              "count":  1,
+                                              "cpuSeconds":  0.203
+                                          },
+                                          {
+                                              "name":  "conhost",
+                                              "count":  2,
+                                              "cpuSeconds":  0.156
+                                          },
+                                          {
+                                              "name":  "csrss",
+                                              "count":  2,
+                                              "cpuSeconds":  1.281
+                                          },
+                                          {
+                                              "name":  "ctfmon",
+                                              "count":  1,
+                                              "cpuSeconds":  0.047
+                                          },
+                                          {
+                                              "name":  "dwm",
+                                              "count":  1,
+                                              "cpuSeconds":  1.672
+                                          },
+                                          {
+                                              "name":  "explorer",
+                                              "count":  1,
+                                              "cpuSeconds":  3.109
+                                          },
+                                          {
+                                              "name":  "fontdrvhost",
+                                              "count":  2,
+                                              "cpuSeconds":  0.078
+                                          },
+                                          {
+                                              "name":  "Idle",
+                                              "count":  1,
+                                              "cpuSeconds":  0
+                                          },
+                                          {
+                                              "name":  "lsass",
+                                              "count":  1,
+                                              "cpuSeconds":  1.141
+                                          },
+                                          {
+                                              "name":  "Memory Compression",
+                                              "count":  1,
+                                              "cpuSeconds":  0.016
+                                          },
+                                          {
+                                              "name":  "MsMpEng",
+                                              "count":  1,
+                                              "cpuSeconds":  14.969
+                                          },
+                                          {
+                                              "name":  "NisSrv",
+                                              "count":  1,
+                                              "cpuSeconds":  0.047
+                                          },
+                                          {
+                                              "name":  "powershell",
+                                              "count":  1,
+                                              "cpuSeconds":  1.766
+                                          },
+                                          {
+                                              "name":  "Registry",
+                                              "count":  1,
+                                              "cpuSeconds":  0.219
+                                          },
+                                          {
+                                              "name":  "RuntimeBroker",
+                                              "count":  2,
+                                              "cpuSeconds":  0.266
+                                          },
+                                          {
+                                              "name":  "SearchHost",
+                                              "count":  1,
+                                              "cpuSeconds":  0.859
+                                          },
+                                          {
+                                              "name":  "SearchIndexer",
+                                              "count":  1,
+                                              "cpuSeconds":  58.188
+                                          },
+                                          {
+                                              "name":  "Secure System",
+                                              "count":  1,
+                                              "cpuSeconds":  0
+                                          },
+                                          {
+                                              "name":  "SecurityHealthService",
+                                              "count":  1,
+                                              "cpuSeconds":  0.234
+                                          },
+                                          {
+                                              "name":  "SecurityHealthSystray",
+                                              "count":  1,
+                                              "cpuSeconds":  0.031
+                                          },
+                                          {
+                                              "name":  "services",
+                                              "count":  1,
+                                              "cpuSeconds":  1.25
+                                          },
+                                          {
+                                              "name":  "sihost",
+                                              "count":  1,
+                                              "cpuSeconds":  0.703
+                                          },
+                                          {
+                                              "name":  "smss",
+                                              "count":  1,
+                                              "cpuSeconds":  0.109
+                                          },
+                                          {
+                                              "name":  "spoolsv",
+                                              "count":  1,
+                                              "cpuSeconds":  0.281
+                                          },
+                                          {
+                                              "name":  "StartMenuExperienceHost",
+                                              "count":  1,
+                                              "cpuSeconds":  1
+                                          },
+                                          {
+                                              "name":  "svchost",
+                                              "count":  87,
+                                              "cpuSeconds":  26
+                                          },
+                                          {
+                                              "name":  "System",
+                                              "count":  1,
+                                              "cpuSeconds":  15.453
+                                          },
+                                          {
+                                              "name":  "taskhostw",
+                                              "count":  2,
+                                              "cpuSeconds":  0.078
+                                          },
+                                          {
+                                              "name":  "TextInputHost",
+                                              "count":  1,
+                                              "cpuSeconds":  0.25
+                                          },
+                                          {
+                                              "name":  "unsecapp",
+                                              "count":  1,
+                                              "cpuSeconds":  0
+                                          },
+                                          {
+                                              "name":  "wininit",
+                                              "count":  1,
+                                              "cpuSeconds":  0.062
+                                          },
+                                          {
+                                              "name":  "winlogon",
+                                              "count":  1,
+                                              "cpuSeconds":  0.141
+                                          },
+                                          {
+                                              "name":  "WmiPrvSE",
+                                              "count":  3,
+                                              "cpuSeconds":  4.984
+                                          },
+                                          {
+                                              "name":  "WUDFHost",
+                                              "count":  2,
+                                              "cpuSeconds":  0.016
+                                          },
+                                          {
+                                              "name":  "other: 43",
+                                              "count":  43,
+                                              "cpuSeconds":  16.454
+                                          }
+                                      ],
+                        "services":  [
+                                         {
+                                             "name":  "Appinfo"
+                                         },
+                                         {
+                                             "name":  "AudioEndpointBuilder"
+                                         },
+                                         {
+                                             "name":  "Audiosrv"
+                                         },
+                                         {
+                                             "name":  "BFE"
+                                         },
+                                         {
+                                             "name":  "bthserv"
+                                         },
+                                         {
+                                             "name":  "CoreMessagingRegistrar"
+                                         },
+                                         {
+                                             "name":  "CryptSvc"
+                                         },
+                                         {
+                                             "name":  "DcomLaunch"
+                                         },
+                                         {
+                                             "name":  "Dhcp"
+                                         },
+                                         {
+                                             "name":  "DiagTrack"
+                                         },
+                                         {
+                                             "name":  "Dnscache"
+                                         },
+                                         {
+                                             "name":  "DoSvc"
+                                         },
+                                         {
+                                             "name":  "EventLog"
+                                         },
+                                         {
+                                             "name":  "EventSystem"
+                                         },
+                                         {
+                                             "name":  "FontCache"
+                                         },
+                                         {
+                                             "name":  "gpsvc"
+                                         },
+                                         {
+                                             "name":  "iphlpsvc"
+                                         },
+                                         {
+                                             "name":  "LanmanServer"
+                                         },
+                                         {
+                                             "name":  "LanmanWorkstation"
+                                         },
+                                         {
+                                             "name":  "LicenseManager"
+                                         },
+                                         {
+                                             "name":  "LSM"
+                                         },
+                                         {
+                                             "name":  "mpssvc"
+                                         },
+                                         {
+                                             "name":  "netprofm"
+                                         },
+                                         {
+                                             "name":  "nsi"
+                                         },
+                                         {
+                                             "name":  "PlugPlay"
+                                         },
+                                         {
+                                             "name":  "Power"
+                                         },
+                                         {
+                                             "name":  "ProfSvc"
+                                         },
+                                         {
+                                             "name":  "RpcEptMapper"
+                                         },
+                                         {
+                                             "name":  "RpcSs"
+                                         },
+                                         {
+                                             "name":  "SamSs"
+                                         },
+                                         {
+                                             "name":  "Schedule"
+                                         },
+                                         {
+                                             "name":  "SecurityHealthService"
+                                         },
+                                         {
+                                             "name":  "SENS"
+                                         },
+                                         {
+                                             "name":  "ShellHWDetection"
+                                         },
+                                         {
+                                             "name":  "Spooler"
+                                         },
+                                         {
+                                             "name":  "StateRepository"
+                                         },
+                                         {
+                                             "name":  "SysMain"
+                                         },
+                                         {
+                                             "name":  "Themes"
+                                         },
+                                         {
+                                             "name":  "TimeBrokerSvc"
+                                         },
+                                         {
+                                             "name":  "TrkWks"
+                                         },
+                                         {
+                                             "name":  "UserManager"
+                                         },
+                                         {
+                                             "name":  "UsoSvc"
+                                         },
+                                         {
+                                             "name":  "Wcmsvc"
+                                         },
+                                         {
+                                             "name":  "WinDefend"
+                                         },
+                                         {
+                                             "name":  "Winmgmt"
+                                         },
+                                         {
+                                             "name":  "WlanSvc"
+                                         },
+                                         {
+                                             "name":  "WpnService"
+                                         },
+                                         {
+                                             "name":  "WSearch"
+                                         },
+                                         {
+                                             "name":  "wuauserv"
+                                         },
+                                         {
+                                             "name":  "other: 75",
+                                             "count":  75,
+                                             "cpuSeconds":  0
+                                         }
+                                     ],
+                        "benchFileSha256":  {
+                                                "bench-env.ps1":  "3ddf50b29b313bdc6fcf0b9e053464243438c39c76fa89a23f2eeaead0c64942",
+                                                "superposition.json":  "4839c68a7b50a63e5d70e5723afc0a2e80988546b70cec7344758c6d6a10aebd",
+                                                "lab-chain.ps1":  "aa53ce67c3f5217075cb866ef345423e2a2f8204be6681f55d108faff16a062a",
+                                                "lab-config.ps1":  "2a8b905cf1a9bdd5d26f60bc61eeceac64e09b3952209b99d4e5be0781b3466e",
+                                                "lab-denylist.ps1":  "f5ba1567b0b8ef9770d7c40f26b9152b4bcfc2df2fb5763aac865b84d1b7c88f",
+                                                "lab-environment.ps1":  "15656a61ef145e573dddff2191e0c8ecd028c7c7ecbb59309afcac5f7da4fdcb",
+                                                "lab-libraries.ps1":  "47927a0696cc612647dbbf67e6ee67a5b2a73855b289f953b8ad66fa7f1b54e8",
+                                                "lab-loads.ps1":  "0ebd60c6d842d86b71374d3c5952a7a3328abbe1cf6da0162f132eb95db3a1e6",
+                                                "lab-plan.ps1":  "e49f3aa04cd5ad4f57d05c5d6f3b6e65247da566887f7abc06e50465949ef17c",
+                                                "lab-preflight.ps1":  "46cfa309ea6255b433d95122ff85f5151a81da1f9e5f9e98a870ff69c20c19a8",
+                                                "lab-profile.ps1":  "2194cee79fdbb96a1dad91b5a54c5fb6feb9cfd8655a86e1e83b7d1c9b32b571",
+                                                "lab-sanitize.ps1":  "d813ecf4609e9d6f3b1a5be6030653b232820dda76cf79173b11c096525ef2f1",
+                                                "lab-steps.ps1":  "73e50feca9c48a9963eb65e53e83fbaaf757deda966c97d768cb1287a23b36ae",
+                                                "lab-system.ps1":  "b65b4085be4ed680e861613d3008c1f5a391f80d612bc60d6cf023ec41fa02d1",
+                                                "bench-lab.ps1":  "21e21d615ad4c9b04b29a194952d8b42e5cd6df5e1c8909d5ea06ac3e25a5d1a"
+                                            }
+                    },
+    "processCpuDelta":  [
+                            {
+                                "name":  "powershell",
+                                "count":  1,
+                                "cpuSeconds":  9.859
+                            },
+                            {
+                                "name":  "System",
+                                "count":  1,
+                                "cpuSeconds":  6.281
+                            },
+                            {
+                                "name":  "svchost",
+                                "count":  86,
+                                "cpuSeconds":  3.484
+                            },
+                            {
+                                "name":  "MsMpEng",
+                                "count":  1,
+                                "cpuSeconds":  2.094
+                            },
+                            {
+                                "name":  "dwm",
+                                "count":  1,
+                                "cpuSeconds":  1.75
+                            },
+                            {
+                                "name":  "WmiPrvSE",
+                                "count":  3,
+                                "cpuSeconds":  0.969
+                            },
+                            {
+                                "name":  "explorer",
+                                "count":  1,
+                                "cpuSeconds":  0.312
+                            },
+                            {
+                                "name":  "TextInputHost",
+                                "count":  1,
+                                "cpuSeconds":  0.188
+                            },
+                            {
+                                "name":  "services",
+                                "count":  1,
+                                "cpuSeconds":  0.125
+                            },
+                            {
+                                "name":  "SearchIndexer",
+                                "count":  1,
+                                "cpuSeconds":  0.094
+                            },
+                            {
+                                "name":  "conhost",
+                                "count":  3,
+                                "cpuSeconds":  0.078
+                            },
+                            {
+                                "name":  "lsass",
+                                "count":  1,
+                                "cpuSeconds":  0.062
+                            },
+                            {
+                                "name":  "csrss",
+                                "count":  2,
+                                "cpuSeconds":  0.062
+                            },
+                            {
+                                "name":  "sihost",
+                                "count":  1,
+                                "cpuSeconds":  0.031
+                            },
+                            {
+                                "name":  "StartMenuExperienceHost",
+                                "count":  1,
+                                "cpuSeconds":  0.016
+                            },
+                            {
+                                "name":  "taskhostw",
+                                "count":  2,
+                                "cpuSeconds":  0.016
+                            },
+                            {
+                                "name":  "ApplicationFrameHost",
+                                "count":  1,
+                                "cpuSeconds":  0.016
+                            },
+                            {
+                                "name":  "RuntimeBroker",
+                                "count":  2,
+                                "cpuSeconds":  0.016
+                            },
+                            {
+                                "name":  "audiodg",
+                                "count":  1,
+                                "cpuSeconds":  0.016
+                            },
+                            {
+                                "name":  "SearchHost",
+                                "count":  1,
+                                "cpuSeconds":  0.016
+                            },
+                            {
+                                "name":  "smss",
+                                "count":  1,
+                                "cpuSeconds":  0
+                            },
+                            {
+                                "name":  "spoolsv",
+                                "count":  1,
+                                "cpuSeconds":  0
+                            },
+                            {
+                                "name":  "wininit",
+                                "count":  1,
+                                "cpuSeconds":  0
+                            },
+                            {
+                                "name":  "WUDFHost",
+                                "count":  2,
+                                "cpuSeconds":  0
+                            },
+                            {
+                                "name":  "winlogon",
+                                "count":  1,
+                                "cpuSeconds":  0
+                            },
+                            {
+                                "name":  "unsecapp",
+                                "count":  1,
+                                "cpuSeconds":  0
+                            },
+                            {
+                                "name":  "SecurityHealthSystray",
+                                "count":  1,
+                                "cpuSeconds":  0
+                            },
+                            {
+                                "name":  "fontdrvhost",
+                                "count":  2,
+                                "cpuSeconds":  0
+                            },
+                            {
+                                "name":  "Idle",
+                                "count":  1,
+                                "cpuSeconds":  0
+                            },
+                            {
+                                "name":  "ctfmon",
+                                "count":  1,
+                                "cpuSeconds":  0
+                            },
+                            {
+                                "name":  "Registry",
+                                "count":  1,
+                                "cpuSeconds":  0
+                            },
+                            {
+                                "name":  "NisSrv",
+                                "count":  1,
+                                "cpuSeconds":  0
+                            },
+                            {
+                                "name":  "SecurityHealthService",
+                                "count":  1,
+                                "cpuSeconds":  0
+                            },
+                            {
+                                "name":  "Secure System",
+                                "count":  1,
+                                "cpuSeconds":  0
+                            },
+                            {
+                                "name":  "Memory Compression",
+                                "count":  1,
+                                "cpuSeconds":  0
+                            },
+                            {
+                                "name":  "other: 43",
+                                "count":  43,
+                                "cpuSeconds":  95.923
+                            }
+                        ]
+}

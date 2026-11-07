@@ -1,0 +1,1679 @@
+{
+    "phase":  "boot00-state00",
+    "timestamp":  "2026-11-06T18:39:55",
+    "devices":  [
+                    {
+                        "Device":  "AMD Radeon RX 7800 XT",
+                        "Class":  "Display",
+                        "MSISupported":  "on",
+                        "Mode":  "message-signaled, 1 vector",
+                        "SharedWith":  ""
+                    },
+                    {
+                        "Device":  "High Definition Audio Bus",
+                        "Class":  "System",
+                        "MSISupported":  "off",
+                        "Mode":  "line IRQ 17",
+                        "SharedWith":  "High Definition Audio Controller"
+                    },
+                    {
+                        "Device":  "Realtek Gaming 2.5GbE Family Controller #2",
+                        "Class":  "Net",
+                        "MSISupported":  "on",
+                        "Mode":  "message-signaled, 16 vectors",
+                        "SharedWith":  ""
+                    },
+                    {
+                        "Device":  "Realtek 8852BE Wireless LAN WiFi 6 PCI-E NIC",
+                        "Class":  "Net",
+                        "MSISupported":  "on",
+                        "Mode":  "message-signaled, 1 vector",
+                        "SharedWith":  ""
+                    },
+                    {
+                        "Device":  "Standard NVM Express Controller",
+                        "Class":  "SCSIAdapter",
+                        "MSISupported":  "on",
+                        "Mode":  "message-signaled, 17 vectors",
+                        "SharedWith":  ""
+                    },
+                    {
+                        "Device":  "Standard NVM Express Controller",
+                        "Class":  "SCSIAdapter",
+                        "MSISupported":  "on",
+                        "Mode":  "message-signaled, 33 vectors",
+                        "SharedWith":  ""
+                    },
+                    {
+                        "Device":  "Intel(R) PCI Express Root Port #15 - 7A36",
+                        "Class":  "System",
+                        "MSISupported":  "default",
+                        "Mode":  "no IRQ assigned",
+                        "SharedWith":  ""
+                    },
+                    {
+                        "Device":  "Intel(R) PCI Express Root Port #1 - 7A38",
+                        "Class":  "System",
+                        "MSISupported":  "default",
+                        "Mode":  "no IRQ assigned",
+                        "SharedWith":  ""
+                    },
+                    {
+                        "Device":  "Intel(R) PCI Express Root Port #5 - 7A3C",
+                        "Class":  "System",
+                        "MSISupported":  "default",
+                        "Mode":  "no IRQ assigned",
+                        "SharedWith":  ""
+                    },
+                    {
+                        "Device":  "High Definition Audio Controller",
+                        "Class":  "System",
+                        "MSISupported":  "off",
+                        "Mode":  "line IRQ 17",
+                        "SharedWith":  "High Definition Audio Bus"
+                    },
+                    {
+                        "Device":  "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+                        "Class":  "USB",
+                        "MSISupported":  "on",
+                        "Mode":  "message-signaled, 1 vector",
+                        "SharedWith":  ""
+                    },
+                    {
+                        "Device":  "Standard SATA AHCI Controller",
+                        "Class":  "HDC",
+                        "MSISupported":  "on",
+                        "Mode":  "message-signaled, 1 vector",
+                        "SharedWith":  ""
+                    },
+                    {
+                        "Device":  "Intel(R) Management Engine Interface #1",
+                        "Class":  "System",
+                        "MSISupported":  "on",
+                        "Mode":  "message-signaled, 1 vector",
+                        "SharedWith":  ""
+                    },
+                    {
+                        "Device":  "Intel(R) PCIe RC 010 G5 - A70D",
+                        "Class":  "System",
+                        "MSISupported":  "default",
+                        "Mode":  "no IRQ assigned",
+                        "SharedWith":  ""
+                    },
+                    {
+                        "Device":  "Intel(R) PCIe RC 060 (x4) G4 - A74D",
+                        "Class":  "System",
+                        "MSISupported":  "default",
+                        "Mode":  "no IRQ assigned",
+                        "SharedWith":  ""
+                    },
+                    {
+                        "Device":  "Intel(R) GNA Scoring Accelerator module",
+                        "Class":  "System",
+                        "MSISupported":  "on",
+                        "Mode":  "message-signaled, 1 vector",
+                        "SharedWith":  ""
+                    }
+                ],
+    "probes":  [
+                   {
+                       "cpu":  0,
+                       "devices":  [
+                                       "HDAudBus.sys",
+                                       "Wdf01000.sys"
+                                   ],
+                       "seconds":  60,
+                       "gapThresholdUs":  2,
+                       "gapsPerSecond":  8958.2,
+                       "gapP50Us":  3.8,
+                       "gapP99Us":  29.1,
+                       "gapP999Us":  631.9,
+                       "gapMaxUs":  10386,
+                       "stalledUs":  3538819.3,
+                       "stalledPct":  5.9,
+                       "histogram":  [
+                                         {
+                                             "fromUs":  2,
+                                             "toUs":  5,
+                                             "gaps":  420756,
+                                             "stalledUs":  1611941.7
+                                         },
+                                         {
+                                             "fromUs":  5,
+                                             "toUs":  10,
+                                             "gaps":  101139,
+                                             "stalledUs":  527185.8
+                                         },
+                                         {
+                                             "fromUs":  10,
+                                             "toUs":  20,
+                                             "gaps":  4327,
+                                             "stalledUs":  72069.3
+                                         },
+                                         {
+                                             "fromUs":  20,
+                                             "toUs":  50,
+                                             "gaps":  9497,
+                                             "stalledUs":  260544.6
+                                         },
+                                         {
+                                             "fromUs":  50,
+                                             "toUs":  100,
+                                             "gaps":  89,
+                                             "stalledUs":  5030.7
+                                         },
+                                         {
+                                             "fromUs":  100,
+                                             "toUs":  200,
+                                             "gaps":  8,
+                                             "stalledUs":  1234.1
+                                         },
+                                         {
+                                             "fromUs":  200,
+                                             "toUs":  500,
+                                             "gaps":  21,
+                                             "stalledUs":  6905
+                                         },
+                                         {
+                                             "fromUs":  500,
+                                             "toUs":  1000,
+                                             "gaps":  1652,
+                                             "stalledUs":  1039773
+                                         },
+                                         {
+                                             "fromUs":  1000,
+                                             "toUs":  2000,
+                                             "gaps":  3,
+                                             "stalledUs":  3749.1
+                                         },
+                                         {
+                                             "fromUs":  2000,
+                                             "toUs":  5000,
+                                             "gaps":  0,
+                                             "stalledUs":  0
+                                         },
+                                         {
+                                             "fromUs":  5000,
+                                             "toUs":  10000,
+                                             "gaps":  0,
+                                             "stalledUs":  0
+                                         },
+                                         {
+                                             "fromUs":  10000,
+                                             "toUs":  20000,
+                                             "gaps":  1,
+                                             "stalledUs":  10386
+                                         },
+                                         {
+                                             "fromUs":  20000,
+                                             "toUs":  50000,
+                                             "gaps":  0,
+                                             "stalledUs":  0
+                                         },
+                                         {
+                                             "fromUs":  50000,
+                                             "toUs":  100000,
+                                             "gaps":  0,
+                                             "stalledUs":  0
+                                         },
+                                         {
+                                             "fromUs":  100000,
+                                             "toUs":  null,
+                                             "gaps":  0,
+                                             "stalledUs":  0
+                                         }
+                                     ]
+                   },
+                   {
+                       "cpu":  1,
+                       "devices":  [
+                                       "dxgkrnl.sys"
+                                   ],
+                       "seconds":  60,
+                       "gapThresholdUs":  2,
+                       "gapsPerSecond":  1134,
+                       "gapP50Us":  15.6,
+                       "gapP99Us":  727.2,
+                       "gapP999Us":  865.4,
+                       "gapMaxUs":  9205.7,
+                       "stalledUs":  3464189.1,
+                       "stalledPct":  5.77,
+                       "histogram":  [
+                                         {
+                                             "fromUs":  2,
+                                             "toUs":  5,
+                                             "gaps":  27576,
+                                             "stalledUs":  81305.3
+                                         },
+                                         {
+                                             "fromUs":  5,
+                                             "toUs":  10,
+                                             "gaps":  2979,
+                                             "stalledUs":  17632.9
+                                         },
+                                         {
+                                             "fromUs":  10,
+                                             "toUs":  20,
+                                             "gaps":  9942,
+                                             "stalledUs":  156310.4
+                                         },
+                                         {
+                                             "fromUs":  20,
+                                             "toUs":  50,
+                                             "gaps":  17965,
+                                             "stalledUs":  511308
+                                         },
+                                         {
+                                             "fromUs":  50,
+                                             "toUs":  100,
+                                             "gaps":  1377,
+                                             "stalledUs":  83150.9
+                                         },
+                                         {
+                                             "fromUs":  100,
+                                             "toUs":  200,
+                                             "gaps":  79,
+                                             "stalledUs":  12699.6
+                                         },
+                                         {
+                                             "fromUs":  200,
+                                             "toUs":  500,
+                                             "gaps":  6462,
+                                             "stalledUs":  1374830.1
+                                         },
+                                         {
+                                             "fromUs":  500,
+                                             "toUs":  1000,
+                                             "gaps":  1647,
+                                             "stalledUs":  1203233.8
+                                         },
+                                         {
+                                             "fromUs":  1000,
+                                             "toUs":  2000,
+                                             "gaps":  10,
+                                             "stalledUs":  14512.4
+                                         },
+                                         {
+                                             "fromUs":  2000,
+                                             "toUs":  5000,
+                                             "gaps":  0,
+                                             "stalledUs":  0
+                                         },
+                                         {
+                                             "fromUs":  5000,
+                                             "toUs":  10000,
+                                             "gaps":  1,
+                                             "stalledUs":  9205.7
+                                         },
+                                         {
+                                             "fromUs":  10000,
+                                             "toUs":  20000,
+                                             "gaps":  0,
+                                             "stalledUs":  0
+                                         },
+                                         {
+                                             "fromUs":  20000,
+                                             "toUs":  50000,
+                                             "gaps":  0,
+                                             "stalledUs":  0
+                                         },
+                                         {
+                                             "fromUs":  50000,
+                                             "toUs":  100000,
+                                             "gaps":  0,
+                                             "stalledUs":  0
+                                         },
+                                         {
+                                             "fromUs":  100000,
+                                             "toUs":  null,
+                                             "gaps":  0,
+                                             "stalledUs":  0
+                                         }
+                                     ]
+                   }
+               ],
+    "cpuPick":  {
+                    "preTraceSeconds":  5,
+                    "devices":  [
+                                    {
+                                        "driver":  "dxgkrnl.sys",
+                                        "cpu":  1,
+                                        "isrOnCpu":  5782,
+                                        "isrTotal":  5782,
+                                        "mainTraceCpu":  1
+                                    },
+                                    {
+                                        "driver":  "HDAudBus.sys",
+                                        "cpu":  0,
+                                        "isrOnCpu":  1406,
+                                        "isrTotal":  1406,
+                                        "mainTraceCpu":  0
+                                    },
+                                    {
+                                        "driver":  "Wdf01000.sys",
+                                        "cpu":  0,
+                                        "isrOnCpu":  51100,
+                                        "isrTotal":  51100,
+                                        "mainTraceCpu":  0
+                                    }
+                                ]
+                },
+    "trace":  {
+                  "seconds":  60.5,
+                  "clockType":  "perf",
+                  "isrPlain":  514958,
+                  "isrMessage":  65974,
+                  "dpcCount":  859913,
+                  "droppedEvents":  0,
+                  "isrPlainPerCpu":  [
+                                         {
+                                             "cpu":  0,
+                                             "isr":  514958
+                                         }
+                                     ],
+                  "isrMessagePerCpu":  [
+                                           {
+                                               "cpu":  0,
+                                               "isr":  8
+                                           },
+                                           {
+                                               "cpu":  1,
+                                               "isr":  56747
+                                           },
+                                           {
+                                               "cpu":  2,
+                                               "isr":  37
+                                           },
+                                           {
+                                               "cpu":  3,
+                                               "isr":  114
+                                           },
+                                           {
+                                               "cpu":  4,
+                                               "isr":  61
+                                           },
+                                           {
+                                               "cpu":  5,
+                                               "isr":  174
+                                           },
+                                           {
+                                               "cpu":  6,
+                                               "isr":  50
+                                           },
+                                           {
+                                               "cpu":  7,
+                                               "isr":  44
+                                           },
+                                           {
+                                               "cpu":  8,
+                                               "isr":  20
+                                           },
+                                           {
+                                               "cpu":  9,
+                                               "isr":  94
+                                           },
+                                           {
+                                               "cpu":  10,
+                                               "isr":  45
+                                           },
+                                           {
+                                               "cpu":  11,
+                                               "isr":  65
+                                           },
+                                           {
+                                               "cpu":  12,
+                                               "isr":  149
+                                           },
+                                           {
+                                               "cpu":  13,
+                                               "isr":  796
+                                           },
+                                           {
+                                               "cpu":  14,
+                                               "isr":  175
+                                           },
+                                           {
+                                               "cpu":  15,
+                                               "isr":  318
+                                           },
+                                           {
+                                               "cpu":  16,
+                                               "isr":  11
+                                           },
+                                           {
+                                               "cpu":  17,
+                                               "isr":  5
+                                           },
+                                           {
+                                               "cpu":  18,
+                                               "isr":  524
+                                           },
+                                           {
+                                               "cpu":  19,
+                                               "isr":  358
+                                           },
+                                           {
+                                               "cpu":  20,
+                                               "isr":  11
+                                           },
+                                           {
+                                               "cpu":  21,
+                                               "isr":  13
+                                           },
+                                           {
+                                               "cpu":  22,
+                                               "isr":  65
+                                           },
+                                           {
+                                               "cpu":  23,
+                                               "isr":  53
+                                           },
+                                           {
+                                               "cpu":  24,
+                                               "isr":  24
+                                           },
+                                           {
+                                               "cpu":  25,
+                                               "isr":  7
+                                           },
+                                           {
+                                               "cpu":  26,
+                                               "isr":  5741
+                                           },
+                                           {
+                                               "cpu":  27,
+                                               "isr":  31
+                                           },
+                                           {
+                                               "cpu":  28,
+                                               "isr":  23
+                                           },
+                                           {
+                                               "cpu":  29,
+                                               "isr":  82
+                                           },
+                                           {
+                                               "cpu":  30,
+                                               "isr":  14
+                                           },
+                                           {
+                                               "cpu":  31,
+                                               "isr":  115
+                                           }
+                                       ],
+                  "drivers":  [
+                                  {
+                                      "driver":  "amdkmdag.sys",
+                                      "isrPlain":  0,
+                                      "isrMessage":  0,
+                                      "isrPerCpu":  [
+
+                                                    ],
+                                      "vectors":  "",
+                                      "isrMaxUs":  0,
+                                      "isrMeanUs":  0,
+                                      "dpcCount":  57916,
+                                      "dpcMaxUs":  1343.4,
+                                      "dpcP99Us":  201.1,
+                                      "dpcMeanUs":  31.62
+                                  },
+                                  {
+                                      "driver":  "ndis.sys",
+                                      "isrPlain":  0,
+                                      "isrMessage":  1693,
+                                      "isrPerCpu":  [
+                                                        {
+                                                            "cpu":  1,
+                                                            "isr":  1693
+                                                        }
+                                                    ],
+                                      "vectors":  "81:1693",
+                                      "isrMaxUs":  1255.8,
+                                      "isrMeanUs":  11.15,
+                                      "dpcCount":  4788,
+                                      "dpcMaxUs":  1257.2,
+                                      "dpcP99Us":  649,
+                                      "dpcMeanUs":  188.43
+                                  },
+                                  {
+                                      "driver":  "ntoskrnl.exe",
+                                      "isrPlain":  0,
+                                      "isrMessage":  0,
+                                      "isrPerCpu":  [
+
+                                                    ],
+                                      "vectors":  "",
+                                      "isrMaxUs":  0,
+                                      "isrMeanUs":  0,
+                                      "dpcCount":  24459,
+                                      "dpcMaxUs":  692.5,
+                                      "dpcP99Us":  33.3,
+                                      "dpcMeanUs":  12.27
+                                  },
+                                  {
+                                      "driver":  "CLASSPNP.SYS",
+                                      "isrPlain":  0,
+                                      "isrMessage":  0,
+                                      "isrPerCpu":  [
+
+                                                    ],
+                                      "vectors":  "",
+                                      "isrMaxUs":  0,
+                                      "isrMeanUs":  0,
+                                      "dpcCount":  168,
+                                      "dpcMaxUs":  657.2,
+                                      "dpcP99Us":  34.6,
+                                      "dpcMeanUs":  11.43
+                                  },
+                                  {
+                                      "driver":  "Wdf01000.sys",
+                                      "isrPlain":  501164,
+                                      "isrMessage":  0,
+                                      "isrPerCpu":  [
+                                                        {
+                                                            "cpu":  0,
+                                                            "isr":  501164
+                                                        }
+                                                    ],
+                                      "vectors":  "80:501164",
+                                      "isrMaxUs":  624.2,
+                                      "isrMeanUs":  0.18,
+                                      "dpcCount":  501164,
+                                      "dpcMaxUs":  653.9,
+                                      "dpcP99Us":  3.8,
+                                      "dpcMeanUs":  2.46
+                                  },
+                                  {
+                                      "driver":  "storport.sys",
+                                      "isrPlain":  0,
+                                      "isrMessage":  9227,
+                                      "isrPerCpu":  [
+                                                        {
+                                                            "cpu":  0,
+                                                            "isr":  8
+                                                        },
+                                                        {
+                                                            "cpu":  2,
+                                                            "isr":  37
+                                                        },
+                                                        {
+                                                            "cpu":  3,
+                                                            "isr":  114
+                                                        },
+                                                        {
+                                                            "cpu":  4,
+                                                            "isr":  61
+                                                        },
+                                                        {
+                                                            "cpu":  5,
+                                                            "isr":  174
+                                                        },
+                                                        {
+                                                            "cpu":  6,
+                                                            "isr":  50
+                                                        },
+                                                        {
+                                                            "cpu":  7,
+                                                            "isr":  44
+                                                        },
+                                                        {
+                                                            "cpu":  8,
+                                                            "isr":  20
+                                                        },
+                                                        {
+                                                            "cpu":  9,
+                                                            "isr":  94
+                                                        },
+                                                        {
+                                                            "cpu":  10,
+                                                            "isr":  45
+                                                        },
+                                                        {
+                                                            "cpu":  11,
+                                                            "isr":  65
+                                                        },
+                                                        {
+                                                            "cpu":  12,
+                                                            "isr":  149
+                                                        },
+                                                        {
+                                                            "cpu":  13,
+                                                            "isr":  796
+                                                        },
+                                                        {
+                                                            "cpu":  14,
+                                                            "isr":  175
+                                                        },
+                                                        {
+                                                            "cpu":  15,
+                                                            "isr":  318
+                                                        },
+                                                        {
+                                                            "cpu":  16,
+                                                            "isr":  11
+                                                        },
+                                                        {
+                                                            "cpu":  17,
+                                                            "isr":  5
+                                                        },
+                                                        {
+                                                            "cpu":  18,
+                                                            "isr":  524
+                                                        },
+                                                        {
+                                                            "cpu":  19,
+                                                            "isr":  358
+                                                        },
+                                                        {
+                                                            "cpu":  20,
+                                                            "isr":  11
+                                                        },
+                                                        {
+                                                            "cpu":  21,
+                                                            "isr":  13
+                                                        },
+                                                        {
+                                                            "cpu":  22,
+                                                            "isr":  65
+                                                        },
+                                                        {
+                                                            "cpu":  23,
+                                                            "isr":  53
+                                                        },
+                                                        {
+                                                            "cpu":  24,
+                                                            "isr":  24
+                                                        },
+                                                        {
+                                                            "cpu":  25,
+                                                            "isr":  7
+                                                        },
+                                                        {
+                                                            "cpu":  26,
+                                                            "isr":  5741
+                                                        },
+                                                        {
+                                                            "cpu":  27,
+                                                            "isr":  31
+                                                        },
+                                                        {
+                                                            "cpu":  28,
+                                                            "isr":  23
+                                                        },
+                                                        {
+                                                            "cpu":  29,
+                                                            "isr":  82
+                                                        },
+                                                        {
+                                                            "cpu":  30,
+                                                            "isr":  14
+                                                        },
+                                                        {
+                                                            "cpu":  31,
+                                                            "isr":  115
+                                                        }
+                                                    ],
+                                      "vectors":  "144:7822 160:1398 128:5",
+                                      "isrMaxUs":  5.3,
+                                      "isrMeanUs":  0.81,
+                                      "dpcCount":  177224,
+                                      "dpcMaxUs":  172,
+                                      "dpcP99Us":  9.9,
+                                      "dpcMeanUs":  3.44
+                                  },
+                                  {
+                                      "driver":  "dxgkrnl.sys",
+                                      "isrPlain":  0,
+                                      "isrMessage":  55054,
+                                      "isrPerCpu":  [
+                                                        {
+                                                            "cpu":  1,
+                                                            "isr":  55054
+                                                        }
+                                                    ],
+                                      "vectors":  "112:55054",
+                                      "isrMaxUs":  132.7,
+                                      "isrMeanUs":  20.92,
+                                      "dpcCount":  69966,
+                                      "dpcMaxUs":  125.3,
+                                      "dpcP99Us":  7.6,
+                                      "dpcMeanUs":  1.42
+                                  },
+                                  {
+                                      "driver":  "tcpip.sys",
+                                      "isrPlain":  0,
+                                      "isrMessage":  0,
+                                      "isrPerCpu":  [
+
+                                                    ],
+                                      "vectors":  "",
+                                      "isrMaxUs":  0,
+                                      "isrMeanUs":  0,
+                                      "dpcCount":  137,
+                                      "dpcMaxUs":  88.9,
+                                      "dpcP99Us":  80.6,
+                                      "dpcMeanUs":  18.55
+                                  },
+                                  {
+                                      "driver":  "HDAudBus.sys",
+                                      "isrPlain":  13794,
+                                      "isrMessage":  0,
+                                      "isrPerCpu":  [
+                                                        {
+                                                            "cpu":  0,
+                                                            "isr":  13794
+                                                        }
+                                                    ],
+                                      "vectors":  "162:13794",
+                                      "isrMaxUs":  642.6,
+                                      "isrMeanUs":  8.83,
+                                      "dpcCount":  6898,
+                                      "dpcMaxUs":  14,
+                                      "dpcP99Us":  10.7,
+                                      "dpcMeanUs":  2.61
+                                  },
+                                  {
+                                      "driver":  "symcryptk.dll",
+                                      "isrPlain":  0,
+                                      "isrMessage":  0,
+                                      "isrPerCpu":  [
+
+                                                    ],
+                                      "vectors":  "",
+                                      "isrMaxUs":  0,
+                                      "isrMeanUs":  0,
+                                      "dpcCount":  615,
+                                      "dpcMaxUs":  10.8,
+                                      "dpcP99Us":  2.8,
+                                      "dpcMeanUs":  1.9
+                                  },
+                                  {
+                                      "driver":  "Ndu.sys",
+                                      "isrPlain":  0,
+                                      "isrMessage":  0,
+                                      "isrPerCpu":  [
+
+                                                    ],
+                                      "vectors":  "",
+                                      "isrMaxUs":  0,
+                                      "isrMeanUs":  0,
+                                      "dpcCount":  47,
+                                      "dpcMaxUs":  7.7,
+                                      "dpcP99Us":  7.7,
+                                      "dpcMeanUs":  2.4
+                                  },
+                                  {
+                                      "driver":  "stornvme.sys",
+                                      "isrPlain":  0,
+                                      "isrMessage":  0,
+                                      "isrPerCpu":  [
+
+                                                    ],
+                                      "vectors":  "",
+                                      "isrMaxUs":  0,
+                                      "isrMeanUs":  0,
+                                      "dpcCount":  9175,
+                                      "dpcMaxUs":  5.8,
+                                      "dpcP99Us":  2.4,
+                                      "dpcMeanUs":  1.36
+                                  },
+                                  {
+                                      "driver":  "hvservice.sys",
+                                      "isrPlain":  0,
+                                      "isrMessage":  0,
+                                      "isrPerCpu":  [
+
+                                                    ],
+                                      "vectors":  "",
+                                      "isrMaxUs":  0,
+                                      "isrMeanUs":  0,
+                                      "dpcCount":  2,
+                                      "dpcMaxUs":  5,
+                                      "dpcP99Us":  5,
+                                      "dpcMeanUs":  3.9
+                                  },
+                                  {
+                                      "driver":  "UnionFS.sys",
+                                      "isrPlain":  0,
+                                      "isrMessage":  0,
+                                      "isrPerCpu":  [
+
+                                                    ],
+                                      "vectors":  "",
+                                      "isrMaxUs":  0,
+                                      "isrMeanUs":  0,
+                                      "dpcCount":  1,
+                                      "dpcMaxUs":  4.1,
+                                      "dpcP99Us":  4.1,
+                                      "dpcMeanUs":  4.1
+                                  },
+                                  {
+                                      "driver":  "fastfat.SYS",
+                                      "isrPlain":  0,
+                                      "isrMessage":  0,
+                                      "isrPerCpu":  [
+
+                                                    ],
+                                      "vectors":  "",
+                                      "isrMaxUs":  0,
+                                      "isrMeanUs":  0,
+                                      "dpcCount":  1,
+                                      "dpcMaxUs":  4,
+                                      "dpcP99Us":  4,
+                                      "dpcMeanUs":  4
+                                  },
+                                  {
+                                      "driver":  "ReFS.SYS",
+                                      "isrPlain":  0,
+                                      "isrMessage":  0,
+                                      "isrPerCpu":  [
+
+                                                    ],
+                                      "vectors":  "",
+                                      "isrMaxUs":  0,
+                                      "isrMeanUs":  0,
+                                      "dpcCount":  4,
+                                      "dpcMaxUs":  3.4,
+                                      "dpcP99Us":  3.4,
+                                      "dpcMeanUs":  2.85
+                                  },
+                                  {
+                                      "driver":  "Ntfs.sys",
+                                      "isrPlain":  0,
+                                      "isrMessage":  0,
+                                      "isrPerCpu":  [
+
+                                                    ],
+                                      "vectors":  "",
+                                      "isrMaxUs":  0,
+                                      "isrMeanUs":  0,
+                                      "dpcCount":  12,
+                                      "dpcMaxUs":  3.4,
+                                      "dpcP99Us":  3.4,
+                                      "dpcMeanUs":  2.12
+                                  },
+                                  {
+                                      "driver":  "dxgmms2.sys",
+                                      "isrPlain":  0,
+                                      "isrMessage":  0,
+                                      "isrPerCpu":  [
+
+                                                    ],
+                                      "vectors":  "",
+                                      "isrMaxUs":  0,
+                                      "isrMeanUs":  0,
+                                      "dpcCount":  30,
+                                      "dpcMaxUs":  3,
+                                      "dpcP99Us":  3,
+                                      "dpcMeanUs":  2.09
+                                  },
+                                  {
+                                      "driver":  "WdFilter.sys",
+                                      "isrPlain":  0,
+                                      "isrMessage":  0,
+                                      "isrPerCpu":  [
+
+                                                    ],
+                                      "vectors":  "",
+                                      "isrMaxUs":  0,
+                                      "isrMeanUs":  0,
+                                      "dpcCount":  2,
+                                      "dpcMaxUs":  2.7,
+                                      "dpcP99Us":  2.7,
+                                      "dpcMeanUs":  2.2
+                                  },
+                                  {
+                                      "driver":  "storvsp.sys",
+                                      "isrPlain":  0,
+                                      "isrMessage":  0,
+                                      "isrPerCpu":  [
+
+                                                    ],
+                                      "vectors":  "",
+                                      "isrMaxUs":  0,
+                                      "isrMeanUs":  0,
+                                      "dpcCount":  6,
+                                      "dpcMaxUs":  2.5,
+                                      "dpcP99Us":  2.5,
+                                      "dpcMeanUs":  2.25
+                                  },
+                                  {
+                                      "driver":  "amdfendr.sys",
+                                      "isrPlain":  0,
+                                      "isrMessage":  0,
+                                      "isrPerCpu":  [
+
+                                                    ],
+                                      "vectors":  "",
+                                      "isrMaxUs":  0,
+                                      "isrMeanUs":  0,
+                                      "dpcCount":  7298,
+                                      "dpcMaxUs":  2.2,
+                                      "dpcP99Us":  0.3,
+                                      "dpcMeanUs":  0.15
+                                  }
+                              ]
+              },
+    "load":  {
+                 "name":  "superposition",
+                 "build":  "1.1",
+                 "videoConfig":  null,
+                 "extraLaunchFlags":  [
+
+                                      ]
+             },
+    "presentMon":  {
+                       "sha256":  "b2a706bc6ad475749e3b7e3409263aa1e6906d45bdcf993f6dbc0f660188f1af",
+                       "overflowedPresents":  0
+                   },
+    "frames":  {
+                   "frames":  7189,
+                   "spanSeconds":  59.954,
+                   "avgFps":  119.9,
+                   "p50Ms":  8.29,
+                   "low1PctMs":  9.063,
+                   "low01PctMs":  9.282,
+                   "cpuBusyP50Ms":  8.255,
+                   "gpuBusyP50Ms":  8.254,
+                   "syncIntervals":  [
+                                         "0"
+                                     ],
+                   "presentModes":  [
+                                        "Hardware: Independent Flip"
+                                    ],
+                   "refreshHz":  180,
+                   "capped":  false,
+                   "cappedReason":  ""
+               },
+    "rejected":  null,
+    "files":  [
+                  "msi-bench-boot00-state00-stalls.csv",
+                  "msi-bench-boot00-state00-presentmon.csv"
+              ],
+    "metadata":  {
+                     "benchScript":  {
+                                         "name":  "msi-bench.ps1",
+                                         "sha256":  "9e5094d323df4779a5df0c8498d1b8da1fe3a2cee3bf02accb9f85ba5d1715cf"
+                                     },
+                     "os":  {
+                                "build":  "26300",
+                                "displayVersion":  "26H2",
+                                "ubr":  9818
+                            },
+                     "power":  {
+                                   "schemeGuid":  "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+                                   "overlayAc":  "00000000-0000-0000-0000-000000000000",
+                                   "overlayDc":  null,
+                                   "processorSettings":  [
+                                                             {
+                                                                 "guid":  "06cadf0e-64ed-448a-8927-ce7bf90eb35d",
+                                                                 "alias":  "PERFINCTHRESHOLD",
+                                                                 "name":  "Processor performance increase threshold",
+                                                                 "ac":  30,
+                                                                 "dc":  30
+                                                             },
+                                                             {
+                                                                 "guid":  "06cadf0e-64ed-448a-8927-ce7bf90eb35e",
+                                                                 "alias":  "PERFINCTHRESHOLD1",
+                                                                 "name":  "Processor performance increase threshold for Processor Power Efficiency Class 1",
+                                                                 "ac":  60,
+                                                                 "dc":  90
+                                                             },
+                                                             {
+                                                                 "guid":  "0cc5b647-c1df-4637-891a-dec35c318583",
+                                                                 "alias":  "CPMINCORES",
+                                                                 "name":  "Processor performance core parking min cores",
+                                                                 "ac":  100,
+                                                                 "dc":  100
+                                                             },
+                                                             {
+                                                                 "guid":  "0cc5b647-c1df-4637-891a-dec35c318584",
+                                                                 "alias":  "CPMINCORES1",
+                                                                 "name":  "Processor performance core parking min cores for Processor Power Efficiency Class 1",
+                                                                 "ac":  100,
+                                                                 "dc":  100
+                                                             },
+                                                             {
+                                                                 "guid":  "12a0ab44-fe28-4fa9-b3bd-4b64f44960a6",
+                                                                 "alias":  "PERFDECTHRESHOLD",
+                                                                 "name":  "Processor performance decrease threshold",
+                                                                 "ac":  10,
+                                                                 "dc":  10
+                                                             },
+                                                             {
+                                                                 "guid":  "12a0ab44-fe28-4fa9-b3bd-4b64f44960a7",
+                                                                 "alias":  "PERFDECTHRESHOLD1",
+                                                                 "name":  "Processor performance decrease threshold for Processor Power Efficiency Class 1",
+                                                                 "ac":  20,
+                                                                 "dc":  30
+                                                             },
+                                                             {
+                                                                 "guid":  "12fd031f-53d2-4bf4-ac6d-c699fc9538c7",
+                                                                 "alias":  "HETEROCONTAINMENTHYBRIDIMPUTILTHRESHOLD",
+                                                                 "name":  "Hybrid containment zone important utility percentage",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "1a98ad09-af22-42ca-8e61-f0a5802c270a",
+                                                                 "alias":  "RESTRICTIONCOUNT",
+                                                                 "name":  "Processor Restriction Count",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "1facfc65-a930-4bc5-9f38-504ec097bbc0",
+                                                                 "alias":  "HETEROCLASS1INITIALPERF",
+                                                                 "name":  "Initial performance for Processor Power Efficiency Class 1 when unparked",
+                                                                 "ac":  100,
+                                                                 "dc":  100
+                                                             },
+                                                             {
+                                                                 "guid":  "2430ab6f-a520-44a2-9601-f7f23b5134b1",
+                                                                 "alias":  "CPCONCURRENCY",
+                                                                 "name":  "Processor performance core parking concurrency threshold",
+                                                                 "ac":  95,
+                                                                 "dc":  95
+                                                             },
+                                                             {
+                                                                 "guid":  "2ddd5a84-5a71-437e-912a-db0b8c788732",
+                                                                 "alias":  "CPINCREASETIME",
+                                                                 "name":  "Processor performance core parking increase time",
+                                                                 "ac":  1,
+                                                                 "dc":  1
+                                                             },
+                                                             {
+                                                                 "guid":  "36687f9e-e3a5-4dbf-b1dc-15eb381c6863",
+                                                                 "alias":  "PERFEPP",
+                                                                 "name":  "Processor energy performance preference policy",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "36687f9e-e3a5-4dbf-b1dc-15eb381c6864",
+                                                                 "alias":  "PERFEPP1",
+                                                                 "name":  "Processor energy performance preference policy for Processor Power Efficiency Class 1",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "36687f9e-e3a5-4dbf-b1dc-15eb381c6865",
+                                                                 "alias":  "PERFEPP2",
+                                                                 "name":  "Processor energy performance preference policy for Processor Power Efficiency Class 2",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "3b04d4fd-1cc7-4f23-ab1c-d1337819c4bb",
+                                                                 "alias":  "THROTTLING",
+                                                                 "name":  "Allow Throttle States",
+                                                                 "ac":  2,
+                                                                 "dc":  2
+                                                             },
+                                                             {
+                                                                 "guid":  "4009efa7-e72d-4cba-9edf-91084ea8cbc3",
+                                                                 "alias":  "HETEROINCREASETIME",
+                                                                 "name":  "Processor performance increase time for Processor Power Efficiency Class 1",
+                                                                 "ac":  1,
+                                                                 "dc":  1
+                                                             },
+                                                             {
+                                                                 "guid":  "40fbefc7-2e9d-4d25-a185-0cfd8574bac6",
+                                                                 "alias":  "PERFDECPOL",
+                                                                 "name":  "Processor performance decrease policy",
+                                                                 "ac":  1,
+                                                                 "dc":  1
+                                                             },
+                                                             {
+                                                                 "guid":  "40fbefc7-2e9d-4d25-a185-0cfd8574bac7",
+                                                                 "alias":  "PERFDECPOL1",
+                                                                 "name":  "Processor performance decrease policy for Processor Power Efficiency Class 1",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "43f278bc-0f8a-46d0-8b31-9a23e615d713",
+                                                                 "alias":  "LONGTHREADARCHCLASSLOWERTHRESHOLD",
+                                                                 "name":  "Long running threads\u0027 processor architecture lower limit",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "447235c7-6a8d-4cc0-8e24-9eaf70b96e2b",
+                                                                 "alias":  "CPPERF",
+                                                                 "name":  "Processor performance core parking parked performance state",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "447235c7-6a8d-4cc0-8e24-9eaf70b96e2c",
+                                                                 "alias":  "CPPERF1",
+                                                                 "name":  "Processor performance core parking parked performance state for Processor Power Efficiency Class 1",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "45bcc044-d885-43e2-8605-ee0ec6e96b59",
+                                                                 "alias":  "PERFBOOSTPOL",
+                                                                 "name":  "Processor performance boost policy",
+                                                                 "ac":  100,
+                                                                 "dc":  100
+                                                             },
+                                                             {
+                                                                 "guid":  "465e1f50-b610-473a-ab58-00d1077dc418",
+                                                                 "alias":  "PERFINCPOL",
+                                                                 "name":  "Processor performance increase policy",
+                                                                 "ac":  2,
+                                                                 "dc":  2
+                                                             },
+                                                             {
+                                                                 "guid":  "465e1f50-b610-473a-ab58-00d1077dc419",
+                                                                 "alias":  "PERFINCPOL1",
+                                                                 "name":  "Processor performance increase policy for Processor Power Efficiency Class 1",
+                                                                 "ac":  3,
+                                                                 "dc":  3
+                                                             },
+                                                             {
+                                                                 "guid":  "4b70f900-cdd9-4e66-aa26-ae8417f98173",
+                                                                 "alias":  "LATENCYHINTEPP",
+                                                                 "name":  "Latency sensitivity hint processor energy performance preference",
+                                                                 "ac":  100,
+                                                                 "dc":  100
+                                                             },
+                                                             {
+                                                                 "guid":  "4b70f900-cdd9-4e66-aa26-ae8417f98174",
+                                                                 "alias":  "LATENCYHINTEPP1",
+                                                                 "name":  "Latency sensitivity hint processor energy performance preference for Processor Power Efficiency Class 1",
+                                                                 "ac":  100,
+                                                                 "dc":  100
+                                                             },
+                                                             {
+                                                                 "guid":  "4b70f900-cdd9-4e66-aa26-ae8417f98175",
+                                                                 "alias":  "LATENCYHINTEPP2",
+                                                                 "name":  "Latency sensitivity hint processor energy performance preference for Processor Power Efficiency Class 2",
+                                                                 "ac":  100,
+                                                                 "dc":  100
+                                                             },
+                                                             {
+                                                                 "guid":  "4b92d758-5a24-4851-a470-815d78aee119",
+                                                                 "alias":  "IDLEDEMOTE",
+                                                                 "name":  "Processor idle demote threshold",
+                                                                 "ac":  40,
+                                                                 "dc":  40
+                                                             },
+                                                             {
+                                                                 "guid":  "4bdaf4e9-d103-46d7-a5f0-6280121616ef",
+                                                                 "alias":  "CPDISTRIBUTION",
+                                                                 "name":  "Processor performance core parking distribution threshold",
+                                                                 "ac":  90,
+                                                                 "dc":  90
+                                                             },
+                                                             {
+                                                                 "guid":  "4d2b0152-7d5c-498b-88e2-34345392a2c5",
+                                                                 "alias":  "PERFCHECK",
+                                                                 "name":  "Processor performance time check interval",
+                                                                 "ac":  15,
+                                                                 "dc":  15
+                                                             },
+                                                             {
+                                                                 "guid":  "4e4450b3-6179-4e91-b8f1-5bb9938f81a1",
+                                                                 "alias":  "PERFDUTYCYCLING",
+                                                                 "name":  "Processor duty cycling",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "53824d46-87bd-4739-aa1b-aa793fac36d6",
+                                                                 "alias":  "SHORTTHREADARCHCLASSLOWERTHRESHOLD",
+                                                                 "name":  "Short running threads\u0027 processor architecture lower limit",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "5ba7419a-295c-4b02-841b-66799388d6da",
+                                                                 "alias":  "WPSMINEFFICIENCYTHRESHOLD",
+                                                                 "name":  "WPS minimum efficiency score for small cores",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "5d76a2ca-e8c0-402f-a133-2158492d58ad",
+                                                                 "alias":  "IDLEDISABLE",
+                                                                 "name":  "Processor idle disable",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "603fe9ce-8d01-4b48-a968-1d706c28fd5c",
+                                                                 "alias":  "RESOURCEPRIORITY",
+                                                                 "name":  "Processor resource priority",
+                                                                 "ac":  100,
+                                                                 "dc":  100
+                                                             },
+                                                             {
+                                                                 "guid":  "603fe9ce-8d01-4b48-a968-1d706c28fd5d",
+                                                                 "alias":  "RESOURCEPRIORITY1",
+                                                                 "name":  "Processor resource priority for Processor Power Efficiency Class 1",
+                                                                 "ac":  100,
+                                                                 "dc":  100
+                                                             },
+                                                             {
+                                                                 "guid":  "603fe9ce-8d01-4b48-a968-1d706c28fd5e",
+                                                                 "alias":  "RESOURCEPRIORITY2",
+                                                                 "name":  "Processor resource priority for Processor Power Efficiency Class 2",
+                                                                 "ac":  100,
+                                                                 "dc":  100
+                                                             },
+                                                             {
+                                                                 "guid":  "60fbe21b-efd9-49f2-b066-8674d8e9f423",
+                                                                 "alias":  "HETEROCONTAINMENTPOLICY",
+                                                                 "name":  "Hetero containment policy.",
+                                                                 "ac":  1,
+                                                                 "dc":  1
+                                                             },
+                                                             {
+                                                                 "guid":  "616cdaa5-695e-4545-97ad-97dc2d1bdd88",
+                                                                 "alias":  "LATENCYHINTUNPARK",
+                                                                 "name":  "Latency sensitivity hint min unparked cores/packages",
+                                                                 "ac":  50,
+                                                                 "dc":  50
+                                                             },
+                                                             {
+                                                                 "guid":  "616cdaa5-695e-4545-97ad-97dc2d1bdd89",
+                                                                 "alias":  "LATENCYHINTUNPARK1",
+                                                                 "name":  "Latency sensitivity hint min unparked cores/packages for Processor Power Efficiency Class 1",
+                                                                 "ac":  50,
+                                                                 "dc":  50
+                                                             },
+                                                             {
+                                                                 "guid":  "619b7505-003b-4e82-b7a6-4dd29c300971",
+                                                                 "alias":  "LATENCYHINTPERF",
+                                                                 "name":  "Latency sensitivity hint processor performance",
+                                                                 "ac":  99,
+                                                                 "dc":  99
+                                                             },
+                                                             {
+                                                                 "guid":  "619b7505-003b-4e82-b7a6-4dd29c300972",
+                                                                 "alias":  "LATENCYHINTPERF1",
+                                                                 "name":  "Latency sensitivity hint processor performance for Processor Power Efficiency Class 1",
+                                                                 "ac":  99,
+                                                                 "dc":  99
+                                                             },
+                                                             {
+                                                                 "guid":  "619b7505-003b-4e82-b7a6-4dd29c300973",
+                                                                 "alias":  "LATENCYHINTPERF2",
+                                                                 "name":  "Latency sensitivity hint processor performance for Processor Power Efficiency Class 2",
+                                                                 "ac":  50,
+                                                                 "dc":  50
+                                                             },
+                                                             {
+                                                                 "guid":  "64fcee6b-5b1f-45a4-a76a-19b2c36ee290",
+                                                                 "alias":  "HETEROCONTAINMENTINCREASETIME",
+                                                                 "name":  "Processor performance increase time for a containment zone",
+                                                                 "ac":  1,
+                                                                 "dc":  1
+                                                             },
+                                                             {
+                                                                 "guid":  "6788488b-1b90-4d11-8fa7-973e470dff47",
+                                                                 "alias":  "HETEROHYBRIDCONTAINMENTTHRESHOLD",
+                                                                 "name":  "Processor hybrid containment concurrency threshold",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "69439b22-221b-4830-bd34-f7bcece24583",
+                                                                 "alias":  "HETEROEFFICIENCYCONTAINMENTTHRESHOLD",
+                                                                 "name":  "Processor efficiency containment concurrency threshold",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "6c2993b0-8f48-481f-bcc6-00dd2742aa06",
+                                                                 "alias":  "IDLESCALING",
+                                                                 "name":  "Processor idle threshold scaling",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "6ece9e1f-b6dd-42bf-b1b7-5a512b10c092",
+                                                                 "alias":  "HETEROCONTAINMENTEFFICIENCYIMPUTILTHRESHOLD",
+                                                                 "name":  "Efficiency containment zone important utility percentage",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "6ff13aeb-7897-4356-9999-dd9930af065f",
+                                                                 "alias":  "HETEROCONTAINMENTDECREASETIME",
+                                                                 "name":  "Processor performance decrease time for a containment zone.",
+                                                                 "ac":  1,
+                                                                 "dc":  1
+                                                             },
+                                                             {
+                                                                 "guid":  "71021b41-c749-4d21-be74-a00f335d582b",
+                                                                 "alias":  "CPDECREASEPOL",
+                                                                 "name":  "Processor performance core parking decrease policy",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "75b0ae3f-bce0-45a7-8c89-c9611c25e100",
+                                                                 "alias":  "PROCFREQMAX",
+                                                                 "name":  "Maximum processor frequency",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "75b0ae3f-bce0-45a7-8c89-c9611c25e101",
+                                                                 "alias":  "PROCFREQMAX1",
+                                                                 "name":  "Maximum processor frequency for Processor Power Efficiency Class 1",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "75b0ae3f-bce0-45a7-8c89-c9611c25e102",
+                                                                 "alias":  "PROCFREQMAX2",
+                                                                 "name":  "Maximum processor frequency for Processor Power Efficiency Class 2",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "7b224883-b3cc-4d79-819f-8374152cbe7c",
+                                                                 "alias":  "IDLEPROMOTE",
+                                                                 "name":  "Processor idle promote threshold",
+                                                                 "ac":  60,
+                                                                 "dc":  60
+                                                             },
+                                                             {
+                                                                 "guid":  "7d24baa7-0b84-480f-840c-1b0743c00f5f",
+                                                                 "alias":  "PERFHISTORY",
+                                                                 "name":  "Processor performance history count",
+                                                                 "ac":  1,
+                                                                 "dc":  1
+                                                             },
+                                                             {
+                                                                 "guid":  "7d24baa7-0b84-480f-840c-1b0743c00f60",
+                                                                 "alias":  "PERFHISTORY1",
+                                                                 "name":  "Processor performance history count for Processor Power Efficiency Class 1",
+                                                                 "ac":  1,
+                                                                 "dc":  1
+                                                             },
+                                                             {
+                                                                 "guid":  "7f2492b6-60b1-45e5-ae55-773f8cd5caec",
+                                                                 "alias":  "HETERODECREASETIME",
+                                                                 "name":  "Processor performance decrease time for Processor Power Efficiency Class 1",
+                                                                 "ac":  3,
+                                                                 "dc":  3
+                                                             },
+                                                             {
+                                                                 "guid":  "7f2f5cfa-f10c-4823-b5e1-e93ae85f46b5",
+                                                                 "alias":  "HETEROPOLICY",
+                                                                 "name":  "Heterogeneous policy in effect",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "828423eb-8662-4344-90f7-52bf15870f5a",
+                                                                 "alias":  "SHORTTHREADARCHCLASSUPPERTHRESHOLD",
+                                                                 "name":  "Short running threads\u0027 processor architecture upper limit",
+                                                                 "ac":  255,
+                                                                 "dc":  255
+                                                             },
+                                                             {
+                                                                 "guid":  "893dee8e-2bef-41e0-89c6-b55d0929964c",
+                                                                 "alias":  "PROCTHROTTLEMIN",
+                                                                 "name":  "Minimum processor state",
+                                                                 "ac":  100,
+                                                                 "dc":  5
+                                                             },
+                                                             {
+                                                                 "guid":  "893dee8e-2bef-41e0-89c6-b55d0929964d",
+                                                                 "alias":  "PROCTHROTTLEMIN1",
+                                                                 "name":  "Minimum processor state for Processor Power Efficiency Class 1",
+                                                                 "ac":  100,
+                                                                 "dc":  5
+                                                             },
+                                                             {
+                                                                 "guid":  "893dee8e-2bef-41e0-89c6-b55d0929964e",
+                                                                 "alias":  "PROCTHROTTLEMIN2",
+                                                                 "name":  "Minimum processor state for Processor Power Efficiency Class 2",
+                                                                 "ac":  100,
+                                                                 "dc":  5
+                                                             },
+                                                             {
+                                                                 "guid":  "8baa4a8a-14c6-4451-8e8b-14bdbd197537",
+                                                                 "alias":  "PERFAUTONOMOUS",
+                                                                 "name":  "Processor performance autonomous mode",
+                                                                 "ac":  1,
+                                                                 "dc":  1
+                                                             },
+                                                             {
+                                                                 "guid":  "93b8b6dc-0698-4d1c-9ee4-0644e900c85d",
+                                                                 "alias":  "SCHEDPOLICY",
+                                                                 "name":  "Heterogeneous thread scheduling policy",
+                                                                 "ac":  5,
+                                                                 "dc":  5
+                                                             },
+                                                             {
+                                                                 "guid":  "943c8cb6-6f93-4227-ad87-e9a3feec08d1",
+                                                                 "alias":  "CPOVERUTIL",
+                                                                 "name":  "Processor performance core parking overutilization threshold",
+                                                                 "ac":  60,
+                                                                 "dc":  60
+                                                             },
+                                                             {
+                                                                 "guid":  "94d3a615-a899-4ac5-ae2b-e4d8f634367f",
+                                                                 "alias":  "SYSCOOLPOL",
+                                                                 "name":  "System cooling policy",
+                                                                 "ac":  1,
+                                                                 "dc":  1
+                                                             },
+                                                             {
+                                                                 "guid":  "97cfac41-2217-47eb-992d-618b1977c907",
+                                                                 "alias":  "SOFTPARKLATENCY",
+                                                                 "name":  "Processor performance core parking soft park latency",
+                                                                 "ac":  1000,
+                                                                 "dc":  1000
+                                                             },
+                                                             {
+                                                                 "guid":  "984cf492-3bed-4488-a8f9-4286c97bf5aa",
+                                                                 "alias":  "PERFINCTIME",
+                                                                 "name":  "Processor performance increase time",
+                                                                 "ac":  1,
+                                                                 "dc":  1
+                                                             },
+                                                             {
+                                                                 "guid":  "984cf492-3bed-4488-a8f9-4286c97bf5ab",
+                                                                 "alias":  "PERFINCTIME1",
+                                                                 "name":  "Processor performance increase time for Processor Power Efficiency Class 1",
+                                                                 "ac":  1,
+                                                                 "dc":  1
+                                                             },
+                                                             {
+                                                                 "guid":  "9943e905-9a30-4ec1-9b99-44dd3b76f7a2",
+                                                                 "alias":  "IDLESTATEMAX",
+                                                                 "name":  "Processor idle state maximum",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "b000397d-9b0b-483d-98c9-692a6060cfbf",
+                                                                 "alias":  "HETEROINCREASETHRESHOLD",
+                                                                 "name":  "Processor performance level increase threshold for Processor Power Efficiency Class 1 processor count increase",
+                                                                 "ac":  254,
+                                                                 "dc":  254
+                                                             },
+                                                             {
+                                                                 "guid":  "b000397d-9b0b-483d-98c9-692a6060cfc0",
+                                                                 "alias":  "HETEROINCREASETHRESHOLD1",
+                                                                 "name":  "Processor performance level increase threshold for Processor Power Efficiency Class 2 processor count increase",
+                                                                 "ac":  255,
+                                                                 "dc":  255
+                                                             },
+                                                             {
+                                                                 "guid":  "b0deaf6b-59c0-4523-8a45-ca7f40244114",
+                                                                 "alias":  "MODULEUNPARKPOLICY",
+                                                                 "name":  "Module unpark policy",
+                                                                 "ac":  1,
+                                                                 "dc":  1
+                                                             },
+                                                             {
+                                                                 "guid":  "b28a6829-c5f7-444e-8f61-10e24e85c532",
+                                                                 "alias":  "SMTUNPARKPOLICY",
+                                                                 "name":  "Smt threads unpark policy",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "b669a5e9-7b1d-4132-baaa-49190abcfeb6",
+                                                                 "alias":  "COMPLEXUNPARKPOLICY",
+                                                                 "name":  "Complex unpark policy",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "bae08b81-2d5e-4688-ad6a-13243356654b",
+                                                                 "alias":  "SHORTSCHEDPOLICY",
+                                                                 "name":  "Heterogeneous short running thread scheduling policy",
+                                                                 "ac":  5,
+                                                                 "dc":  5
+                                                             },
+                                                             {
+                                                                 "guid":  "bc5038f7-23e0-4960-96da-33abaf5935ec",
+                                                                 "alias":  "PROCTHROTTLEMAX",
+                                                                 "name":  "Maximum processor state",
+                                                                 "ac":  100,
+                                                                 "dc":  100
+                                                             },
+                                                             {
+                                                                 "guid":  "bc5038f7-23e0-4960-96da-33abaf5935ed",
+                                                                 "alias":  "PROCTHROTTLEMAX1",
+                                                                 "name":  "Maximum processor state for Processor Power Efficiency Class 1",
+                                                                 "ac":  100,
+                                                                 "dc":  100
+                                                             },
+                                                             {
+                                                                 "guid":  "bc5038f7-23e0-4960-96da-33abaf5935ee",
+                                                                 "alias":  "PROCTHROTTLEMAX2",
+                                                                 "name":  "Maximum processor state for Processor Power Efficiency Class 2",
+                                                                 "ac":  100,
+                                                                 "dc":  100
+                                                             },
+                                                             {
+                                                                 "guid":  "be337238-0d82-4146-a960-4f3749d470c7",
+                                                                 "alias":  "PERFBOOSTMODE",
+                                                                 "name":  "Processor performance boost mode",
+                                                                 "ac":  2,
+                                                                 "dc":  2
+                                                             },
+                                                             {
+                                                                 "guid":  "bf903d33-9d24-49d3-a468-e65e0325046a",
+                                                                 "alias":  "LONGTHREADARCHCLASSUPPERTHRESHOLD",
+                                                                 "name":  "Long running threads\u0027 processor architecture upper limit",
+                                                                 "ac":  255,
+                                                                 "dc":  255
+                                                             },
+                                                             {
+                                                                 "guid":  "c4581c31-89ab-4597-8e2b-9c9cab440e6b",
+                                                                 "alias":  "IDLECHECK",
+                                                                 "name":  "Processor idle time check",
+                                                                 "ac":  50000,
+                                                                 "dc":  50000
+                                                             },
+                                                             {
+                                                                 "guid":  "c7be0679-2817-4d69-9d02-519a537ed0c6",
+                                                                 "alias":  "CPINCREASEPOL",
+                                                                 "name":  "Processor performance core parking increase policy",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "cfeda3d0-7697-4566-a922-a9086cd49dfa",
+                                                                 "alias":  "PERFAUTONOMOUSWINDOW",
+                                                                 "name":  "Processor autonomous activity window",
+                                                                 "ac":  30000,
+                                                                 "dc":  30000
+                                                             },
+                                                             {
+                                                                 "guid":  "d8edeb9b-95cf-4f95-a73c-b061973693c8",
+                                                                 "alias":  "PERFDECTIME",
+                                                                 "name":  "Processor performance decrease time",
+                                                                 "ac":  1,
+                                                                 "dc":  1
+                                                             },
+                                                             {
+                                                                 "guid":  "d8edeb9b-95cf-4f95-a73c-b061973693c9",
+                                                                 "alias":  "PERFDECTIME1",
+                                                                 "name":  "Processor performance decrease time for Processor Power Efficiency Class 1",
+                                                                 "ac":  2,
+                                                                 "dc":  2
+                                                             },
+                                                             {
+                                                                 "guid":  "d92998c2-6a48-49ca-85d4-8cceec294570",
+                                                                 "alias":  "SHORTTHREADRUNTIMETHRESHOLD",
+                                                                 "name":  "Short vs. long running thread threshold",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "dfd10d17-d5eb-45dd-877a-9a34ddd15c82",
+                                                                 "alias":  "CPDECREASETIME",
+                                                                 "name":  "Processor performance core parking decrease time",
+                                                                 "ac":  3,
+                                                                 "dc":  3
+                                                             },
+                                                             {
+                                                                 "guid":  "e0007330-f589-42ed-a401-5ddb10e785d3",
+                                                                 "alias":  "DISTRIBUTEUTIL",
+                                                                 "name":  "Processor performance core parking utility distribution",
+                                                                 "ac":  0,
+                                                                 "dc":  0
+                                                             },
+                                                             {
+                                                                 "guid":  "ea062031-0e34-4ff1-9b6d-eb1059334028",
+                                                                 "alias":  "CPMAXCORES",
+                                                                 "name":  "Processor performance core parking max cores",
+                                                                 "ac":  100,
+                                                                 "dc":  100
+                                                             },
+                                                             {
+                                                                 "guid":  "ea062031-0e34-4ff1-9b6d-eb1059334029",
+                                                                 "alias":  "CPMAXCORES1",
+                                                                 "name":  "Processor performance core parking max cores for Processor Power Efficiency Class 1",
+                                                                 "ac":  100,
+                                                                 "dc":  100
+                                                             },
+                                                             {
+                                                                 "guid":  "f735a673-2066-4f80-a0c5-ddee0cf1bf5d",
+                                                                 "alias":  "CPHEADROOM",
+                                                                 "name":  "Processor performance core parking concurrency headroom threshold",
+                                                                 "ac":  50,
+                                                                 "dc":  50
+                                                             },
+                                                             {
+                                                                 "guid":  "f8861c27-95e7-475c-865b-13c0cb3f9d6b",
+                                                                 "alias":  "HETERODECREASETHRESHOLD",
+                                                                 "name":  "Processor performance level decrease threshold for Processor Power Efficiency Class 1 processor count decrease",
+                                                                 "ac":  254,
+                                                                 "dc":  254
+                                                             },
+                                                             {
+                                                                 "guid":  "f8861c27-95e7-475c-865b-13c0cb3f9d6c",
+                                                                 "alias":  "HETERODECREASETHRESHOLD1",
+                                                                 "name":  "Processor performance level decrease threshold for Processor Power Efficiency Class 2 processor count decrease",
+                                                                 "ac":  255,
+                                                                 "dc":  255
+                                                             },
+                                                             {
+                                                                 "guid":  "fddc842b-8364-4edc-94cf-c17f60de1c80",
+                                                                 "alias":  "HETEROCLASS0FLOORPERF",
+                                                                 "name":  "A floor performance for Processor Power Efficiency Class 0 when there are Processor Power Efficiency Class 1 processors unparked",
+                                                                 "ac":  100,
+                                                                 "dc":  100
+                                                             }
+                                                         ]
+                               },
+                     "load":  "superposition",
+                     "presentMonVersion":  "2.6.0",
+                     "qpcFrequency":  10000000
+                 }
+}
