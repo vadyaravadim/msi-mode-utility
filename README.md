@@ -149,15 +149,15 @@ MSI (Message Signaled Interrupts) is a way for a PCI/PCIe device to deliver inte
 
 ### Does enabling MSI mode reduce input lag or increase FPS?
 
-Not average FPS on our testbed. We have not measured input lag: that takes an end-to-end instrument (a Reflex Analyzer, LDAT or a photodiode), and interrupt or frame times are not input lag. What we traced on an i9-14900F / RX 7800 XT desktop (Windows 11 25H2), two 30 s runs per state under the same 180 fps load:
+A little, where a shared line was left. We have not measured input lag: that takes an end-to-end instrument (a Reflex Analyzer, LDAT or a photodiode), and interrupt or frame times are not input lag. What we measured on an i9-14900F / RX 7800 XT desktop (Windows 11 26H2, Memory Integrity on), 8 clean boots per state, Unigine Superposition at 1440p (GPU-bound, about 120 fps) plus an audio tone and back-to-back USB SSD reads in every run:
 
-| Device, change | What moved | What did not |
-|----------------|-----------|--------------|
-| Two audio controllers, shared IRQ 17 → MSI | ISR calls per interrupt **1.9 → 1.0** (6,480 → 3,470 calls for ~3,450 real interrupts) | Frame times (p99 5.8 ms both ways, 0 missed frames) |
-| GPU, MSI → forced legacy line | Nothing: mean ISR 25.3 vs 25.4 µs, mean DPC 17.0 vs 16.6 µs in the fresh-boot pair | Frame time p99 5.7 ms and 0 missed frames in both modes. Day-to-day drift is bigger than the mode: MSI-mode sessions alone ranged 18.9–27.6 µs |
-| USB xHCI with a fast mouse (~7,500 interrupts/s), MSI → forced legacy line | Mean ISR 0.2 → 1.1 µs | Mean DPC 5.6 µs both ways; **+0.9 µs per mouse report** in total. No frame-time verdict: an unrelated once-a-second desktop stall hit some mouse runs, see [`bench/results/`](bench/results/#what-went-wrong-stated-up-front) |
+| Change | Interrupt cost | Frames, median of 8 runs |
+|--------|----------------|--------------------------|
+| Two audio controllers, shared IRQ 17 → MSI (what this script changes on that PC) | Routine calls 228/s → 114/s for 114 interrupts; the calls move from CPU 0 to CPU 1 | **+0.6% average fps** (120.0 → 120.7), 1% low 9.04 → 8.76 ms; all 8 MSI runs beat all 8 stock runs |
+| GPU, MSI → forced legacy line (ceiling) | Mean ISR 21.1 µs both ways; DPC p99 8.5 → 116 µs | No loss: 121.4 fps, above stock, which we cannot explain |
+| USB xHCI at ~8,000 interrupts/s, MSI → forced legacy line (ceiling) | Mean ISR 0.18 → 1.11 µs, mean DPC 2.5 → 3.4 µs | Unchanged (120.2 fps) |
 
-MSI mode removes one specific cost: devices stacked on a shared interrupt line, each running its routine for the other's interrupts. Windows 11 drivers had already put the GPU, USB, NVMe and network devices in MSI/MSI-X on that machine; the only legacy devices were the two audio controllers. The cost becomes audible or visible when a shared line carries something heavy (the classic case is a sound card sharing a line with a busy GPU). Full methodology, screenshots and the "check your own PC in 30 seconds" guide: **[the RigPolice deep dive](https://rigpolice.com/system/articles/enable-msi-mode/?utm_source=github&utm_medium=readme&utm_campaign=msi-mode-utility)**. Reproduce it yourself with [`bench/msi-bench.ps1`](bench/msi-bench.ps1): built-in Windows tools only (NT Kernel Logger + `tracerpt`), nothing to install. The raw output of every run behind these numbers, with the known gaps listed, is in [`bench/results/`](bench/results/).
+MSI mode removes one specific cost: devices stacked on a shared interrupt line, each running its routine for the other's interrupts. Windows 11 drivers had already put the GPU, USB, NVMe and network devices in MSI/MSI-X on that machine; the only legacy devices were the two audio controllers. The cost becomes audible or visible when a shared line carries something heavy (the classic case is a sound card sharing a line with a busy GPU). Full methodology, charts and the "check your own PC in 30 seconds" guide: **[the RigPolice deep dive](https://rigpolice.com/system/articles/enable-msi-mode/?utm_source=github&utm_medium=readme&utm_campaign=msi-mode-utility)**. Reproduce it yourself with [`bench/msi-bench.ps1`](bench/msi-bench.ps1) (NT Kernel Logger + `tracerpt`, PresentMon for frames). The raw output of all 32 runs is in [`bench/results/`](bench/results/).
 
 ### Is it safe to enable MSI mode?
 
