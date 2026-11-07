@@ -93,15 +93,15 @@ Rollback = double-click the undo file, then reboot. No System Restore needed —
 
 ## The Problem: Line-Based (IRQ) vs Message Signaled Interrupts
 
-Legacy line-based (IRQ) interrupts share physical lines, so a device can be forced to wait or collide with others. MSI lets a device signal the CPU by writing to a memory address instead — every device gets its own vector and nothing is shared. Windows still leaves some devices in legacy mode even when their driver supports MSI: on our Windows 11 testbed it was both audio controllers, stacked on one line.
+Legacy line-based (IRQ) interrupts share physical lines, so a device can be forced to wait or collide with others. MSI lets a device signal the CPU by writing to a memory address instead, so each device gets its own vector. Windows still leaves some devices in legacy mode even when their driver supports MSI. On our Windows 11 testbed that was both audio controllers. Windows' own HD Audio driver writes 0 for them, so they shared one line.
 
-**When it actually helps** (what we measured is in the [FAQ](#does-enabling-msi-mode-reduce-input-lag-or-increase-fps)):
+**Where guides say it helps** (what we measured is in the [FAQ](#does-enabling-msi-mode-reduce-input-lag-or-increase-fps)):
 
-- A device sharing a legacy IRQ line with a busy neighbor. Audio popping / crackling under GPU or USB load is the classic case: on a shared line every interrupt runs the routine of every driver on it
-- DPC latency spikes that trace back to a driver on a shared line (msinfo32 shows who shares with whom, see [Verify](#verify-check-if-msi-mode-is-enabled))
+- A device sharing a legacy IRQ line with a busy neighbor. Guides name audio popping or crackling under GPU or USB load as the classic case. igor'sLAB reports crackling under full GPU load on the author's own PC, where HD Audio ran on legacy lines twice, and it stopped after the switch to MSI. We haven't measured crackling
+- DPC latency spikes that trace back to a driver on a shared line, as guides describe them (msinfo32 shows who shares with whom, see [Verify](#verify-check-if-msi-mode-is-enabled)). We haven't measured spikes
 - Older platforms and add-in cards (sound, USB, capture) that Windows left in line-based mode
 
-**What it won't do:** raise average FPS, or change anything for a GPU and USB controller that already run MSI. Forcing our USB controller back onto a legacy line cost 0.9 µs of interrupt handling per mouse report. That is why the first thing this script does is show you the current state: on a modern PC the honest answer is often "already on".
+**What it won't do:** change anything for a device that already runs MSI. So the script shows you the current state first. On a modern PC the answer is often "already on".
 
 ## Requirements
 
@@ -120,15 +120,15 @@ HKLM\SYSTEM\CurrentControlSet\Enum\PCI\<class>\<instance>\Device Parameters\Inte
     Value: MSISupported  (DWORD)   1 = MSI on, 0 = off
 ```
 
-MSI-capable devices always have the `Interrupt Management` key, but the `MessageSignaledInterruptProperties` subkey and `MSISupported` value **often don't exist until you enable MSI** — so the script creates them as needed rather than only flipping existing values.
+Per Microsoft Learn, a driver's INF creates the `MessageSignaledInterruptProperties` key when its `AddReg` section adds the `MSISupported` value. A device whose INF wrote nothing has no such value, so the script creates the key and value as needed rather than only flipping existing ones.
 
-When the value is absent, the grid shows **Default** (not "Disabled"): it means no explicit override is set and the driver default applies — an MSI-X-capable device may already be running in MSI-X mode regardless of this key. The **Mode** column shows whether it does.
+When the value is absent, the grid shows **Default** (not "Disabled"): it means no INF or tool wrote the value. Microsoft requires a driver's INF to set it before a device can receive MSIs. The **Mode** column shows what each device runs in.
 
 ## Verify: Check If MSI Mode Is Enabled
 
 After the reboot, confirm the device actually runs in MSI mode:
 
-- **Device Manager** → device → **Properties ▸ Resources**: a **negative IRQ number** (e.g. `-3145728`) means message-signaled interrupts are active; a small positive number means legacy line-based mode.
+- **Device Manager** → device → **Properties ▸ Resources**: a **negative IRQ number** (e.g. `-59`) means message-signaled interrupts are active; a small positive number means legacy line-based mode.
 - **msinfo32** → Hardware Resources ▸ IRQs: legacy devices sit at the top on small numbers (two devices on the same number share that line); MSI/MSI-X devices sit at the bottom, where msinfo32 prints the negative IRQ as a ten-digit number such as `IRQ 4294967255`.
 - Or run the script with `-Status` (no admin rights needed): the **Mode** column shows what each device runs in this boot — `MSI`, or `Line IRQ n` plus whoever shares that line.
 
@@ -145,7 +145,7 @@ Prefer a System Restore point anyway? Create one yourself before running: `Check
 
 ### What is MSI mode?
 
-MSI (Message Signaled Interrupts) is a way for a PCI/PCIe device to deliver interrupts by writing to a memory address instead of asserting a shared physical IRQ line. Every device gets its own vector, so the extra interrupt-routine calls a shared line causes go away.
+MSI (Message Signaled Interrupts) is a way for a PCI/PCIe device to deliver interrupts by writing to a memory address instead of asserting a shared physical IRQ line. With its own vector, a device stops running its routine for a neighbor's interrupt.
 
 ### Does enabling MSI mode reduce input lag or increase FPS?
 
@@ -157,7 +157,7 @@ A little, where a shared line was left. We have not measured input lag: that tak
 | GPU, MSI → forced legacy line (ceiling) | Mean ISR 21.1 µs both ways; DPC p99 8.5 → 116 µs | No loss: 121.4 fps, above stock, which we cannot explain |
 | USB xHCI at ~8,000 interrupts/s, MSI → forced legacy line (ceiling) | Mean ISR 0.18 → 1.11 µs, mean DPC 2.5 → 3.4 µs | Unchanged (120.2 fps) |
 
-MSI mode removes one specific cost: devices stacked on a shared interrupt line, each running its routine for the other's interrupts. Windows 11 drivers had already put the GPU, USB, NVMe and network devices in MSI/MSI-X on that machine; the only legacy devices were the two audio controllers. The cost becomes audible or visible when a shared line carries something heavy (the classic case is a sound card sharing a line with a busy GPU). Full methodology, charts and the "check your own PC in 30 seconds" guide: **[the RigPolice deep dive](https://rigpolice.com/system/articles/enable-msi-mode/?utm_source=github&utm_medium=readme&utm_campaign=msi-mode-utility)**. Reproduce it yourself with [`bench/msi-bench.ps1`](bench/msi-bench.ps1) (NT Kernel Logger + `tracerpt`, PresentMon for frames). The raw output of all 32 runs is in [`bench/results/`](bench/results/).
+MSI mode removes one specific cost. When two devices share an interrupt line, Windows calls their routines in turn until a driver claims the interrupt, so a device can run its routine for its neighbor's interrupts. Windows 11 drivers had already put the GPU, USB, NVMe and network devices in MSI/MSI-X on that machine. The only legacy devices were the two audio controllers. On the igor'sLAB PC above, the sound crackled under full GPU load until HD Audio moved to MSI. **[The RigPolice article](https://rigpolice.com/system/articles/enable-msi-mode/?utm_source=github&utm_medium=readme&utm_campaign=msi-mode-utility)** has the full method, the charts and a guide to checking your own PC in 30 seconds. Run the same measurement on your own machine with [`bench/msi-bench.ps1`](bench/msi-bench.ps1) (NT Kernel Logger + `tracerpt`, PresentMon for frames). The public bench repeats the trace, the probes and the frame capture. The audio tone and the SSD reads came from our private runner and aren't in the public bench yet. The raw output of all 32 runs is in [`bench/results/`](bench/results/).
 
 ### Is it safe to enable MSI mode?
 
@@ -165,7 +165,7 @@ MSI mode removes one specific cost: devices stacked on a shared interrupt line, 
 
 ### Should I enable MSI mode for my NVIDIA or AMD GPU?
 
-GPUs are the most common target for this tweak. Some NVIDIA and AMD driver/board combinations leave the card in legacy line-based mode — the **Mode** column shows what the card actually runs in, so you don't have to guess. If it says `Line IRQ …` and you see DPC latency spikes or frame-time stutters, enabling MSI is a cheap, reversible first step. If it says `MSI`, there is nothing to change, even when the `MSI` setting column reads **Default**: our RX 7800 XT ran in MSI mode out of the box, and forcing it off changed nothing we could measure.
+Read the **Mode** column first. If it says `Line IRQ …`, enabling MSI is a cheap, reversible step. If it says `MSI`, there is nothing to change: our RX 7800 XT ran in MSI mode out of the box.
 
 ### What is the difference between MSI and MSI-X?
 
@@ -185,7 +185,7 @@ Double-click the `msi_undo_*.reg` file saved next to the script (or in `%USERPRO
 
 ### Does disabling MPO (Multiplane Overlay) help with flickering and stutters?
 
-MPO is a DWM display feature, not an interrupt setting, but it shows up in the same troubleshooting threads: on some GPU/driver combinations it causes flickering, black screens, or stutter in windowed games. The classic fix — DWORD `OverlayTestMode = 5` under `HKLM\SOFTWARE\Microsoft\Windows\Dwm` — is being phased out by Microsoft: it works up to Windows 11 23H2, is unreliable on 24H2, and is ignored on 25H2. That's why there is no "MPO disabler" in this series: a tweak that dies with every Windows release isn't worth a utility. On 23H2 or older, try the registry value (delete it to revert); on newer builds, update your GPU driver instead — NVIDIA, AMD, and Microsoft have been shipping MPO fixes on their side.
+MPO is a DWM display feature, not an interrupt setting, but it shows up in the same troubleshooting threads: on some GPU/driver combinations it causes flickering, black screens, or stutter in windowed games. NVIDIA's support article gives DWORD `OverlayTestMode = 5` under `HKLM\SOFTWARE\Microsoft\Windows\Dwm` as the registry value that turns MPO off (delete it to revert). There's no MPO disabler in this series. If you see these symptoms, update your GPU driver first.
 
 ## Related
 

@@ -10,8 +10,8 @@ editions with a desktop - Server Core has none, while PowerShell 7 on a desktop 
 early with instructions beats a raw `CommandNotFound` thrown halfway through a scan the user already
 waited on. `-Status` prints to the console, so it skips that check and the elevation.
 
-**The `Mode` column, not `MSI`, is what a device runs in.** `MSI` is the registry override, and "Default"
-there is how most MSI-X devices look. `Mode` comes from the IRQs Windows assigned this boot
+**The `Mode` column, not `MSI`, is what a device runs in.** `MSI` is the registry override, and it shows
+the value an INF or a tool wrote. `Mode` comes from the IRQs Windows assigned this boot
 (`Win32_PNPAllocatedResource`; negative = message-signaled, WMI reports it unsigned) - do not derive it
 from `MSISupported`.
 
@@ -88,6 +88,10 @@ effect. Frame time and ISR/DPC time are not input lag. The method lives in rigpo
 `.claude/rules/bench-methodology.md`, section "Conclusions".
 
 ## The RigPolice pages that mirror this script
+
+Every copy of the verdict (what MSI mode did or did not change in our measurements) is rewritten together
+after a retest: the README FAQ, `bench/results/README.md`, the RigPolice article, the toolbox card and the
+toolbox FAQ on /system/latency-toolbox/, the article chart data and the release notes.
 
 - **The hub card.** `src/lib/latency-toolbox.ts` in the rigpolice repo holds this script's card on
   https://rigpolice.com/system/latency-toolbox/: what it does, what was measured with it, and whether it

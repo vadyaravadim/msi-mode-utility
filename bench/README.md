@@ -1,6 +1,6 @@
 # MSI mode bench
 
-Reproduce the measurements behind the RigPolice article https://rigpolice.com/system/articles/enable-msi-mode/ . `msi-bench.ps1` records the interrupt mode of every PCI device, ISR and DPC time per driver from a kernel trace, and a stall probe that counts every gap of 2 us or more in a spinning thread on a chosen CPU. The Superposition load below is the GPU-bound load for it.
+Follow the procedure in the RigPolice article: https://rigpolice.com/system/articles/enable-msi-mode/ . The reboots, the settle wait and the checks between runs were done by the article's test runner; you do them by hand. `msi-bench.ps1` records the interrupt mode of every PCI device, ISR and DPC time per driver from a kernel trace, and a stall probe that counts every gap of 2 us or more in a spinning thread on a chosen CPU. The Superposition load below is the GPU-bound load for it.
 
 **Same procedure, not same numbers.** A game update, a driver update or a different CPU moves every number. Compare states only inside one series of runs on one machine, never against the published tables.
 
