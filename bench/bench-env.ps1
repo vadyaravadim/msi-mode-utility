@@ -230,6 +230,17 @@ function Read-SharedText {
     try { (New-Object System.IO.StreamReader($stream)).ReadToEnd() } finally { $stream.Dispose() }
 }
 
+function Get-LoadLogPath {
+    param([Parameter(Mandatory)]$Recipe, [Parameter(Mandatory)]$Process)
+    [System.IO.Path]::GetFullPath((Join-Path (Split-Path -Parent $Process.Path) $Recipe.startMarker.log))
+}
+
+function Join-Rejection {
+    param([AllowNull()][string[]]$Reason)
+    $reasons = @($Reason | Where-Object { $_ })
+    if ($reasons.Count) { $reasons -join '; ' } else { $null }
+}
+
 function Wait-LoadStart {
     param([Parameter(Mandatory)]$Recipe)
     Write-Host "Waiting for $($Recipe.presentMonProcess) ..."
@@ -239,7 +250,7 @@ function Wait-LoadStart {
         if (-not $proc) { Start-Sleep -Milliseconds 500 }
     }
     if (-not $Recipe.startMarker) { return $proc }
-    $logPath = [System.IO.Path]::GetFullPath((Join-Path (Split-Path -Parent $proc.Path) $Recipe.startMarker.log))
+    $logPath = Get-LoadLogPath -Recipe $Recipe -Process $proc
     Write-Host "Found $($Recipe.presentMonProcess). Waiting for '$($Recipe.startMarker.pattern)' in $(Split-Path -Leaf $logPath) ..."
     $from = 0
     if (Test-Path -Path $logPath) { $from = (Read-SharedText -Path $logPath).Length }
@@ -305,14 +316,6 @@ function Get-LoadBuild {
         return $null
     }
     (Get-Item -Path $ExePath).VersionInfo.ProductVersion
-}
-
-function Wait-LoadReady {
-    param([Parameter(Mandatory)]$Recipe)
-    $proc = Wait-LoadStart -Recipe $Recipe
-    Write-Host "Load started. Waiting $($Recipe.timings.loadPauseSeconds) s, then capturing $($Recipe.timings.captureSeconds) s. Do not touch the PC."
-    Start-Sleep -Seconds $Recipe.timings.loadPauseSeconds
-    $proc
 }
 
 function Get-LoadRecord {

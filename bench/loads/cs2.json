@@ -13,6 +13,7 @@
   "launchArgs": ["-applaunch", "730", "-novid", "-condebug", "+con_enable", "1", "-console", "+toggleconsole"],
   "menuWaitSeconds": 25,
   "consoleLine": "game_type 3; game_mode 0; sv_skirmish_id 0; sv_game_mode_flags 32; mapgroup @workshop/3240880604/de_dust2; nextlevel de_dust2; map de_dust2 customgamemode=3240880604 nomapvalidation=true; hideconsole",
+  "cap": { "key": "F9", "virtualKey": 120, "scanCode": 67, "echo": "rigpolice_cap_key", "consoleLine": "bind {0} \"echo {1}; fps_max {2}\"", "pressAfter": "Cannot set convar 'fps_max'" },
   "startMarker": { "log": "../../csgo/console.log", "pattern": "[VProf] VProfLite started." },
   "build": { "file": "../../csgo/steam.inf", "key": "PatchVersion" },
   "timings": { "loadPauseSeconds": 15, "captureSeconds": 100 },

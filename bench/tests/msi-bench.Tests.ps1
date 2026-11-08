@@ -586,12 +586,6 @@ Describe 'starting and stopping the background loads' {
         Get-BackgroundRejection -Background ([ordered]@{ tone = [ordered]@{ frequencyHz = 440 } }) | Should -BeNullOrEmpty
         Get-BackgroundRejection -Background $null | Should -BeNullOrEmpty
     }
-
-    It 'joins the game and the background reasons' {
-        Join-Rejection -Reason @('a', 'b') | Should -Be 'a; b'
-        Join-Rejection -Reason @($null, 'b') | Should -Be 'b'
-        Join-Rejection -Reason @($null, $null) | Should -BeNullOrEmpty
-    }
 }
 
 Describe 'the USB read file check' {

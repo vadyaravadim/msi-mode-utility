@@ -804,12 +804,6 @@ function Get-BackgroundRejection {
     if ($Background -and $Background.Contains('usbRead') -and $Background.usbRead.error) { "the USB read failed: $($Background.usbRead.error)" }
 }
 
-function Join-Rejection {
-    param([AllowNull()][string[]]$Reason)
-    $reasons = @($Reason | Where-Object { $_ })
-    if ($reasons.Count) { $reasons -join '; ' } else { $null }
-}
-
 function Start-LoadWithBackground {
     param([Parameter(Mandatory)]$Recipe, [string[]]$Background, [string]$UsbReadFile)
     $process = Wait-LoadStart -Recipe $Recipe
