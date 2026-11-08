@@ -318,25 +318,19 @@ Describe 'Get-GameRejection' {
     }
 }
 
-Describe 'Wait-LoadReady' {
-    BeforeAll {
-        $script:readyRecipe = [pscustomobject]@{ title = 'Test load'; consoleLine = 'map x'; presentMonProcess = 'game.exe'; timings = [pscustomobject]@{ loadPauseSeconds = 7; captureSeconds = 30 } }
+Describe 'Join-Rejection' {
+    It 'joins the game and the background reasons' {
+        Join-Rejection -Reason @('a', 'b') | Should -Be 'a; b'
+        Join-Rejection -Reason @($null, 'b') | Should -Be 'b'
+        Join-Rejection -Reason @($null, $null) | Should -BeNullOrEmpty
     }
-    It 'waits for the load, pauses the recipe load pause and returns the process' {
-        $proc = [pscustomobject]@{ Id = 42 }
-        Mock Wait-LoadStart { $proc }
-        Mock Start-Sleep {}
-        $got = Wait-LoadReady -Recipe $readyRecipe 6>$null
-        $got.Id | Should -Be 42
-        Should -Invoke Wait-LoadStart -Times 1 -Exactly
-        Should -Invoke Start-Sleep -Times 1 -Exactly -ParameterFilter { $Seconds -eq 7 }
-    }
-    It 'starts the pause only after the load is ready' {
-        $script:order = New-Object System.Collections.Generic.List[string]
-        Mock Wait-LoadStart { $script:order.Add('wait'); [pscustomobject]@{ Id = 1 } }
-        Mock Start-Sleep { $script:order.Add('sleep') }
-        Wait-LoadReady -Recipe $readyRecipe 6>$null | Out-Null
-        $script:order -join ',' | Should -Be 'wait,sleep'
+}
+
+Describe 'Get-LoadLogPath' {
+    It 'resolves the recipe log next to the exe' {
+        $recipe = [pscustomobject]@{ startMarker = [pscustomobject]@{ log = '../../csgo/console.log' } }
+        $process = [pscustomobject]@{ Path = 'C:\g\game\bin\win64\cs2.exe' }
+        Get-LoadLogPath -Recipe $recipe -Process $process | Should -Be 'C:\g\game\csgo\console.log'
     }
 }
 
