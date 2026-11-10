@@ -3,3 +3,4 @@ bench/msi-bench-*.json
 .vs/
 .vscode/
 .claude/
+.DS_Store
