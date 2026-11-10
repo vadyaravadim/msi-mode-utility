@@ -36,12 +36,12 @@ BeforeAll {
         )
         $null = New-Item -ItemType Directory -Path $Root -Force
         $states = @{
-            S = @{ one = 0; two = 0; oneShared = @('Audio Two'); twoShared = @('Audio One') }
-            M = @{ one = 1; two = 0; oneShared = @(); twoShared = @() }
+            S = @{ name = 'stock'; one = 0; two = 0; oneShared = @('Audio Two'); twoShared = @('Audio One') }
+            M = @{ name = 'mobo-audio-msi'; one = 1; two = 0; oneShared = @(); twoShared = @() }
         }
         $planBoots = foreach ($label in $Layout) {
             [ordered]@{
-                label  = $label
+                label  = $states[$label].name
                 states = @([ordered]@{
                         kind = 'msi'; step = 'msi'
                         devices = @(
@@ -63,8 +63,8 @@ BeforeAll {
                 phase = $name
                 devices = @(New-DeviceRows -OneMsi ($states[$label].one -eq 1) -TwoMsi ($states[$label].two -eq 1))
                 probes = @(
-                    [ordered]@{ cpu = 0; gapP50Us = 3 + $boot; gapP999Us = 600; stalledPct = 5 + $boot }
-                    [ordered]@{ cpu = 1; gapP50Us = 4; gapP999Us = 700; stalledPct = 6 }
+                    [ordered]@{ cpu = 0; devices = @('dxgkrnl.sys'); gapP50Us = 3 + $boot; gapP99Us = 300; gapP999Us = 600; stalledPct = 5 + $boot }
+                    [ordered]@{ cpu = 1; devices = @('HDAudBus.sys', 'Wdf01000.sys'); gapP50Us = 4; gapP99Us = 20; gapP999Us = 700; stalledPct = 6 }
                 )
                 trace = [ordered]@{
                     seconds = 10
@@ -72,6 +72,7 @@ BeforeAll {
                         (New-DriverRow 'loud.sys' (4000 + 1000 * $boot) 1000)
                         (New-DriverRow 'edge.sys' 4000 1000)
                         (New-DriverRow 'quiet.sys' 3000 1999)
+                        (New-DriverRow 'HDAudBus.sys' 1000 1000)
                     )
                 }
                 frames = [ordered]@{
@@ -160,6 +161,12 @@ Describe 'the constants' {
         $driverFloorMsPerSecond | Should -Be 0.5
         $longGapUs | Should -Be 5000
     }
+    It 'counts stalls from the same threshold the probe writes the stall file with' {
+        $text = Get-Content -LiteralPath (Join-Path $PSScriptRoot '..\msi-bench.ps1') -Raw
+        $match = [regex]::Match($text, 'TimelineMinUs\s*=\s*([0-9.]+)')
+        $match.Success | Should -BeTrue
+        [double]$match.Groups[1].Value | Should -Be $stallFileMinUs
+    }
 }
 
 Describe 'the report of a clean series' {
@@ -167,19 +174,19 @@ Describe 'the report of a clean series' {
         $script:report = New-SeriesReport -SeriesPath (New-Series -Root (Join-Path $TestDrive 'clean'))
     }
     It 'groups the boots by the plan label in plan order' {
-        @($report.Summary.states | ForEach-Object { $_.label }) | Should -Be @('S', 'M')
-        (Get-State $report 'S').boots | Should -Be @(0, 2)
-        (Get-State $report 'M').boots | Should -Be @(1, 3)
+        @($report.Summary.states | ForEach-Object { $_.label }) | Should -Be @('stock', 'mobo-audio-msi')
+        (Get-State $report 'stock').boots | Should -Be @(0, 2)
+        (Get-State $report 'mobo-audio-msi').boots | Should -Be @(1, 3)
     }
     It 'takes the median of an even count of boots for frames' {
-        $fps = (Get-State $report 'S').frames.avgFps
+        $fps = (Get-State $report 'stock').frames.avgFps
         $fps.median | Should -Be 110
         $fps.min | Should -Be 100
         $fps.max | Should -Be 120
-        (Get-State $report 'M').frames.avgFps.median | Should -Be 120
+        (Get-State $report 'mobo-audio-msi').frames.avgFps.median | Should -Be 120
     }
     It 'reports the other frame metrics and the CPU busy p50' {
-        $frames = (Get-State $report 'S').frames
+        $frames = (Get-State $report 'stock').frames
         $frames.p50Ms.median | Should -Be 8
         $frames.low1PctMs.median | Should -Be 9
         $frames.low01PctMs.median | Should -Be 10
@@ -187,7 +194,7 @@ Describe 'the report of a clean series' {
         $frames.cpuBusyP50Ms.median | Should -Be 6
     }
     It 'computes ms per second as (microseconds / 1000) / window seconds' {
-        $loud = (Get-State $report 'S').drivers | Where-Object { $_.driver -eq 'loud.sys' }
+        $loud = (Get-State $report 'stock').drivers | Where-Object { $_.driver -eq 'loud.sys' }
         $loud.metrics.isrMsPerSecond.median | Should -Be 0.5
         $loud.metrics.dpcMsPerSecond.median | Should -Be 0.1
         $loud.metrics.isrPerSecond.median | Should -Be 10
@@ -198,28 +205,48 @@ Describe 'the report of a clean series' {
         $loud.cpu | Should -Be @(2)
     }
     It 'lists a driver whose median total is exactly at the floor' {
-        @((Get-State $report 'S').drivers | ForEach-Object { $_.driver }) | Should -Contain 'edge.sys'
-        ((Get-State $report 'S').drivers | Where-Object { $_.driver -eq 'edge.sys' }).totalMsPerSecond.median | Should -Be $driverFloorMsPerSecond
+        @((Get-State $report 'stock').drivers | ForEach-Object { $_.driver }) | Should -Contain 'edge.sys'
+        ((Get-State $report 'stock').drivers | Where-Object { $_.driver -eq 'edge.sys' }).totalMsPerSecond.median | Should -Be $driverFloorMsPerSecond
     }
     It 'leaves out a driver one microsecond under the floor' {
-        @((Get-State $report 'S').drivers | ForEach-Object { $_.driver }) | Should -Not -Contain 'quiet.sys'
+        @((Get-State $report 'stock').drivers | ForEach-Object { $_.driver }) | Should -Not -Contain 'quiet.sys'
         $report.Markdown | Should -Not -Match 'quiet\.sys'
     }
     It 'lists the driver in every state once it passes the floor in any state' {
-        $report.Markdown | Should -Match '\| loud\.sys \| S \|'
-        $report.Markdown | Should -Match '\| loud\.sys \| M \|'
+        $report.Markdown | Should -Match '\| loud\.sys \| stock \|'
+        $report.Markdown | Should -Match '\| loud\.sys \| mobo-audio-msi \|'
     }
     It 'reports the probes per CPU' {
-        $probe = (Get-State $report 'S').probes | Where-Object { $_.cpu -eq 0 }
+        $probe = (Get-State $report 'stock').probes | Where-Object { $_.cpu -eq 0 }
         $probe.stalledPct.median | Should -Be 6
         $probe.gapP50Us.median | Should -Be 4
         $probe.gapP999Us.median | Should -Be 600
+        $probe.gapP99Us.median | Should -Be 300
+        $probe.devices | Should -Be @('dxgkrnl.sys')
+        ((Get-State $report 'stock').probes | Where-Object { $_.cpu -eq 1 }).devices | Should -Be @('HDAudBus.sys', 'Wdf01000.sys')
+    }
+    It 'counts the rows of the stall file per probe CPU' {
+        $probe = (Get-State $report 'stock').probes | Where-Object { $_.cpu -eq 1 }
+        $probe.stallCount.median | Should -Be 1
+        $probe.stallCount.n | Should -Be 2
+    }
+    It 'shows the drivers, gap p99 and stall count in the probes table' {
+        $report.Markdown | Should -Match '\| State \| Probe CPU \| Drivers on the core \| Stalled \(%\) \| Gap p50 \(us\) \| Gap p99 \(us\) \| Gap p99\.9 \(us\) \| Stalls of 1 ms or more \|'
+        $report.Markdown | Should -Match '\| stock \| 1 \| HDAudBus\.sys, Wdf01000\.sys \| 6 \[6-6\] \| 4 \[4-4\] \| 20 \[20-20\] \| 700 \[700-700\] \| 1 \[1-1\] \|'
+    }
+    It 'places the pre-registered tests between the checks and the frames' {
+        $checks = $report.Markdown.IndexOf('## Checks that passed')
+        $tests = $report.Markdown.IndexOf('## Pre-registered tests')
+        $frames = $report.Markdown.IndexOf('## Frames')
+        $tests | Should -BeGreaterThan $checks
+        $frames | Should -BeGreaterThan $tests
+        @($report.Summary.fileMap | Where-Object { $_.table -eq 'Pre-registered tests' }).Count | Should -Be 1
     }
     It 'lists the runs with a gap of 5 ms or more and their offsets, not the 4999.5 us one' {
-        (Get-State $report 'S').longGapRuns | Should -BeNullOrEmpty
+        (Get-State $report 'stock').longGapRuns | Should -BeNullOrEmpty
     }
     It 'reports USB MiB/s' {
-        (Get-State $report 'S').usbMiBPerSecond.median | Should -Be 151
+        (Get-State $report 'stock').usbMiBPerSecond.median | Should -Be 151
     }
     It 'takes the testbed from the data' {
         $report.Summary.testbed['Windows'] | Should -Be 'X build 26300.100'
@@ -239,7 +266,7 @@ Describe 'the report of a clean series' {
     }
     It 'omits the system CPU column when no boot records systemCpu' {
         $report.Markdown | Should -Not -Match 'System CPU busy'
-        (Get-State $report 'S').PSObject.Properties['systemCpuBusyPct'] | Should -BeNullOrEmpty
+        (Get-State $report 'stock').PSObject.Properties['systemCpuBusyPct'] | Should -BeNullOrEmpty
         ($report.Summary.fileMap | Where-Object { $_.table -eq 'Frames' }).fields | Should -Be 'frames.*'
     }
     It 'maps every table to a file' {
@@ -253,7 +280,7 @@ Describe 'the report of a clean series' {
 Describe 'the report with an odd count of boots' {
     It 'takes the middle boot' {
         $report = New-SeriesReport -SeriesPath (New-Series -Root (Join-Path $TestDrive 'odd') -Layout @('S', 'M', 'S', 'M', 'S'))
-        $fps = (Get-State $report 'S').frames.avgFps
+        $fps = (Get-State $report 'stock').frames.avgFps
         $fps.median | Should -Be 120
         $fps.min | Should -Be 100
         $fps.max | Should -Be 140
@@ -267,12 +294,12 @@ Describe 'the gap threshold' {
             if ($ctx.Boot -eq 2) { $ctx.Stalls.Add('1,3210.5,5000'); $ctx.Stalls.Add('0,3300,6100.25') }
         }
         $report = New-SeriesReport -SeriesPath $root
-        $runs = @((Get-State $report 'S').longGapRuns)
+        $runs = @((Get-State $report 'stock').longGapRuns)
         $runs.Count | Should -Be 1
         $runs[0].boot | Should -Be 2
         @($runs[0].gaps | ForEach-Object { $_.offsetMs }) | Should -Be @(3210.5, 3300)
         @($runs[0].gaps | ForEach-Object { $_.gapUs }) | Should -Be @(5000, 6100.25)
-        (Get-State $report 'M').longGapRuns | Should -BeNullOrEmpty
+        (Get-State $report 'mobo-audio-msi').longGapRuns | Should -BeNullOrEmpty
         $report.Markdown | Should -Match '1 of 2'
     }
 }
@@ -285,7 +312,7 @@ Describe 'the driver floor on the median' {
             $row.isrTotalUs = @(1000, 3001, 9000)[$ctx.Boot]
         }
         $report = New-SeriesReport -SeriesPath $root
-        $quiet = (Get-State $report 'S').drivers | Where-Object { $_.driver -eq 'quiet.sys' }
+        $quiet = (Get-State $report 'stock').drivers | Where-Object { $_.driver -eq 'quiet.sys' }
         $quiet | Should -Not -BeNullOrEmpty
         $quiet.totalMsPerSecond.median | Should -Be 0.5
         $quiet.totalMsPerSecond.max | Should -Be 1.0999
@@ -299,10 +326,87 @@ Describe 'a driver missing from one boot' {
             if ($ctx.Boot -eq 1) { $ctx.Bench.trace.drivers = @($ctx.Bench.trace.drivers | Where-Object { $_.driver -ne 'loud.sys' }) }
         }
         $report = New-SeriesReport -SeriesPath $root
-        $loud = (Get-State $report 'S').drivers | Where-Object { $_.driver -eq 'loud.sys' }
+        $loud = (Get-State $report 'stock').drivers | Where-Object { $_.driver -eq 'loud.sys' }
         $loud.totalMsPerSecond.min | Should -Be 0
         $loud.totalMsPerSecond.max | Should -Be 0.7
         $loud.totalMsPerSecond.median | Should -Be 0.5
+    }
+}
+
+Describe 'the pre-registered tests end to end' {
+    BeforeAll {
+        $root = New-Series -Root (Join-Path $TestDrive 'tests-e2e') -Layout @('S', 'M', 'S', 'M', 'S', 'M', 'S', 'M', 'S', 'M') -Mutate {
+            param($ctx)
+            $step = [int][math]::Floor($ctx.Boot / 2)
+            $ctx.Bench.probes[0].stalledPct = if ($ctx.Label -eq 'S') { @(5.0, 5.1, 5.2, 5.3, 5.4)[$step] } else { @(6.0, 6.1, 6.2, 6.3, 6.4)[$step] }
+        }
+        $script:e2e = New-SeriesReport -SeriesPath $root
+        $script:e2eTests = @($e2e.Summary.analysis.tests)
+    }
+    It 'tests the one state against stock in a family of 6' {
+        $e2e.Summary.analysis.family | Should -Be 6
+        @($e2eTests | ForEach-Object { $_.state } | Sort-Object -Unique) | Should -Be @('mobo-audio-msi')
+    }
+    It 'reads hurt for the dxgkrnl stall shift after Holm' {
+        $test = $e2eTests | Where-Object { $_.metric -eq 'dxgkrnlStalledPct' }
+        $test.extreme | Should -Be 2
+        $test.permutations | Should -Be 252
+        $test.p | Should -Be 0.007937
+        $test.pHolm | Should -Be 0.047619
+        $test.verdict | Should -Be 'hurt'
+        $test.stockCpu | Should -Be @(0)
+        $test.stateCpu | Should -Be @(0)
+    }
+    It 'reads no difference for the tied metrics and cannot show for the 1% low under a GPU-bound load' {
+        foreach ($metric in 'dxgkrnlGapP99Us', 'wdf01000StalledPct', 'wdf01000GapP99Us', 'changedDriverMsPerSecond') {
+            $test = $e2eTests | Where-Object { $_.metric -eq $metric }
+            $test.p | Should -Be 1
+            $test.ciLow | Should -Be 0
+            $test.ciHigh | Should -Be 0
+            $test.verdict | Should -Be 'no difference' -Because $metric
+        }
+        ($e2eTests | Where-Object { $_.metric -eq 'wdf01000GapP99Us' }).stockCpu | Should -Be @(1)
+        ($e2eTests | Where-Object { $_.metric -eq 'changedDriverMsPerSecond' }).drivers | Should -Be @('HDAudBus.sys')
+        ($e2eTests | Where-Object { $_.metric -eq 'low1PctMs' }).verdict | Should -Be 'cannot show'
+    }
+    It 'flags the load from the average fps and keeps the verdicts' {
+        $load = $e2e.Summary.analysis.load[0]
+        $load.stockMedian | Should -Be 140
+        $load.stateMedian | Should -Be 150
+        $load.differencePct | Should -Be 7.1429
+        $load.differs | Should -BeTrue
+        @($e2eTests | Where-Object { -not $_.loadDiffers }).Count | Should -Be 0
+    }
+    It 'prints the verdict rows and the load table' {
+        $e2e.Markdown | Should -Match '\| mobo-audio-msi \| Stalled \(%\), dxgkrnl\.sys core \| 0 / 0 \| 5\.2 \| 6\.2 \| 1 \| 19\.23 \| \[0\.8, 1\.2\] \| \+/-0\.3 \| 0\.048 \| hurt \| load differs \|'
+        $e2e.Markdown | Should -Match '\| mobo-audio-msi \| 1% low \(ms\) \| - \| 9 \| 9 \| 0 \| 0 \| \[0, 0\] \| - \| 1 \| cannot show \| load differs \|'
+        ($e2eTests | Where-Object { $_.metric -eq 'low1PctMs' }).margin | Should -BeNullOrEmpty
+        ($e2eTests | Where-Object { $_.metric -eq 'dxgkrnlStalledPct' }).margin | Should -Be 0.3
+        $e2e.Markdown | Should -Match '\| mobo-audio-msi \| 140 \| 150 \| 7\.14 \| differs \|'
+        $e2e.Markdown | Should -Match 'Holm-corrected over the 6 tests'
+    }
+}
+
+Describe 'a stock-only series' {
+    It 'runs no test and prints no test section' {
+        $root = New-Series -Root (Join-Path $TestDrive 'stock-only') -Layout @('S') -Mutate {
+            param($ctx)
+            $ctx.Bench.probes = @([ordered]@{ cpu = 0; gapP50Us = 3.8; gapP999Us = 631.9; stalledPct = 1.5 })
+            $ctx.Bench.trace.drivers = @($ctx.Bench.trace.drivers | Where-Object { $_.driver -ne 'edge.sys' })
+        }
+        $report = New-SeriesReport -SeriesPath $root
+        $report.Summary.analysis.family | Should -Be 0
+        @($report.Summary.analysis.tests).Count | Should -Be 0
+        @($report.Summary.analysis.load).Count | Should -Be 0
+        $report.Markdown | Should -Not -Match '## Pre-registered tests'
+        @($report.Summary.fileMap | Where-Object { $_.table -eq 'Pre-registered tests' }).Count | Should -Be 0
+        $report.Markdown | Should -Match '\| stock \| 1 \| 100 \[100-100\] \| 8 \[8-8\] \| 9 \[9-9\] \| 10 \[10-10\] \| 7 \[7-7\] \| 6 \[6-6\] \|'
+        $report.Markdown | Should -Match '\| loud\.sys \| stock \| 10 \[10-10\] \|'
+        $report.Markdown | Should -Match '\| stock \| 0 of 1 \| - \|'
+        $probe = (Get-State $report 'stock').probes[0]
+        $probe.gapP99Us | Should -BeNullOrEmpty
+        @($probe.devices).Count | Should -Be 0
+        $report.Markdown | Should -Match '\| stock \| 0 \| - \| 1\.5 \[1\.5-1\.5\] \| 3\.8 \[3\.8-3\.8\] \| n/a \|'
     }
 }
 
@@ -341,35 +445,35 @@ Describe 'the series refusals' {
             param($ctx)
             if ($ctx.Boot -eq 2) { $ctx.Bench.devices = @(New-DeviceRows -OneMsi $true -TwoMsi $false) }
         }
-        { New-SeriesReport -SeriesPath $root } | Should -Throw "*boot 2 (S) device 'Audio One' field Mode*"
+        { New-SeriesReport -SeriesPath $root } | Should -Throw "*boot 2 (stock) device 'Audio One' field Mode*"
     }
     It 'refuses a device on a line where the state wants MSI' {
         $root = New-Series -Root (Join-Path $TestDrive 'r-mode2') -Mutate {
             param($ctx)
             if ($ctx.Boot -eq 1) { $ctx.Bench.devices = @(New-DeviceRows -OneMsi $false -TwoMsi $false) }
         }
-        { New-SeriesReport -SeriesPath $root } | Should -Throw "*boot 1 (M) device 'Audio One' field Mode*"
+        { New-SeriesReport -SeriesPath $root } | Should -Throw "*boot 1 (mobo-audio-msi) device 'Audio One' field Mode*"
     }
     It 'refuses a device the plan says is shared when the bench shows it alone' {
         $root = New-Series -Root (Join-Path $TestDrive 'r-alone') -Mutate {
             param($ctx)
             if ($ctx.Boot -eq 0) { foreach ($row in $ctx.Bench.devices) { $row.SharedWith = '' } }
         }
-        { New-SeriesReport -SeriesPath $root } | Should -Throw "*boot 0 (S) device 'Audio One' field SharedWith is ''*the plan says 'Audio Two'*"
+        { New-SeriesReport -SeriesPath $root } | Should -Throw "*boot 0 (stock) device 'Audio One' field SharedWith is ''*the plan says 'Audio Two'*"
     }
     It 'refuses a device the plan says is alone when the bench shows it shared' {
         $root = New-Series -Root (Join-Path $TestDrive 'r-extra') -Mutate {
             param($ctx)
             if ($ctx.Boot -eq 1) { ($ctx.Bench.devices | Where-Object { $_.Device -eq 'Audio Two' }).SharedWith = 'Stranger' }
         }
-        { New-SeriesReport -SeriesPath $root } | Should -Throw "*boot 1 (M) device 'Audio Two' field SharedWith is 'Stranger'*the plan says ''*"
+        { New-SeriesReport -SeriesPath $root } | Should -Throw "*boot 1 (mobo-audio-msi) device 'Audio Two' field SharedWith is 'Stranger'*the plan says ''*"
     }
     It 'refuses a shared line whose partner is not the one the plan names' {
         $root = New-Series -Root (Join-Path $TestDrive 'r-partner') -Mutate {
             param($ctx)
             if ($ctx.Boot -eq 0) { ($ctx.Bench.devices | Where-Object { $_.Device -eq 'Audio One' }).SharedWith = 'Stranger' }
         }
-        { New-SeriesReport -SeriesPath $root } | Should -Throw "*boot 0 (S) device 'Audio One' field SharedWith is 'Stranger'*the plan says 'Audio Two'*"
+        { New-SeriesReport -SeriesPath $root } | Should -Throw "*boot 0 (stock) device 'Audio One' field SharedWith is 'Stranger'*the plan says 'Audio Two'*"
     }
     It 'compares the shared names as a sorted set' {
         $root = New-Series -Root (Join-Path $TestDrive 'r-sorted') -Mutate {
@@ -396,14 +500,14 @@ Describe 'the series refusals' {
         $plan = Get-Content -LiteralPath (Join-Path $root 'plan.json') -Raw | ConvertFrom-Json
         $plan.boots[0].states[0].devices[0].PSObject.Properties.Remove('deviceName')
         ConvertTo-Json -InputObject $plan -Depth 12 | Set-Content -LiteralPath (Join-Path $root 'plan.json') -Encoding UTF8
-        { New-SeriesReport -SeriesPath $root } | Should -Throw '*boot 0 (S) plan device*has no field deviceName*'
+        { New-SeriesReport -SeriesPath $root } | Should -Throw '*boot 0 (stock) plan device*has no field deviceName*'
     }
     It 'refuses a device name that matches two bench rows' {
         $root = New-Series -Root (Join-Path $TestDrive 'r-dup') -Mutate {
             param($ctx)
             if ($ctx.Boot -eq 0) { $ctx.Bench.devices = @($ctx.Bench.devices) + @($ctx.Bench.devices[0]) }
         }
-        { New-SeriesReport -SeriesPath $root } | Should -Throw "*boot 0 (S) bench field devices has 2 rows named*"
+        { New-SeriesReport -SeriesPath $root } | Should -Throw "*boot 0 (stock) bench field devices has 2 rows named*"
     }
     It 'refuses a changed OS build' {
         $root = New-Series -Root (Join-Path $TestDrive 'r-build') -Mutate { param($ctx) if ($ctx.Boot -eq 3) { $ctx.Bench.metadata.os.build = '26301' } }
@@ -578,11 +682,11 @@ Describe 'the system CPU column' {
         $script:cpuReport = New-SeriesReport -SeriesPath $root
     }
     It 'reports busy seconds as a percent of window seconds times logical CPUs' {
-        $spread = (Get-State $cpuReport 'S').systemCpuBusyPct
+        $spread = (Get-State $cpuReport 'stock').systemCpuBusyPct
         $spread.median | Should -Be 12.5
         $spread.min | Should -Be 10
         $spread.max | Should -Be 15
-        (Get-State $cpuReport 'M').systemCpuBusyPct.median | Should -Be 15
+        (Get-State $cpuReport 'mobo-audio-msi').systemCpuBusyPct.median | Should -Be 15
     }
     It 'shows the column in the frames table' {
         $cpuReport.Markdown | Should -Match 'System CPU busy'
@@ -607,7 +711,28 @@ Describe 'the script entry point' {
         $summary = Get-Content -LiteralPath $json -Raw | ConvertFrom-Json
         $summary.states[0].frames.avgFps.median | Should -Be 110
         $summary.constants.driverFloorMsPerSecond | Should -Be 0.5
+        $summary.constants.referenceState | Should -Be 'stock'
+        $summary.constants.margins.cs2.low1PctMs.shareOfStockMedian | Should -Be 0.033
+        $summary.analysis.family | Should -Be 6
+        ($summary.analysis.tests | Where-Object { $_.metric -eq 'dxgkrnlStalledPct' }).verdict | Should -Be 'cannot tell'
         (Get-Content -LiteralPath $md -Raw) | Should -Match '110 \[100-120\]'
+    }
+    It 'writes the same summary.json bytes from two separate runs' {
+        $root = New-Series -Root (Join-Path $TestDrive 'twice')
+        $engine = (Get-Process -Id $PID).Path
+        $paths = foreach ($run in 1, 2) {
+            $json = Join-Path $TestDrive "twice-$run.json"
+            & $engine -NoProfile -ExecutionPolicy Bypass -File $tool -SeriesPath $root -MarkdownPath (Join-Path $TestDrive "twice-$run.md") -SummaryPath $json
+            $json
+        }
+        $first = [System.IO.File]::ReadAllBytes($paths[0])
+        $first.Count | Should -BeGreaterThan 0
+        [System.Convert]::ToBase64String($first) | Should -Be ([System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes($paths[1])))
+    }
+    It 'keeps the field order of the checks and the file map' {
+        $report = New-SeriesReport -SeriesPath (New-Series -Root (Join-Path $TestDrive 'field-order'))
+        @($report.Summary.checks[0].PSObject.Properties | ForEach-Object { $_.Name }) | Should -Be @('name', 'source', 'benchJson', 'status')
+        @($report.Summary.fileMap[0].PSObject.Properties | ForEach-Object { $_.Name }) | Should -Be @('table', 'files', 'fields', 'runner')
     }
     It 'prints the markdown to stdout without -MarkdownPath' {
         $root = New-Series -Root (Join-Path $TestDrive 'stdout')

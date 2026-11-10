@@ -26,8 +26,16 @@ verbatim into the release and fails the release if the tag has no section here.
 - With `-ProcessCpu` (needs `-Load`), the result lists `processCpu`: each process that used at least 0.05 CPU-seconds
   inside the capture window, largest first, so a background job that ran during a measurement shows up in the file.
   Without the switch the result holds no process list.
-- `bench/tools/Get-MsiSeriesTable.ps1` turns a folder of six-state boots into per-state median [min-max] tables and a
-  `summary.json`, and refuses a series that mixes setups.
+- `bench/tools/Get-MsiSeriesTable.ps1` turns a folder of MSI series boots (the six-state Superposition series or the
+  three-state CS2 series) into per-state median [min-max] tables and a `summary.json`, and refuses a series that mixes
+  setups. It also tests every state against stock on six pre-registered metrics (stall share and gap p99 on the
+  dxgkrnl.sys and Wdf01000.sys probe cores, 1% low frame time, ISR+DPC time of the changed driver): an exact rank test
+  with a Holm correction, the Hodges-Lehmann shift with a 90% interval against a fixed margin, and a verdict (helped,
+  hurt, no difference, cannot tell; on a GPU-bound load the 1% low reads cannot show instead). Average FPS is a load
+  check only: a state more than 1% off stock is marked, and the mark changes no verdict. A series with states besides
+  stock now needs a `stock` state, labels from audio-msi, mobo-audio-msi, gpu-audio-msi, gpu-line and usb-line, frames,
+  a load with margins (superposition or cs2) and exactly one probe listing each of the two drivers in every boot. The
+  probes table adds the drivers on each core, gap p99 and the count of stalls of 1 ms or more.
 - With `-Load`, the result carries `systemCpu`: the whole-system busy and idle CPU seconds over the capture window and the
   logical CPU count, so work from processes that start and exit inside the window still shows.
 - Every driver row carries `isrTotalUs` and `dpcTotalUs`, the summed time of its interrupt and deferred routines.
