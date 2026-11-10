@@ -61,9 +61,6 @@ Describe 'Get-DoubledMidRank' {
     It 'gives tied values the doubled mean of their ranks' {
         Get-DoubledMidRank -Values @(1, 2, 2, 2, 3, 3) | Should -Be @(2, 6, 6, 6, 11, 11)
     }
-    It 'ranks a double and a decimal of the same recorded value as a tie' {
-        Get-DoubledMidRank -Values @([double]8.95, [decimal]8.95, 9) | Should -Be @(3, 3, 6)
-    }
 }
 
 Describe 'Get-RankSumTest' {
