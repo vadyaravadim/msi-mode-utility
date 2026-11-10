@@ -4,8 +4,9 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-Each released section below IS the GitHub Release body for that tag: `release.yml` copies the section
-verbatim into the release and fails the release if the tag has no section here.
+Each released section below IS the GitHub Release body for that version: `release.yml` releases the newest
+section, copies it verbatim into the release, and fails before anything is tagged or published if the
+section is empty or its compare link at the bottom is missing.
 
 ## [Unreleased]
 
@@ -51,6 +52,15 @@ verbatim into the release and fails the release if the tag has no section here.
   A run that lost any is rejected.
 - A run is also rejected when its frames cover less than 95% of the capture window, which happens when the load
   exits or stops presenting. Before, such a run passed.
+- Releases are tagged only after every check has passed on the commit they are built from, and the
+  PowerShell Gallery package always holds the same file as the GitHub release.
+- A release now waits for the bench tests, which run under Windows PowerShell 5.1 and PowerShell 7;
+  before, it was published without them.
+- Before a release is published, the script is now checked against the syntax and .NET types of Windows
+  PowerShell 5.1, the version `Run.bat` and the elevated relaunch run it under.
+- Checking that a downloaded script was built from this repository takes a new `gh attestation verify` command
+  from the next release on: releases are now built by the release workflow all six RigPolice scripts share.
+  SECURITY.md has both commands.
 
 ## [1.2.0] - 2026-10-03
 
