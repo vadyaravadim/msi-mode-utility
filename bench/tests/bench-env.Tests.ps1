@@ -360,3 +360,11 @@ Describe 'Get-LoadRecord' {
         @($record.extraLaunchFlags).Count | Should -Be 0
     }
 }
+
+Describe 'ConvertTo-WrittenDecimal' {
+    It 'turns a recorded number into the decimal written in the JSON on every PowerShell' {
+        ConvertTo-WrittenDecimal ('{"value": 8.95}' | ConvertFrom-Json).value | Should -Be 8.95d
+        ConvertTo-WrittenDecimal ([double]8.95) | Should -Be 8.95d
+        ConvertTo-WrittenDecimal 8.95d | Should -Be 8.95d
+    }
+}
