@@ -10,6 +10,8 @@ section is empty or its compare link at the bottom is missing.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-10
+
 ### Added
 
 - `bench/msi-bench.ps1` records frame times with PresentMon while a load runs (`-Load superposition -PresentMon <path>`).
@@ -47,6 +49,7 @@ section is empty or its compare link at the bottom is missing.
 
 ### Changed
 
+- `msi-mode-utility.ps1` itself works exactly as in 1.2.0; only comments in it changed.
 - If another program already holds the NT Kernel Logger session, the bench now stops and names the problem instead of killing that program's trace.
 - PresentMon runs with a larger circular buffer, and the bench counts the presents it lost to a buffer overflow.
   A run that lost any is rejected.
@@ -59,7 +62,7 @@ section is empty or its compare link at the bottom is missing.
 - Before a release is published, the script is now checked against the syntax and .NET types of Windows
   PowerShell 5.1, the version `Run.bat` and the elevated relaunch run it under.
 - Checking that a downloaded script was built from this repository takes a new `gh attestation verify` command
-  from the next release on: releases are now built by the release workflow all six RigPolice scripts share.
+  from this release on: releases are now built by the release workflow all six RigPolice scripts share.
   SECURITY.md has both commands.
 
 ## [1.2.0] - 2026-10-03
@@ -260,7 +263,8 @@ section is empty or its compare link at the bottom is missing.
   dependencies - one readable PowerShell script on Windows PowerShell 5.1+, an open-source
   alternative to the closed-source MSI Util v3. A reboot is needed for the change to take effect.
 
-[Unreleased]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.1.5...v1.2.0
 [1.1.5]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.1.4...v1.1.5
 [1.1.4]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.1.3...v1.1.4
