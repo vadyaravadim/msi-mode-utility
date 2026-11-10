@@ -45,6 +45,14 @@ from `MSISupported`.
 The gates and the release job live in `.github/workflows/pipeline.yml` of `vadyaravadim/latency-toolbox-ci`,
 not here: `ci.yml` runs it on every push and pull request, `release.yml` from a dispatch. Change a gate there.
 
+**`main` moves only to a commit whose `ci` passed on a branch.** Its ruleset requires `ci / psanalyzer`,
+`ci / ascii`, `ci / pester (5.1)` and `ci / pester (runner)` from GitHub Actions, so a commit made on `main`
+is rejected. Push the branch, wait for `ci`, then merge it into `main` (`--no-ff` works while the branch is
+up to date with `main`) and push; push a commit made on `main` to a branch first (`git push origin
+main:<branch>`). A pin bump that renames one of these checks needs the new name in the ruleset before it is
+pushed to `main`. The preview leg is not required: it only warns. Neither is `sync`: it stays red until the
+second repo of a shared bench change lands, so requiring it would block that change.
+
 - **The ASCII gate - every tracked `.ps1` must be pure ASCII with no BOM.** Both halves are load-bearing: a
   BOM makes `irm | iex` choke on a leading U+FEFF, and non-ASCII in a BOM-less file turns into mojibake when
   Windows PowerShell 5.1 runs it with `-File`. Write `\uXXXX` regex escapes rather than literals; em-dashes
