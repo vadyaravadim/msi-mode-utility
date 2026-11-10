@@ -7,6 +7,6 @@ jobs:
       contents: write        # create the release and upload assets
       id-token: write        # OIDC token for Sigstore signing (provenance)
       attestations: write    # persist the attestation
-    uses: vadyaravadim/latency-toolbox-ci/.github/workflows/pipeline.yml@31312ee3ce952dae1149939f15e0ccfab89f0611 # v1.0.1
+    uses: vadyaravadim/latency-toolbox-ci/.github/workflows/pipeline.yml@918bcc64d780737b808ae99b29fbc16f7972d3d3 # v1.0.2
     secrets:
       NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
