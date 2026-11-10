@@ -15,6 +15,7 @@ BeforeAll {
             [double]$Low1 = 9,
             [double]$AvgFps = 120,
             [System.Collections.IDictionary]$DriverMs = @{},
+            [object[]]$Drivers,
             [string]$Load = 'superposition',
             [object[]]$Probes
         )
@@ -24,10 +25,10 @@ BeforeAll {
                 [ordered]@{ cpu = $UsbCpu; devices = @('HDAudBus.sys', 'Wdf01000.sys'); stalledPct = $UsbStalled; gapP99Us = $UsbGap }
             )
         }
-        $drivers = @(foreach ($name in $DriverMs.Keys) { [ordered]@{ driver = $name; isrTotalUs = 10000 * $DriverMs[$name]; dpcTotalUs = 0 } })
+        if (-not $Drivers) { $Drivers = @(foreach ($name in $DriverMs.Keys) { [ordered]@{ driver = $name; isrTotalUs = 10000 * $DriverMs[$name]; dpcTotalUs = 0 } }) }
         $bench = [ordered]@{
             probes = @($Probes)
-            trace  = [ordered]@{ seconds = 10; drivers = $drivers }
+            trace  = [ordered]@{ seconds = 10; drivers = @($Drivers) }
             frames = [ordered]@{ low1PctMs = $Low1; avgFps = $AvgFps }
             load   = [ordered]@{ name = $Load }
         }
@@ -121,34 +122,34 @@ Describe 'Get-ShiftEstimate' {
         $shift.shift | Should -Be 3
         $shift.ciLow | Should -Be 1
         $shift.ciHigh | Should -Be 5
-        $shift.ciConfidence | Should -Be 0.9
+        $shift.ciConfidence | Should -Be 0.9d
     }
     It 'takes the critical index from the no-ties distribution with ties present' {
         $shift = Get-ShiftEstimate -Stock @(10, 11, 12, 13) -State @(12, 14, 15, 16)
         $shift.shift | Should -Be 3
         $shift.ciLow | Should -Be 0
         $shift.ciHigh | Should -Be 5
-        [math]::Round($shift.ciConfidence, 4) | Should -Be 0.9429
+        [math]::Round($shift.ciConfidence, 4) | Should -Be 0.9429d
     }
     It 'gives k = 43 for 12 against 12' {
         $shift = Get-ShiftEstimate -Stock @(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0) -State @(1..12)
         $shift.shift | Should -Be 6.5
         $shift.ciLow | Should -Be 4
         $shift.ciHigh | Should -Be 9
-        [math]::Round($shift.ciConfidence, 4) | Should -Be 0.9113
+        [math]::Round($shift.ciConfidence, 4) | Should -Be 0.9113d
     }
     It 'gives the 5 against 5 interval' {
-        $shift = Get-ShiftEstimate -Stock @(5.0, 5.1, 5.2, 5.3, 5.4) -State @(6.0, 6.1, 6.2, 6.3, 6.4)
+        $shift = Get-ShiftEstimate -Stock @(5.0d, 5.1d, 5.2d, 5.3d, 5.4d) -State @(6.0d, 6.1d, 6.2d, 6.3d, 6.4d)
         $shift.shift | Should -Be 1
-        $shift.ciLow | Should -Be 0.8
-        $shift.ciHigh | Should -Be 1.2
-        [math]::Round($shift.ciConfidence, 4) | Should -Be 0.9048
+        $shift.ciLow | Should -Be 0.8d
+        $shift.ciHigh | Should -Be 1.2d
+        [math]::Round($shift.ciConfidence, 4) | Should -Be 0.9048d
     }
     It 'gives an interval for 5 against 2' {
         $shift = Get-ShiftEstimate -Stock @(1, 2, 3, 4, 5) -State @(6, 7)
         $shift.ciLow | Should -Be 1
         $shift.ciHigh | Should -Be 6
-        [math]::Round($shift.ciConfidence, 4) | Should -Be 0.9048
+        [math]::Round($shift.ciConfidence, 4) | Should -Be 0.9048d
     }
     It 'gives no interval for 4 against 2' {
         $shift = Get-ShiftEstimate -Stock @(1, 2, 3, 4) -State @(6, 7)
@@ -214,40 +215,40 @@ Describe 'Get-Verdict' {
 
 Describe 'the margins in decimal' {
     It 'does not read 8.65 against 8.95 as inside +/-0.3' {
-        $shift = Get-ShiftEstimate -Stock @([double]8.65, [double]8.65, [double]8.65) -State @([double]8.95, [double]8.95, [double]8.95)
-        $shift.ciLow | Should -Be 0.3
-        $shift.ciHigh | Should -Be 0.3
-        Get-Verdict -Significant $false -Direction 1 -CiLow $shift.ciLow -CiHigh $shift.ciHigh -Margin (Get-MetricMargin -Rule $marginRules.superposition.stalledPct -StockMedian 8.65) | Should -Be 'cannot tell'
+        $shift = Get-ShiftEstimate -Stock @(8.65d, 8.65d, 8.65d) -State @(8.95d, 8.95d, 8.95d)
+        $shift.ciLow | Should -Be 0.3d
+        $shift.ciHigh | Should -Be 0.3d
+        Get-Verdict -Significant $false -Direction 1 -CiLow $shift.ciLow -CiHigh $shift.ciHigh -Margin (Get-MetricMargin -Rule $marginRules.superposition.stalledPct -StockMedian 8.65d) | Should -Be 'cannot tell'
     }
     It 'puts 10% of a 654 us stock median between 719.3 and 719.4' {
-        $margin = Get-MetricMargin -Rule $marginRules.superposition.gapP99Us -StockMedian ([double]654)
-        $margin | Should -Be 65.4
-        $inside = Get-ShiftEstimate -Stock @(654, 654, 654) -State @([double]719.3, [double]719.3, [double]719.3)
+        $margin = Get-MetricMargin -Rule $marginRules.superposition.gapP99Us -StockMedian 654d
+        $margin | Should -Be 65.4d
+        $inside = Get-ShiftEstimate -Stock @(654, 654, 654) -State @(719.3d, 719.3d, 719.3d)
         Get-Verdict -Significant $false -Direction 1 -CiLow $inside.ciLow -CiHigh $inside.ciHigh -Margin $margin | Should -Be 'no difference'
-        $edge = Get-ShiftEstimate -Stock @(654, 654, 654) -State @([double]719.4, [double]719.4, [double]719.4)
+        $edge = Get-ShiftEstimate -Stock @(654, 654, 654) -State @(719.4d, 719.4d, 719.4d)
         Get-Verdict -Significant $false -Direction 1 -CiLow $edge.ciLow -CiHigh $edge.ciHigh -Margin $margin | Should -Be 'cannot tell'
     }
     It 'takes 3.3% of the stock median as the cs2 1% low margin' {
-        Get-MetricMargin -Rule $marginRules.cs2.low1PctMs -StockMedian 10 | Should -Be 0.33
+        Get-MetricMargin -Rule $marginRules.cs2.low1PctMs -StockMedian 10 | Should -Be 0.33d
     }
 }
 
 Describe 'Get-LoadCheck' {
     It 'does not flag exactly 1%' {
-        $load = Get-LoadCheck -Stock @([double]120, [double]120, [double]120) -State @([double]121.2, [double]121.2, [double]121.2)
+        $load = Get-LoadCheck -Stock @([double]120, [double]120, [double]120) -State @(121.2d, 121.2d, 121.2d)
         $load.differs | Should -BeFalse
         $load.differencePct | Should -Be 1
     }
     It 'flags more than 1% either way' {
-        (Get-LoadCheck -Stock @(120, 120) -State @([double]121.3, [double]121.3)).differs | Should -BeTrue
-        (Get-LoadCheck -Stock @(120, 120) -State @([double]118.7, [double]118.7)).differs | Should -BeTrue
+        (Get-LoadCheck -Stock @(120, 120) -State @(121.3d, 121.3d)).differs | Should -BeTrue
+        (Get-LoadCheck -Stock @(120, 120) -State @(118.7d, 118.7d)).differs | Should -BeTrue
     }
     It 'gives no percentage for a zero stock median' {
         $load = Get-LoadCheck -Stock @(0, 0) -State @(1, 1)
         $load.differencePct | Should -BeNullOrEmpty
     }
     It 'measures the 1% against the stock median' {
-        (Get-LoadCheck -Stock @(100, 100) -State @([double]101.005, [double]101.005)).differs | Should -BeTrue
+        (Get-LoadCheck -Stock @(100, 100) -State @(101.005d, 101.005d)).differs | Should -BeTrue
     }
     It 'compares medians, not means' {
         $load = Get-LoadCheck -Stock @(100, 100, 130) -State @(100, 100, 100)
@@ -263,6 +264,9 @@ Describe 'Format-PValue' {
         Format-PValue -Value 1 | Should -Be '1'
         Format-PValue -Value 0.05 | Should -Be '0.05'
     }
+    It 'prints a p of exactly 0.001 as 0.001, not under the floor' {
+        Format-PValue -Value 0.001d | Should -Be '0.001'
+    }
     It 'adds digits where three would round a p under alpha up to alpha' {
         Format-PValue -Value 0.049759 | Should -Be '0.0498'
         Format-PValue -Value 0.0499996 | Should -Be '0.049999'
@@ -271,7 +275,7 @@ Describe 'Format-PValue' {
 
 Describe 'the printed zero' {
     It 'prints a zero shift without a sign' {
-        $shift = (Get-ShiftEstimate -Stock @(1, 2) -State @(0.9, 2.1)).shift
+        $shift = (Get-ShiftEstimate -Stock @(1, 2) -State @(0.9d, 2.1d)).shift
         $shift | Should -Be 0
         Format-Rounded $shift | Should -Be '0'
         (ConvertTo-OutputNumber $shift).ToString($invariant) | Should -Be '0'
@@ -367,7 +371,7 @@ Describe 'Get-SeriesAnalysis' {
     It 'computes the changed-driver ms/s in decimal from the routine totals' {
         $boot = New-Boot -Boot 0 -Label 'stock'
         $boot.Bench.trace = [pscustomobject]@{ seconds = [double]60.3; drivers = @([pscustomobject]@{ driver = 'HDAudBus.sys'; isrTotalUs = [double]12000.1; dpcTotalUs = [double]0.2 }) }
-        (Get-DriverMetric -Boot $boot -Driver 'HDAudBus.sys').isrDpcMsPerSecond | Should -Be ([decimal]12000.3 / 1000 / [decimal]60.3)
+        (Get-DriverMetric -Boot $boot -Driver 'HDAudBus.sys').isrDpcMsPerSecond | Should -Be (12000.3d / 1000 / 60.3d)
         (Get-DriverMetric -Boot $boot -Driver 'missing.sys').isrDpcMsPerSecond | Should -Be 0
     }
     It 'sizes the family from the labels: 12 for the CS2 shape' {
@@ -478,20 +482,46 @@ Describe 'Get-SeriesAnalysis' {
     }
 }
 
+Describe 'the bench JSON numbers as written' {
+    It 'reads a stall share recorded 0.3 above stock as on the +/-0.3 margin' {
+        $boots = @(0..2 | ForEach-Object { New-Boot -Boot (2 * $_) -Label 'stock' -DxStalled 8.65; New-Boot -Boot (2 * $_ + 1) -Label 'usb-line' -DxStalled 8.95 })
+        (Get-Test (Invoke-Analysis -Boots $boots) 'usb-line' 'dxgkrnlStalledPct').verdict | Should -Be 'cannot tell'
+    }
+    It 'reads a gap p99 recorded 10% above a 654 us stock median as on the margin' {
+        $boots = @(0..2 | ForEach-Object { New-Boot -Boot (2 * $_) -Label 'stock' -DxGap 654; New-Boot -Boot (2 * $_ + 1) -Label 'usb-line' -DxGap 719.4 })
+        (Get-Test (Invoke-Analysis -Boots $boots) 'usb-line' 'dxgkrnlGapP99Us').verdict | Should -Be 'cannot tell'
+    }
+    It 'reads a cs2 1% low recorded 3.3% above stock as on the margin' {
+        $boots = @(0..2 | ForEach-Object { New-Boot -Boot (2 * $_) -Label 'stock' -Load 'cs2' -Low1 11; New-Boot -Boot (2 * $_ + 1) -Label 'usb-line' -Load 'cs2' -Low1 11.363 })
+        (Get-Test (Invoke-Analysis -Boots $boots) 'usb-line' 'low1PctMs').verdict | Should -Be 'cannot tell'
+    }
+    It 'does not flag an average fps recorded exactly 1% off stock either way' {
+        $boots = @(0..2 | ForEach-Object { New-Boot -Boot (3 * $_) -Label 'stock' -AvgFps 120; New-Boot -Boot (3 * $_ + 1) -Label 'usb-line' -AvgFps 121.2; New-Boot -Boot (3 * $_ + 2) -Label 'gpu-line' -AvgFps 118.8 })
+        $analysis = Invoke-Analysis -Boots $boots
+        @($analysis.load | ForEach-Object { $_.differs }) | Should -Be @($false, $false)
+    }
+    It 'ties boots whose recorded ISR and DPC totals add up to the same time' {
+        $stock = @([ordered]@{ driver = 'Wdf01000.sys'; isrTotalUs = 12000.1; dpcTotalUs = 0.2 })
+        $state = @([ordered]@{ driver = 'Wdf01000.sys'; isrTotalUs = 12000.3; dpcTotalUs = 0 })
+        $boots = @(0..2 | ForEach-Object { New-Boot -Boot (2 * $_) -Label 'stock' -Drivers $stock; New-Boot -Boot (2 * $_ + 1) -Label 'usb-line' -Drivers $state })
+        (Get-Test (Invoke-Analysis -Boots $boots) 'usb-line' 'changedDriverMsPerSecond').extreme | Should -Be 20
+    }
+}
+
 Describe 'the analysis constants' {
     It 'pins the values fixed before the series was read' {
         $referenceState | Should -Be 'stock'
-        $alpha | Should -Be 0.05
-        $confidence | Should -Be 0.9
+        $alpha | Should -Be 0.05d
+        $confidence | Should -Be 0.9d
         $fpsLoadLimitPct | Should -Be 1
         @($marginRules.Keys) | Should -Be @('superposition', 'cs2')
         foreach ($load in 'superposition', 'cs2') {
-            $marginRules[$load].stalledPct.absolute | Should -Be 0.3
-            $marginRules[$load].gapP99Us.shareOfStockMedian | Should -Be 0.1
+            $marginRules[$load].stalledPct.absolute | Should -Be 0.3d
+            $marginRules[$load].gapP99Us.shareOfStockMedian | Should -Be 0.1d
             $marginRules[$load].isrDpcMsPerSecond.absolute | Should -Be 0.5
         }
-        $marginRules.superposition.low1PctMs.absolute | Should -Be 0.3
-        $marginRules.cs2.low1PctMs.shareOfStockMedian | Should -Be 0.033
+        $marginRules.superposition.low1PctMs.absolute | Should -Be 0.3d
+        $marginRules.cs2.low1PctMs.shareOfStockMedian | Should -Be 0.033d
         @($changedDrivers.Keys) | Should -Be @('audio-msi', 'mobo-audio-msi', 'gpu-audio-msi', 'gpu-line', 'usb-line')
         $changedDrivers['audio-msi'] | Should -Be @('HDAudBus.sys')
         $changedDrivers['mobo-audio-msi'] | Should -Be @('HDAudBus.sys')
