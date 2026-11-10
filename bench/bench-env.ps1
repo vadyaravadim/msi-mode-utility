@@ -148,6 +148,11 @@ function ConvertTo-FiniteDouble {
     if ([double]::TryParse("$Value", [System.Globalization.NumberStyles]::Float, [System.Globalization.CultureInfo]::InvariantCulture, [ref]$parsed)) { $parsed }
 }
 
+function ConvertTo-WrittenDecimal {
+    param($Value)
+    [decimal]::Parse($Value.ToString([System.Globalization.CultureInfo]::InvariantCulture), [System.Globalization.NumberStyles]::Float, [System.Globalization.CultureInfo]::InvariantCulture)
+}
+
 function Get-FrameStats {
     param([Parameter(Mandatory, ValueFromPipeline)]$Row, [double]$RefreshHz = (Get-MonitorRefreshHz))
     begin { $rows = New-Object System.Collections.Generic.List[object] }

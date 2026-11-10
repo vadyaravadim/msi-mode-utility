@@ -128,6 +128,17 @@ that recommend the tweak or marked as not measured, never stated as fact, and th
 effect. Frame time and ISR/DPC time are not input lag. The method lives in rigpolice's
 `.claude/rules/bench-methodology.md`, section "Conclusions".
 
+## The series table
+
+**`bench/tools/Get-MsiSeriesTable.ps1` turns every recorded number into a decimal with
+`ConvertTo-WrittenDecimal` (`bench/bench-env.ps1`), never with a `[decimal]` cast.** PowerShell 7's
+`ConvertFrom-Json` yields doubles, and from .NET 11 (PowerShell 7.7) a double converts to its exact binary
+value: a recorded 8.95 became 8.9499..., so an interval exactly on the 0.3 margin read no difference instead
+of cannot tell, an average FPS exactly 1% off stock read load differs, and equal ISR+DPC totals stopped tying.
+Windows PowerShell 5.1 reads fractional JSON numbers as decimals and never showed it. The analysis functions
+take `[decimal]` parameters: their tests pass and compare `d` literals (`0.3d`), because Pester's `-eq`
+converts a double operand the same way.
+
 ## The RigPolice pages that mirror this script
 
 Every copy of the verdict (what MSI mode did or did not change in our measurements) is rewritten together

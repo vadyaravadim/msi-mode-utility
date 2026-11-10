@@ -281,7 +281,7 @@ function Get-DriverMetric {
         dpcMeanUs      = [double]$row.dpcMeanUs
         dpcP99Us       = [double]$row.dpcP99Us
         dpcMsPerSecond = $dpcTotal / 1000 / $seconds
-        isrDpcMsPerSecond = ([decimal]$isrRecorded + [decimal]$dpcRecorded) / 1000 / [decimal]$secondsRecorded
+        isrDpcMsPerSecond = ((ConvertTo-WrittenDecimal $isrRecorded) + (ConvertTo-WrittenDecimal $dpcRecorded)) / 1000 / (ConvertTo-WrittenDecimal $secondsRecorded)
         cpu            = if ($cpus.Count) { [int]$cpus[0].cpu } else { $null }
     }
 }
@@ -548,7 +548,7 @@ function Get-LoadCheck {
 
 function Format-PValue {
     param([Parameter(Mandatory)][decimal]$Value)
-    $floor = [decimal][math]::Pow(10, -$pDisplayDigits)
+    $floor = 1d / [decimal][math]::Pow(10, $pDisplayDigits)
     if ($Value -lt $floor) { return '< ' + $floor.ToString($invariant) }
     $digits = $pDisplayDigits
     $shown = [math]::Round($Value, $digits)
@@ -569,13 +569,13 @@ function Get-ProbeMetricValue {
     $found = @(@(Get-Field $Boot.Bench 'probes' $where) | Where-Object { @(Get-OptionalField $_ 'devices') -contains $Driver })
     if ($found.Count -ne 1) { throw "$where has $($found.Count) probes listing $Driver, expected 1" }
     $cpu = [int](Get-Field $found[0] 'cpu' "$where probe listing $Driver")
-    [pscustomobject]@{ value = [decimal](Get-Field $found[0] $Field "$where probe on CPU $cpu"); cpu = $cpu }
+    [pscustomobject]@{ value = ConvertTo-WrittenDecimal (Get-Field $found[0] $Field "$where probe on CPU $cpu"); cpu = $cpu }
 }
 
 function Get-MetricValue {
     param([Parameter(Mandatory)]$Metric, [Parameter(Mandatory)]$Boot, [string[]]$Drivers)
     if ($Metric.source -eq 'probe') { return Get-ProbeMetricValue -Boot $Boot -Driver $Metric.driver -Field $Metric.field }
-    if ($Metric.source -eq 'frames') { return [pscustomobject]@{ value = [decimal](Get-Field $Boot.Bench "frames.$($Metric.field)" "boot $($Boot.Boot)"); cpu = $null } }
+    if ($Metric.source -eq 'frames') { return [pscustomobject]@{ value = ConvertTo-WrittenDecimal (Get-Field $Boot.Bench "frames.$($Metric.field)" "boot $($Boot.Boot)"); cpu = $null } }
     $sum = 0d
     foreach ($driver in $Drivers) { $sum += (Get-DriverMetric -Boot $Boot -Driver $driver).isrDpcMsPerSecond }
     [pscustomobject]@{ value = $sum; cpu = $null }
@@ -621,7 +621,7 @@ function Get-SeriesAnalysis {
     $loadRows = New-Object System.Collections.Generic.List[object]
     foreach ($label in $compared) {
         $compareBoots = @($StateBoots[$label])
-        $load = Get-LoadCheck -Stock @($stockBoots | ForEach-Object { [decimal](Get-Field $_.Bench 'frames.avgFps' "boot $($_.Boot)") }) -State @($compareBoots | ForEach-Object { [decimal](Get-Field $_.Bench 'frames.avgFps' "boot $($_.Boot)") })
+        $load = Get-LoadCheck -Stock @($stockBoots | ForEach-Object { ConvertTo-WrittenDecimal (Get-Field $_.Bench 'frames.avgFps' "boot $($_.Boot)") }) -State @($compareBoots | ForEach-Object { ConvertTo-WrittenDecimal (Get-Field $_.Bench 'frames.avgFps' "boot $($_.Boot)") })
         $loadRows.Add([pscustomobject]@{
                 state         = $label
                 stockValues   = @($stockBoots | ForEach-Object { ConvertTo-OutputNumber (Get-Field $_.Bench 'frames.avgFps' "boot $($_.Boot)") })
