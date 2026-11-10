@@ -34,12 +34,15 @@
          dxgkrnl.sys, not as the vendor driver.
 
       5. -Load <name> -PresentMon <path> (needs admin): waits for the load recipe in loads\<name>.json
-         (process and start marker), pauses its load pause, then captures frame times with PresentMon
+         (process and start marker), waits its load pause, then captures frame times with PresentMon
          for the recipe's capture time while the kernel trace and the probes run in the same window.
-         -Seconds is not allowed with -Load: the recipe sets the window. The result adds load,
-         presentMon, frames and rejected, and the bench throws after saving the JSON when the run is
-         rejected (capped frame rate, lost frames, frames that stop short of the capture window or a
-         video config that differs from the recipe).
+         On a load with a fixed route the -Device pre-trace runs inside the load pause, so the window
+         stays on the route. -Seconds is not allowed with -Load: the recipe sets the window. The
+         result adds load, loadWindow (seconds from the load start to the start of the window and to
+         the end of the captured frames), presentMon, frames and rejected, and the bench throws after
+         saving the JSON when the run is rejected (capped frame rate, lost frames, frames that stop
+         short of the capture window, a window that ends past a fixed route, or a video config that
+         differs from the recipe).
 
       6. -Background tone,usb-read -UsbReadFile <path> (needs admin, with -Load): plays a 440 Hz tone
          at -40 dBFS on the default output and reads <path> in a loop with the file cache bypassed,
@@ -804,19 +807,28 @@ function Get-BackgroundRejection {
     if ($Background -and $Background.Contains('usbRead') -and $Background.usbRead.error) { "the USB read failed: $($Background.usbRead.error)" }
 }
 
+function Get-RouteRejection {
+    param([Parameter(Mandatory)]$Recipe, [Parameter(Mandatory)][double]$EndSeconds)
+    if ($Recipe.workshop -and $EndSeconds -gt $Recipe.workshop.routeSeconds) { "the capture ended $EndSeconds s after the start line, past the $($Recipe.workshop.routeSeconds) s route" }
+}
+
+function New-LoadClock {
+    [System.Diagnostics.Stopwatch]::StartNew()
+}
+
 function Start-LoadWithBackground {
     param([Parameter(Mandatory)]$Recipe, [string[]]$Background, [string]$UsbReadFile)
     $process = Wait-LoadStart -Recipe $Recipe
+    $clock = New-LoadClock
     $handle = if ($Background.Count) { Start-BenchBackground -Name $Background -UsbReadFile $UsbReadFile }
-    $paused = $false
-    try {
-        Write-Host "Load started. Waiting $($Recipe.timings.loadPauseSeconds) s, then capturing $($Recipe.timings.captureSeconds) s. Do not touch the PC."
-        Start-Sleep -Seconds $Recipe.timings.loadPauseSeconds
-        $paused = $true
-    } finally {
-        if (-not $paused -and $handle) { Stop-BenchBackground -Handle $handle | Out-Null }
-    }
-    [pscustomobject]@{ Process = $process; Background = $handle }
+    Write-Host "Load started. Waiting $($Recipe.timings.loadPauseSeconds) s, then capturing $($Recipe.timings.captureSeconds) s. Do not touch the PC."
+    [pscustomobject]@{ Process = $process; Background = $handle; Clock = $clock }
+}
+
+function Wait-LoadPause {
+    param([Parameter(Mandatory)]$Clock, [Parameter(Mandatory)][double]$Seconds)
+    $remaining = $Seconds - $Clock.Elapsed.TotalSeconds
+    if ($remaining -gt 0) { Start-Sleep -Milliseconds ([int][math]::Round($remaining * (Get-BenchConfig).MsPerSecond)) }
 }
 
 function Get-ProcessCpuSnapshot {
@@ -937,12 +949,19 @@ if ($MyInvocation.InvocationName -ne '.') {
 
     $loadRecord = $null
     $backgroundHandle = $null
+    $loadClock = $null
+    $loadPause = 0
+    $onRoute = $false
     try {
         if ($recipe) {
             Write-Host "Load: $($recipe.title). Start it as bench\README.md says; this window waits."
             if ($recipe.consoleLine) { Write-Host "Console line: $($recipe.consoleLine)" }
             $started = Start-LoadWithBackground -Recipe $recipe -Background $Background -UsbReadFile $UsbReadFile
             $backgroundHandle = $started.Background
+            $loadClock = $started.Clock
+            $loadPause = $recipe.timings.loadPauseSeconds
+            $onRoute = [bool]($recipe.workshop -and $recipe.workshop.routeSeconds)
+            if (-not $onRoute) { Start-Sleep -Seconds $loadPause }
             $loadRecord = Get-LoadRecord -Recipe $recipe -Name $Load -Process $started.Process
         }
 
@@ -967,18 +986,23 @@ if ($MyInvocation.InvocationName -ne '.') {
         $gapSets = New-Object 'object[]' $probes.Count
         $traceSeconds = 0.0
         $capture = $null
+        $loadWindowStart = $null
+        $loadWindowEnd = $null
         $presentMonCsvName = "msi-bench-$Phase-presentmon.csv"
         $backgroundStats = $null
+        if ($onRoute) { Wait-LoadPause -Clock $loadClock -Seconds $loadPause }
         $systemBefore = Get-SystemCpuSnapshot
         $cpuBefore = if ($ProcessCpu) { @(Get-ProcessCpuSnapshot) } else { @() }
         $cpuAfter = @()
         $systemAfter = $null
         if ($doTrace) { Start-KernelTrace -Etl $etl }
         $traceWatch = [System.Diagnostics.Stopwatch]::StartNew()
+        if ($loadClock) { $loadWindowStart = $loadClock.Elapsed.TotalSeconds }
         try {
             foreach ($p in $probes) { $p.Start() }
             if ($recipe) {
                 $capture = Invoke-PresentMonCapture -PresentMonPath $PresentMon -ProcessName $recipe.presentMonProcess -OutputFile (Join-Path $OutDir $presentMonCsvName) -Seconds $windowSeconds -ExpectedSha256 $recipe.presentMon.sha256
+                $loadWindowEnd = $loadClock.Elapsed.TotalSeconds
             }
             for ($i = 0; $i -lt $probes.Count; $i++) {
                 $span = 0.0
@@ -1078,9 +1102,11 @@ if ($MyInvocation.InvocationName -ne '.') {
     }
     if ($recipe) {
         $stats = Import-Csv -Path $capture.csv | Get-FrameStats
-        $rejected = Join-Rejection -Reason @((Get-GameRejection -Stats $stats -Capture $capture -Video $loadRecord.videoConfig -Recipe $recipe), (Get-BackgroundRejection -Background $backgroundStats))
+        $loadWindow = [ordered]@{ startSeconds = [math]::Round($loadWindowStart, $roundDigits); endSeconds = [math]::Round($loadWindowEnd, $roundDigits) }
+        $rejected = Join-Rejection -Reason @((Get-GameRejection -Stats $stats -Capture $capture -Video $loadRecord.videoConfig -Recipe $recipe), (Get-BackgroundRejection -Background $backgroundStats), (Get-RouteRejection -Recipe $recipe -EndSeconds $loadWindow.endSeconds))
         $files += $presentMonCsvName
         $result.load = $loadRecord
+        $result.loadWindow = $loadWindow
         $result.presentMon = [pscustomobject]@{ sha256 = $capture.presentMonSha256; overflowedPresents = $capture.overflowedPresents }
         $result.frames = $stats
         $result.systemCpu = Get-SystemCpuDelta -Before $systemBefore -After $systemAfter -WindowSeconds $traceSeconds -LogicalCpus $processorCount
