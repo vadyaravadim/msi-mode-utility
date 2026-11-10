@@ -7,11 +7,21 @@ permissions:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    env:
+      SIBLING_REPO: vadyaravadim/cpu-parking-disabler
+      SIBLING_DIR: sibling
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: sibling
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ env.SIBLING_REPO }}
+          ref: main
+          path: ${{ env.SIBLING_DIR }}
       - name: Compare the shared bench files with the sibling repo
+        env:
+          SIBLING_SHA: ${{ steps.sibling.outputs.commit }}
         run: |
           for f in bench/bench-env.ps1 bench/tools/New-BenchReadme.ps1 bench/loads/* bench/tests/bench-env.Tests.ps1 bench/tests/bench-static.Tests.ps1 bench/tests/bench-readme.Tests.ps1; do
-            curl -fsSL -o sibling.tmp "https://raw.githubusercontent.com/vadyaravadim/cpu-parking-disabler/main/$f"
-            cmp "$f" sibling.tmp || { echo "$f differs from cpu-parking-disabler main: copy the change to both repos"; exit 1; }
+            cmp "$f" "$SIBLING_DIR/$f" || { echo "$f differs from $SIBLING_REPO main at $SIBLING_SHA: copy the change to both repos"; exit 1; }
           done
