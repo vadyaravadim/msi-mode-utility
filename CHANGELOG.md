@@ -13,8 +13,10 @@ verbatim into the release and fails the release if the tag has no section here.
 
 - `bench/msi-bench.ps1` records frame times with PresentMon while a load runs (`-Load superposition -PresentMon <path>`).
   It waits for the load and the recipe's load pause, then captures frames for the recipe's window while the
-  kernel trace and the stall probes run. The load recipes live in `bench/loads/*.json`, and `bench/README.md` is
-  generated from them.
+  kernel trace and the stall probes run. On a load with a fixed route (Counter-Strike 2) the `-Device` pre-trace runs
+  inside the load pause, so the window stays on the route; the result records `loadWindow`, the seconds from the load
+  start to the start and to the end of the frames, and a capture that ends past the route rejects the run. The load
+  recipes live in `bench/loads/*.json`, and `bench/README.md` is generated from them.
 - The stall probe counts every gap of 2 microseconds or more and keeps a histogram of the gaps. With `-Device <driver.sys>`, a short pre-trace finds the CPU that takes that driver's interrupts and pins a probe
   there as well. The kernel trace uses the performance-counter clock.
 - `-Background tone,usb-read -UsbReadFile <path>` (with `-Load`, needs admin) plays a 440 Hz tone at -40 dBFS on the default

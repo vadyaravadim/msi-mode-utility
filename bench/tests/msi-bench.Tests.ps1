@@ -736,6 +736,7 @@ Describe 'the order around the capture window' {
         Mock Start-BenchBackground { $calls.Add('background-start'); [pscustomobject]@{ h = 1 } }.GetNewClosure()
         Mock Write-Host { $calls.Add('message') }.GetNewClosure()
         Mock Start-Sleep { param($Seconds) $calls.Add("sleep $Seconds") }.GetNewClosure()
+        Mock New-LoadClock { [pscustomobject]@{ Elapsed = [timespan]::Zero } }
     }
     It 'reads the window stopwatch right after the trace stop, before any snapshot or the background stop' {
         $window = Stop-CaptureWindow -Trace $true -Watch $script:watch -Background ([pscustomobject]@{ h = 1 }) -ProcessCpu
@@ -753,23 +754,25 @@ Describe 'the order around the capture window' {
         $calls.ToArray() | Should -Be @('watch-read', 'system-after')
         @($window.ProcessCpuAfter).Count | Should -Be 0
     }
-    It 'starts the background after the load starts and before the load pause' {
+    It 'starts the background after the load starts and returns the load clock without sleeping' {
         $recipe = [pscustomobject]@{ timings = [pscustomobject]@{ loadPauseSeconds = 20; captureSeconds = 60 } }
         $started = Start-LoadWithBackground -Recipe $recipe -Background @('tone') -UsbReadFile ''
-        $calls.ToArray() | Should -Be @('load-wait', 'background-start', 'message', 'sleep 20')
+        $calls.ToArray() | Should -Be @('load-wait', 'background-start', 'message')
         $started.Background.h | Should -Be 1
+        $started.Clock.Elapsed.TotalSeconds | Should -Be 0
     }
     It 'starts no background when none is asked for' {
         $recipe = [pscustomobject]@{ timings = [pscustomobject]@{ loadPauseSeconds = 20; captureSeconds = 60 } }
         $started = Start-LoadWithBackground -Recipe $recipe
-        $calls.ToArray() | Should -Be @('load-wait', 'message', 'sleep 20')
+        $calls.ToArray() | Should -Be @('load-wait', 'message')
         $started.Background | Should -BeNullOrEmpty
     }
-    It 'stops the background when the load pause is interrupted' {
+    It 'starts the load clock the moment the load starts, before the background' {
         $recipe = [pscustomobject]@{ timings = [pscustomobject]@{ loadPauseSeconds = 20; captureSeconds = 60 } }
-        Mock Start-Sleep { throw 'interrupted' }
-        { Start-LoadWithBackground -Recipe $recipe -Background @('tone') -UsbReadFile '' } | Should -Throw 'interrupted'
-        Should -Invoke Stop-BenchBackground -Times 1 -Exactly
+        $calls = $script:calls
+        Mock New-LoadClock { $calls.Add('clock-start'); [pscustomobject]@{ Elapsed = [timespan]::Zero } }.GetNewClosure()
+        Start-LoadWithBackground -Recipe $recipe -Background @('tone') -UsbReadFile '' | Out-Null
+        $calls.ToArray() | Should -Be @('load-wait', 'clock-start', 'background-start', 'message')
     }
     It 'stops the background when the kernel trace cannot start' {
         $tokens = $null
@@ -798,6 +801,197 @@ Describe 'the order around the capture window' {
         $stop = [array]::LastIndexOf($names, 'Stop-CaptureWindow')
         $stop | Should -BeGreaterThan 0
         [array]::LastIndexOf($names, 'Read-KernelTrace') | Should -BeGreaterThan $stop
+    }
+}
+
+Describe 'Wait-LoadPause' {
+    BeforeEach {
+        $script:calls = New-Object System.Collections.Generic.List[string]
+        $calls = $script:calls
+        Mock Start-Sleep { param($Seconds, $Milliseconds) $calls.Add("sleep ms $Milliseconds") }.GetNewClosure()
+    }
+    It 'sleeps only the rest of the load pause' {
+        Wait-LoadPause -Clock ([pscustomobject]@{ Elapsed = [timespan]::FromSeconds(6.2) }) -Seconds 15
+        $calls.ToArray() | Should -Be @('sleep ms 8800')
+    }
+    It 'does not sleep once the pause is over' {
+        Wait-LoadPause -Clock ([pscustomobject]@{ Elapsed = [timespan]::FromSeconds(15.4) }) -Seconds 15
+        Wait-LoadPause -Clock ([pscustomobject]@{ Elapsed = [timespan]::FromSeconds(15) }) -Seconds 15
+        $calls.Count | Should -Be 0
+    }
+}
+
+Describe 'Get-RouteRejection' {
+    BeforeAll {
+        $script:route = [pscustomobject]@{ workshop = [pscustomobject]@{ routeSeconds = 131 } }
+    }
+    It 'accepts a capture that ends on the route' {
+        Get-RouteRejection -Recipe $script:route -EndSeconds 130.9 | Should -BeNullOrEmpty
+        Get-RouteRejection -Recipe $script:route -EndSeconds 131 | Should -BeNullOrEmpty
+    }
+    It 'names a capture that ends past the route' {
+        Get-RouteRejection -Recipe $script:route -EndSeconds 131.2 | Should -Be 'the capture ended 131.2 s after the start line, past the 131 s route'
+    }
+    It 'accepts any end for a recipe without a route' {
+        Get-RouteRejection -Recipe ([pscustomobject]@{ timings = [pscustomobject]@{ loadPauseSeconds = 20 } }) -EndSeconds 500 | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'the load pause in the main flow' {
+    BeforeAll {
+        $script:traceCsv = Join-Path $TestDrive 'main-trace.csv'
+        Write-TraceCsv -Path $script:traceCsv
+        $script:routeRecipe = [pscustomobject]@{
+            name = 'cs2'; title = 'x'; consoleLine = $null; presentMonProcess = 'cs2.exe'
+            presentMon = [pscustomobject]@{ version = '1'; sha256 = 'x' }
+            workshop = [pscustomobject]@{ routeSeconds = 131 }
+            timings = [pscustomobject]@{ loadPauseSeconds = 15; captureSeconds = 100 }
+        }
+        $script:plainRecipe = [pscustomobject]@{
+            name = 'superposition'; title = 'x'; consoleLine = $null; presentMonProcess = 'superposition.exe'
+            presentMon = [pscustomobject]@{ version = '1'; sha256 = 'x' }
+            timings = [pscustomobject]@{ loadPauseSeconds = 20; captureSeconds = 60 }
+        }
+        function Invoke-BenchMain {
+            param([string[]]$Device = @(), [string[]]$Background = @())
+            $tokens = $null
+            $errors = $null
+            $ast = [System.Management.Automation.Language.Parser]::ParseFile($script:benchScript, [ref]$tokens, [ref]$errors)
+            $guard = $ast.Find({ param($node) $node -is [System.Management.Automation.Language.IfStatementAst] -and $node.Clauses[0].Item1.Extent.Text -like '*InvocationName*' }, $true)
+            $body = (@($guard.Clauses[0].Item2.Statements | ForEach-Object { $_.Extent.Text }) -join "`n")
+            $body = $body.Replace('$PSCommandPath', '$script:benchScript')
+            $run = [scriptblock]::Create('param($OutDir, $Load, $Background, $Device, $SkipTrace, $isAdmin, $PresentMon, $Phase)' + "`n" + $body)
+            & $run -OutDir $TestDrive -Load 'x' -Background $Background -Device $Device -SkipTrace $false -isAdmin $true -PresentMon 'pm.exe' -Phase 'main-flow'
+        }
+        function Read-MainResult {
+            Get-Content -Path (Join-Path $TestDrive 'msi-bench-main-flow.json') -Raw | ConvertFrom-Json
+        }
+    }
+    BeforeEach {
+        $script:calls = New-Object System.Collections.Generic.List[string]
+        $script:state = @{ now = 0.0; decode = 0.2; captureEnd = 116.4; phase = 'main' }
+        $calls = $script:calls
+        $state = $script:state
+        $traceCsv = $script:traceCsv
+        $clock = [pscustomobject]@{}
+        $clock | Add-Member -MemberType ScriptProperty -Name Elapsed -Value { [timespan]::FromSeconds($state.now) }.GetNewClosure()
+        Mock New-LoadClock { $clock }.GetNewClosure()
+        Mock Write-Host {}
+        Mock Assert-LoadArgument {}
+        Mock Add-Type {}
+        Mock Get-BenchMetadata { @{} }
+        Mock Get-InterruptTable { @() }
+        Mock Wait-LoadStart { $calls.Add('load-wait'); [pscustomobject]@{ Id = 1 } }.GetNewClosure()
+        Mock Start-BenchBackground { $calls.Add('background-start'); [pscustomobject]@{ h = 1 } }.GetNewClosure()
+        Mock Stop-BenchBackground { $calls.Add('background-stop'); [ordered]@{ tone = 1 } }.GetNewClosure()
+        Mock Get-LoadRecord { $calls.Add('load-record'); $state.now += 1.0; @{} }.GetNewClosure()
+        Mock Start-KernelTrace {
+            param($Etl)
+            $state.phase = if ($Etl -like '*-pick.etl') { 'pretrace' } else { 'main' }
+            $calls.Add("$($state.phase)-start".Replace('main-start', 'trace-start'))
+        }.GetNewClosure()
+        Mock Stop-KernelTrace { $calls.Add("$($state.phase)-stop".Replace('main-stop', 'trace-stop')) }.GetNewClosure()
+        Mock Read-KernelTrace {
+            param($Etl)
+            if ($Etl -like '*-pick.etl') { $calls.Add('pretrace-read'); $state.now += $state.decode }
+            [KernelCsv]::Parse($traceCsv)
+        }.GetNewClosure()
+        Mock Start-Sleep {
+            param($Seconds, $Milliseconds)
+            if ($Milliseconds) { $calls.Add("sleep ms $Milliseconds"); $state.now += $Milliseconds / 1000 } else { $calls.Add("sleep $Seconds"); $state.now += $Seconds }
+        }.GetNewClosure()
+        Mock Get-SystemCpuSnapshot { [pscustomobject]@{ idle = 1; kernel = 2; user = 3 } }
+        Mock Invoke-PresentMonCapture {
+            $calls.Add('capture')
+            $state.now = $state.captureEnd
+            [pscustomobject]@{ csv = 'x.csv'; presentMonSha256 = 'h'; overflowedPresents = 0 }
+        }.GetNewClosure()
+        Mock Import-Csv { @([pscustomobject]@{ a = 1 }) }
+        Mock Get-FrameStats { [pscustomobject]@{ frames = 1; avgFps = 1; p50Ms = 1; low1PctMs = 1 } }
+        Mock Get-GameRejection { $null }
+        Mock New-Object {
+            $probe = [pscustomobject]@{ TimelineOffsetsMs = [double[]]@(); TimelineGapsUs = [double[]]@() }
+            $probe | Add-Member -MemberType ScriptMethod -Name Start -Value {}
+            $probe | Add-Member -MemberType ScriptMethod -Name Stop -Value { param($span) $span.Value = 100.0; , [double[]]@() }
+            $probe
+        } -ParameterFilter { $TypeName -eq 'StallProbe' }
+    }
+    It 'runs the -Device pre-trace inside the load pause on a route' {
+        $recipe = $script:routeRecipe
+        Mock Get-LoadRecipe { $recipe }.GetNewClosure()
+        Invoke-BenchMain -Device @('drv.sys')
+        $order = $calls.ToArray()
+        $order[0..([array]::IndexOf($order, 'trace-start'))] | Should -Be @('load-wait', 'load-record', 'pretrace-start', 'sleep 5', 'pretrace-stop', 'pretrace-read', 'sleep ms 8800', 'trace-start')
+    }
+    It 'sleeps nothing before the trace when the pre-trace already used the whole pause on a route' {
+        $recipe = $script:routeRecipe
+        $state.decode = 9.2
+        Mock Get-LoadRecipe { $recipe }.GetNewClosure()
+        Invoke-BenchMain -Device @('drv.sys')
+        @($calls | Where-Object { $_ -like 'sleep ms*' }).Count | Should -Be 0
+    }
+    It 'keeps the full load pause before the pre-trace without a route' {
+        $recipe = $script:plainRecipe
+        Mock Get-LoadRecipe { $recipe }.GetNewClosure()
+        Invoke-BenchMain -Device @('drv.sys')
+        $order = $calls.ToArray()
+        $order[0..([array]::IndexOf($order, 'trace-start'))] | Should -Be @('load-wait', 'sleep 20', 'load-record', 'pretrace-start', 'sleep 5', 'pretrace-stop', 'pretrace-read', 'trace-start')
+    }
+    It 'sleeps the load pause once, with -Seconds, on a load without a route and no -Device' {
+        $recipe = $script:plainRecipe
+        Mock Get-LoadRecipe { $recipe }.GetNewClosure()
+        Invoke-BenchMain
+        @($calls | Where-Object { $_ -like 'sleep*' }) | Should -Be @('sleep 20')
+    }
+    It 'records loadWindow from the load start to the end of the frames' {
+        $recipe = $script:routeRecipe
+        $state.decode = 9.2
+        Mock Get-LoadRecipe { $recipe }.GetNewClosure()
+        Invoke-BenchMain -Device @('drv.sys')
+        $result = Read-MainResult
+        $result.loadWindow.startSeconds | Should -Be 15.2
+        $result.loadWindow.endSeconds | Should -Be 116.4
+        $result.rejected | Should -BeNullOrEmpty
+    }
+    It 'reads the end of the window right after the capture returns, before the background stops' {
+        $recipe = $script:routeRecipe
+        Mock Get-LoadRecipe { $recipe }.GetNewClosure()
+        Mock Stop-BenchBackground { $state.now = 999; $calls.Add('background-stop'); [ordered]@{ tone = 1 } }.GetNewClosure()
+        Invoke-BenchMain -Background @('tone')
+        (Read-MainResult).loadWindow.endSeconds | Should -Be 116.4
+    }
+    It 'rejects a capture that ends past the route and keeps the result file' {
+        $recipe = $script:routeRecipe
+        $state.captureEnd = 131.2
+        Mock Get-LoadRecipe { $recipe }.GetNewClosure()
+        { Invoke-BenchMain } | Should -Throw '*the capture ended 131.2 s after the start line, past the 131 s route*'
+        $result = Read-MainResult
+        $result.loadWindow.endSeconds | Should -Be 131.2
+        $result.rejected | Should -BeLike '*past the 131 s route*'
+    }
+    It 'records loadWindow for a load without a route and never rejects its end' {
+        $recipe = $script:plainRecipe
+        $state.captureEnd = 500
+        Mock Get-LoadRecipe { $recipe }.GetNewClosure()
+        Invoke-BenchMain -Device @('drv.sys')
+        $result = Read-MainResult
+        $result.loadWindow.startSeconds | Should -Be 26.2
+        $result.loadWindow.endSeconds | Should -Be 500
+        $result.rejected | Should -BeNullOrEmpty
+    }
+    It 'stops the background once when the load pause is interrupted without a route' {
+        $recipe = $script:plainRecipe
+        Mock Get-LoadRecipe { $recipe }.GetNewClosure()
+        Mock Start-Sleep { throw 'interrupted' }
+        { Invoke-BenchMain -Background @('tone') } | Should -Throw 'interrupted'
+        Should -Invoke Stop-BenchBackground -Times 1 -Exactly
+    }
+    It 'stops the background once when the load pause is interrupted on a route' {
+        $recipe = $script:routeRecipe
+        Mock Get-LoadRecipe { $recipe }.GetNewClosure()
+        Mock Start-Sleep { param($Seconds, $Milliseconds) if ($Milliseconds) { throw 'interrupted' } }
+        { Invoke-BenchMain -Background @('tone') } | Should -Throw 'interrupted'
+        Should -Invoke Stop-BenchBackground -Times 1 -Exactly
     }
 }
 
