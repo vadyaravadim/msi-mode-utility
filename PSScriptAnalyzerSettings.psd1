@@ -6,13 +6,14 @@
         # Write-Host" advice does not apply.
         'PSAvoidUsingWriteHost'
 
-        # False positive: $Elevated / $UserSid are read inside the nested
-        # Wait-IfElevatedWindow function via parent scope, which PSSA does not
-        # trace - it sees the param as unused.
+        # False positive: $Elevated is read inside the nested Wait-IfElevatedWindow
+        # function via parent scope, which PSSA does not trace - it sees the param
+        # as unused.
         'PSReviewUnusedParameter'
 
         # Internal helper functions in a self-contained script; -WhatIf/-Confirm
-        # add no value (the script has its own .reg undo mechanism).
+        # add no value: each script has a read-only -Status mode, and the ones
+        # that change settings write their own undo file (.reg or .json) first.
         'PSUseShouldProcessForStateChangingFunctions'
 
         # Plural helper names (ConvertTo-HexPairs, Get-SleepStats) are deliberate

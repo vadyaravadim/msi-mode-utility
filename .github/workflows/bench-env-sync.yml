@@ -12,9 +12,12 @@ jobs:
       SIBLING_DIR: sibling
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - id: sibling
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           repository: ${{ env.SIBLING_REPO }}
           ref: main
           path: ${{ env.SIBLING_DIR }}
