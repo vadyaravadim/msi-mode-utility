@@ -2,8 +2,9 @@ name: ci
 on:
   push:
   pull_request:
+permissions: {}
 jobs:
   ci:
     permissions:
       contents: read
-    uses: vadyaravadim/latency-toolbox-ci/.github/workflows/pipeline.yml@918bcc64d780737b808ae99b29fbc16f7972d3d3 # v1.0.2
+    uses: vadyaravadim/latency-toolbox-ci/.github/workflows/pipeline.yml@83ceb1e54c9b361b82db207bc5d43516a58b741b # v1.1.0

@@ -86,11 +86,12 @@ second repo of a shared bench change lands, so requiring it would block that cha
 
 ## Release - the newest CHANGELOG section is the version
 
-`gh workflow run release.yml` (or Actions > release > Run workflow) on `main` releases the newest
-`## [X.Y.Z]` section of `CHANGELOG.md`: it gates that commit, stamps the version into `.VERSION`, hashes the
-script, attests build provenance, publishes to the PowerShell Gallery and, last, creates the GitHub Release,
-which creates the `vX.Y.Z` tag at that commit. A run from any other branch fails in the release job before
-anything is written. Nothing ships from a push to `main`, and no tag exists until every gate has passed.
+`gh workflow run release.yml` (or Actions > release > Run workflow) on `main` releases the newest `## [X.Y.Z]`
+section of `CHANGELOG.md`: it gates that commit, stamps the version into `.VERSION`, hashes the script,
+attests build provenance, publishes to the PowerShell Gallery and, last, creates the GitHub Release, which
+creates the `vX.Y.Z` tag at that commit. A run from any other branch fails at the `release` environment before
+the release job's first step, so nothing is written. Nothing ships from a push to `main`, and no tag exists
+until every gate has passed.
 
 - **The `irm | iex` URL is `releases/latest/download/msi-mode-utility.ps1` - in the README AND in the
   script's bootstrap download, never `raw.githubusercontent.com/.../main`.** That is what keeps the
@@ -107,6 +108,11 @@ anything is written. Nothing ships from a push to `main`, and no tag exists unti
   `--signer-workflow vadyaravadim/latency-toolbox-ci/.github/workflows/pipeline.yml` (SECURITY.md); 1.1.3 to
   1.2.0 were signed by this repo's own `release.yml`, earlier releases carry no provenance. Never rename or
   delete `latency-toolbox-ci`: GitHub does not redirect a renamed reusable workflow, so every caller breaks.
+- **`NUGET_API_KEY` is a secret of the `release` environment, which only `main` can use; the repository has no
+  secret of that name.** `release.yml` passes it by name and the shared pipeline's release job runs in that
+  environment, so no workflow on another branch can read the key. Rotate it with `gh secret set NUGET_API_KEY
+  --env release`. After a pin bump, a dispatch on `main` stops at "Check the version is not released yet"
+  while the newest CHANGELOG section is already released - that is the probe.
 - **`v*` tags cannot be moved or deleted (tag ruleset) and releases are immutable (repo setting).** A broken
   release is fixed by releasing a new patch version (a new CHANGELOG section), never by re-tagging. The
   ruleset leaves tag creation open on purpose: the release creates the tag with `GITHUB_TOKEN`.
@@ -128,12 +134,12 @@ anything is written. Nothing ships from a push to `main`, and no tag exists unti
   a new run.
 
 **Before releasing, move the `## [Unreleased]` bullets in `CHANGELOG.md` into a `## [X.Y.Z] - YYYY-MM-DD`
-section and add its `[X.Y.Z]: .../compare/vPREV...vX.Y.Z` link at the bottom.** That section is the
-version. The release job copies exactly that section into the release body and **fails before anything is
-tagged or published when it is empty or its compare link is missing**; a newest section that is already
-released fails the same way. This is a gate on purpose, not a fallback: notes are hand-written because
-GitHub's `--generate-notes` lists merged PRs, and this repo lands nearly everything as direct commits to
-`main`, so it published releases whose whole body was a compare link.
+section and add its `[X.Y.Z]: .../compare/vPREV...vX.Y.Z` link at the bottom.** That section is the version.
+The release job copies exactly that section into the release body and **fails before anything is tagged or
+published when it is empty or its compare link is missing**; a newest section that is already released, or
+lower than a released version, fails the same way. This is a gate on purpose, not a fallback: notes are
+hand-written because GitHub's `--generate-notes` lists merged PRs, and this repo lands nearly everything as
+direct commits to `main`, so it published releases whose whole body was a compare link.
 
 Write the entries for someone who runs the tool, not for someone reading the diff: what changed on their
 machine and why it matters. A fix says what was broken and what it cost them.
