@@ -8,9 +8,9 @@
 
 .COMPANYNAME
 
-.COPYRIGHT
+.COPYRIGHT Copyright (c) 2026 vadyaravadim
 
-.TAGS Windows Windows10 Windows11 Gaming MSI MessageSignaledInterrupts DPC Latency PCI GPU Performance Tweak
+.TAGS Windows Windows10 Windows11 Gaming MSI MessageSignaledInterrupts DPC Latency PCI GPU Performance Tweak PSEdition_Desktop PSEdition_Core
 
 .LICENSEURI https://github.com/vadyaravadim/msi-mode-utility/blob/main/LICENSE
 
@@ -24,7 +24,7 @@
 
 .EXTERNALSCRIPTDEPENDENCIES
 
-.RELEASENOTES
+.RELEASENOTES https://github.com/vadyaravadim/msi-mode-utility/blob/main/CHANGELOG.md
 
 .PRIVATEDATA
 
@@ -52,6 +52,24 @@
     the original state.
     (-Disable writes an explicit 0; it does not restore the original
     "value absent" state - only the undo file does.)
+
+.EXAMPLE
+    .\msi-mode-utility.ps1
+
+    Double-click Run.bat, or right-click this file > Run with PowerShell.
+    No parameters needed - it elevates itself.
+
+.EXAMPLE
+    .\msi-mode-utility.ps1 -Status
+
+.EXAMPLE
+    .\msi-mode-utility.ps1 -ShowAll
+
+.EXAMPLE
+    .\msi-mode-utility.ps1 -Disable
+
+.LINK
+    https://github.com/vadyaravadim/msi-mode-utility
 #>
 [CmdletBinding()]
 param(

@@ -10,6 +10,18 @@ section is empty or its compare link at the bottom is missing.
 
 ## [Unreleased]
 
+### Added
+
+- The README's Quick Start says how to check a downloaded script before running it, and SECURITY.md now starts with
+  `gh release verify-asset`, which works for every immutable release whichever workflow built it.
+- The README FAQ says how to remove the script and the files it leaves behind.
+- `Get-Help .\msi-mode-utility.ps1 -Examples` shows how to run the script and each of its switches.
+
+### Changed
+
+- On the PowerShell Gallery the script page links this changelog as its release notes, shows the license's copyright
+  line, and lists the script for both Windows PowerShell and PowerShell 7.
+
 ### Fixed
 
 - On Windows Server Core the run stopped with a raw error after the device scan instead of saying the edition is not

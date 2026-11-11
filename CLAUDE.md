@@ -1,5 +1,7 @@
 # MSI Mode Utility
 
+Maintainer notes for Claude Code and the maintainer. Contributors start with [CONTRIBUTING.md](https://github.com/vadyaravadim/.github/blob/main/CONTRIBUTING.md); `rigpolice`, named below, is the maintainer's private website repository.
+
 A single self-contained PowerShell script (`msi-mode-utility.ps1`) that lists PCI devices in an
 `Out-GridView` picker and switches the selected ones to MSI (Message Signaled Interrupts) by writing the
 documented `MSISupported` value. Part of a family of six single-script Windows tuning tools that share this
@@ -110,6 +112,13 @@ anything is written. Nothing ships from a push to `main`, and no tag exists unti
   ruleset leaves tag creation open on purpose: the release creates the tag with `GITHUB_TOKEN`.
 - **Never push a `v*` tag by hand.** It starts no release and cannot be deleted; unless it sits on the exact
   commit the release then runs on, the release stops before publishing and that version is burned.
+- **A data release - bench logs, not the script - is created with `--latest=false`:** `gh release create
+  bench-data-<name> --latest=false --title "Bench data: <name>" --notes "<what it holds>" <file>`. GitHub makes
+  every newly published release Latest unless told otherwise, and a Latest release without
+  `msi-mode-utility.ps1` breaks `releases/latest/download/msi-mode-utility.ps1` - the README one-liner and the
+  script's own bootstrap - until the next script release. Afterwards `gh api
+  repos/vadyaravadim/msi-mode-utility/releases/latest --jq .tag_name` must print the newest `v*` tag; if it
+  does not, `gh release edit <that tag> --latest` puts it back (allowed on immutable releases).
 - **Finish a failed release with "Re-run failed jobs" on that run, not a new run.** The re-run builds the
   same commit with the same pinned pipeline: the Gallery step (`.github/Publish-GalleryScript.ps1` of
   `vadyaravadim/latency-toolbox-ci`) skips a version already there with identical bytes and fails on

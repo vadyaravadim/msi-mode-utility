@@ -37,6 +37,8 @@ irm https://github.com/vadyaravadim/msi-mode-utility/releases/latest/download/ms
 
 The script downloads itself to `%USERPROFILE%\msi-mode-utility.ps1` (not a temp folder) on purpose: the `msi_undo_*.reg` rollback file is written next to it and must survive automatic temp cleanup. An existing copy at that path that differs is kept as `.bak`. The `irm | iex` pipe itself takes no switches - run the saved copy instead, see [Optional switches](#optional-switches).
 
+**Check it before it runs:** download `msi-mode-utility.ps1` from the [latest release](https://github.com/vadyaravadim/msi-mode-utility/releases/latest), verify it as [SECURITY.md](SECURITY.md#verifying-a-release) shows, then run that file with `powershell -ExecutionPolicy Bypass -File .\msi-mode-utility.ps1`.
+
 **From the PowerShell Gallery**, in PowerShell 7 (`pwsh`):
 
 ```powershell
@@ -186,6 +188,10 @@ Double-click the `msi_undo_*.reg` file saved next to the script (or in `%USERPRO
 ### Does disabling MPO (Multiplane Overlay) help with flickering and stutters?
 
 MPO is a DWM display feature, not an interrupt setting, but it shows up in the same troubleshooting threads: on some GPU/driver combinations it causes flickering, black screens, or stutter in windowed games. NVIDIA's support article gives DWORD `OverlayTestMode = 5` under `HKLM\SOFTWARE\Microsoft\Windows\Dwm` as the registry value that turns MPO off (delete it to revert). There's no MPO disabler in this series. If you see these symptoms, update your GPU driver first.
+
+### How do I remove the script itself?
+
+Apply the `msi_undo_*.reg` files first if you want the old interrupt modes back (see [Reverting](#reverting)). Then delete what the script left: with the one-liner, `msi-mode-utility.ps1`, an `msi-mode-utility.ps1.bak` if there is one, and the `msi_undo_*.reg` files in `%USERPROFILE%`; with the ZIP or a clone, the folder. From the PowerShell Gallery, the undo files sit in the folder `(Get-InstalledScript msi-mode-utility).InstalledLocation` prints; delete them, then run `Uninstall-Script msi-mode-utility`. The script installs nothing else.
 
 ## Related
 
