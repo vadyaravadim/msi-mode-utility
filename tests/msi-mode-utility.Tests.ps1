@@ -103,3 +103,29 @@ Describe 'a run that picks devices in the grid' {
         Should -Invoke Write-Host -Times 0 -Exactly -ParameterFilter { "$Object" -like 'REBOOT REQUIRED*' } -Because 'nothing was changed, so there is nothing to reboot for'
     }
 }
+
+Describe 'PSScriptInfo metadata for the PowerShell Gallery' {
+    BeforeAll {
+        $script:infoValue = {
+            param([string]$Key)
+            $line = @(Select-String -LiteralPath $scriptPath -Pattern "^\.$Key\b" | ForEach-Object Line)
+            $line.Count | Should -Be 1 -Because "PSScriptInfo has exactly one .$Key line"
+            ($line[0] -replace "^\.$Key\s*", '').Trim()
+        }
+    }
+
+    It 'PSScriptInfo copyright is the LICENSE copyright line' {
+        $license = Join-Path $PSScriptRoot '..\LICENSE'
+        & $infoValue 'COPYRIGHT' | Should -BeExactly (Get-Content -LiteralPath $license)[2]
+    }
+
+    It 'PSScriptInfo tags list PSEdition_Desktop and PSEdition_Core' {
+        $tags = (& $infoValue 'TAGS') -split '\s+'
+        $tags | Should -Contain 'PSEdition_Desktop'
+        $tags | Should -Contain 'PSEdition_Core'
+    }
+
+    It 'PSScriptInfo release notes are the CHANGELOG of .PROJECTURI' {
+        & $infoValue 'RELEASENOTES' | Should -BeExactly ((& $infoValue 'PROJECTURI') + '/blob/main/CHANGELOG.md')
+    }
+}
