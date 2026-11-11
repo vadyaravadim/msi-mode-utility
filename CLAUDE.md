@@ -6,10 +6,15 @@ documented `MSISupported` value. Part of a family of six single-script Windows t
 layout: one `.ps1`, `Run.bat`, `PSScriptAnalyzerSettings.psd1`, and two thin workflows, `ci.yml` and
 `release.yml`, that call the family's shared pipeline in `vadyaravadim/latency-toolbox-ci`.
 
-**`Out-GridView` is a hard dependency and the check for it stays up front.** It exists only on Windows
-editions with a desktop - Server Core has none, while PowerShell 7 on a desktop edition does have it; failing
-early with instructions beats a raw `CommandNotFound` thrown halfway through a scan the user already
-waited on. `-Status` prints to the console, so it skips that check and the elevation.
+**`Out-GridView` is a hard dependency and the check for it stays up front; Windows Server Core is not
+supported (owner decision, 2026-11-11).** On Server Core the cmdlet resolves but cannot open its window
+(`Microsoft.PowerShell.GraphicalHost`), so a `Get-Command` check alone passed there and the run died in the
+`trap` after the scan. The check therefore also reads
+`HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Server\ServerLevels`: the key exists on every Windows
+Server and holds `Server-Gui-Shell` = 1 only with the desktop - hyphenated, as Microsoft's "Determining Whether
+Server Core Is Running" spells it; the `ServerGuiShell` of an older Microsoft table matches nothing. Failing
+before the scan beats a raw error after a scan the user already waited on. `-Status` prints to the console, so
+it skips that check and the elevation.
 
 **The `Mode` column, not `MSI`, is what a device runs in.** `MSI` is the registry override, and it shows
 the value an INF or a tool wrote. `Mode` comes from the IRQs Windows assigned this boot
@@ -74,6 +79,8 @@ second repo of a shared bench change lands, so requiring it would block that cha
   `continue-on-error`, red without blocking. Nothing bumps that pin - move it by hand in `pipeline.yml`: to
   the final release when it ships, and once `windows-latest` itself ships that version, on to the next
   preview, or drop the leg if there is none. A repo with no test file passes the gate with a notice.
+  `tests/msi-mode-utility.Tests.ps1` runs its whole-script tests on a copy in `TestDrive` with every device,
+  registry and grid command mocked, only when elevated, after proving the mocks reach a script started with `&`.
 
 ## Release - the newest CHANGELOG section is the version
 

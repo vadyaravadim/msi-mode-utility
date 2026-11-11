@@ -152,10 +152,10 @@ Write-Host "  MSI MODE UTILITY $version" -ForegroundColor Cyan
 Write-Host "===================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Out-GridView exists only on Windows editions with a desktop - Server Core has
-# none; fail up front with instructions instead of a raw CommandNotFound mid-run.
-# -Status prints to the console and does not need it.
-if (-not $Status -and -not (Get-Command Out-GridView -ErrorAction SilentlyContinue)) {
+$serverLevelsKey = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Server\ServerLevels'
+$serverLevels = Get-ItemProperty -LiteralPath $serverLevelsKey -ErrorAction SilentlyContinue
+$serverCore = $serverLevels -and $serverLevels.'Server-Gui-Shell' -ne 1
+if (-not $Status -and ($serverCore -or -not (Get-Command Out-GridView -ErrorAction SilentlyContinue))) {
     Write-Host "Out-GridView is not available in this PowerShell. It needs a Windows edition with a desktop (not Server Core); on a desktop edition, run the script with Windows PowerShell (powershell.exe)." -ForegroundColor Red
     Wait-IfElevatedWindow
     return
@@ -326,7 +326,7 @@ if ($failed) {
     # The undo file lists the failed devices too; reverting an unchanged value is a no-op.
     Write-Host "$failed device(s) failed - see errors above." -ForegroundColor Yellow
 }
-Write-Host "REBOOT REQUIRED for changes to take effect." -ForegroundColor Green
+if ($updated) { Write-Host "REBOOT REQUIRED for changes to take effect." -ForegroundColor Green }
 if ($updated -and -not $Disable) {
     Write-Host ""
     Write-Host "Useful? A star on GitHub helps others find it: https://github.com/vadyaravadim/msi-mode-utility"
