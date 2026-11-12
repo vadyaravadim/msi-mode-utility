@@ -16,6 +16,8 @@ $referenceState = 'stock'
 $alpha = 0.05d
 $confidence = 0.9d
 $fpsLoadLimitPct = 1d
+$colocationMarginPct = 0.1d
+$microsecondsPerCorePercent = 10000
 $pValueDigits = 6
 $pDisplayDigits = 3
 $marginRules = [ordered]@{
@@ -223,7 +225,7 @@ function ConvertTo-FingerprintValue {
 }
 
 $optionalBenchFingerprintField = 'metadata.benchScript.sha256', 'metadata.presentMonVersion', 'presentMon.sha256', 'load.build', 'load.videoConfig', 'frames.refreshHz'
-$optionalWrapperFingerprintField = 'environment.hvciEnabled', 'environment.bios.version', 'environment.microcodeRaw', 'environment.clockFlags'
+$optionalWrapperFingerprintField = 'environment.hvciEnabled', 'environment.bios.version', 'environment.microcodeRaw', 'environment.clockFlags', 'environment.enabledNetworkAdapters'
 
 function Get-Fingerprint {
     param([Parameter(Mandatory)]$Boot)
@@ -506,7 +508,8 @@ function Get-HolmAdjusted {
 }
 
 function Get-Verdict {
-    param([bool]$Significant, [int]$Direction, $CiLow, $CiHigh, $Margin, [switch]$CannotShow)
+    param([bool]$Significant, [int]$Direction, $CiLow, $CiHigh, $Margin, [switch]$CannotShow, [switch]$Colocated)
+    if ($Colocated) { return 'cannot tell' }
     if ($Significant -and $Direction -gt 0) { return 'hurt' }
     if ($Significant -and $Direction -lt 0) { return 'helped' }
     if ($CannotShow) { return 'cannot show' }
@@ -563,13 +566,61 @@ function Format-PValue {
     $shown.ToString('0.' + ('#' * $digits), $invariant)
 }
 
-function Get-ProbeMetricValue {
-    param([Parameter(Mandatory)]$Boot, [Parameter(Mandatory)][string]$Driver, [Parameter(Mandatory)][string]$Field)
+function Get-ProbeCore {
+    param([Parameter(Mandatory)]$Boot, [Parameter(Mandatory)][string]$Driver)
     $where = "boot $($Boot.Boot)"
     $found = @(@(Get-Field $Boot.Bench 'probes' $where) | Where-Object { @(Get-OptionalField $_ 'devices') -contains $Driver })
     if ($found.Count -ne 1) { throw "$where has $($found.Count) probes listing $Driver, expected 1" }
-    $cpu = [int](Get-Field $found[0] 'cpu' "$where probe listing $Driver")
-    [pscustomobject]@{ value = ConvertTo-WrittenDecimal (Get-Field $found[0] $Field "$where probe on CPU $cpu"); cpu = $cpu }
+    [pscustomobject]@{ probe = $found[0]; cpu = [int](Get-Field $found[0] 'cpu' "$where probe listing $Driver") }
+}
+
+function Get-ProbeMetricValue {
+    param([Parameter(Mandatory)]$Boot, [Parameter(Mandatory)][string]$Driver, [Parameter(Mandatory)][string]$Field)
+    $core = Get-ProbeCore -Boot $Boot -Driver $Driver
+    [pscustomobject]@{ value = ConvertTo-WrittenDecimal (Get-Field $core.probe $Field "boot $($Boot.Boot) probe on CPU $($core.cpu)"); cpu = $core.cpu }
+}
+
+function Get-CoreLoad {
+    param([Parameter(Mandatory)]$Boot, [Parameter(Mandatory)][int]$Cpu, [string[]]$Except = @())
+    $where = "boot $($Boot.Boot)"
+    $seconds = ConvertTo-WrittenDecimal (Get-Field $Boot.Bench 'trace.seconds' $where)
+    $loads = [ordered]@{}
+    foreach ($row in @(Get-Field $Boot.Bench 'trace.drivers' $where)) {
+        if ($Except -contains [string]$row.driver) { continue }
+        $rowWhere = "$where driver $($row.driver)"
+        $isrCount = (ConvertTo-WrittenDecimal (Get-Field $row 'isrPlain' $rowWhere)) + (ConvertTo-WrittenDecimal (Get-Field $row 'isrMessage' $rowWhere))
+        $onCpu = 0d
+        foreach ($entry in @(Get-Field $row 'isrPerCpu' $rowWhere)) {
+            if ([int](Get-Field $entry 'cpu' $rowWhere) -eq $Cpu) { $onCpu += ConvertTo-WrittenDecimal (Get-Field $entry 'isr' $rowWhere) }
+        }
+        $total = (ConvertTo-WrittenDecimal (Get-Field $row 'isrTotalUs' $rowWhere)) + (ConvertTo-WrittenDecimal (Get-Field $row 'dpcTotalUs' $rowWhere))
+        $loads[[string]$row.driver] = if ($isrCount -eq 0) { 0d } else { $onCpu * $total / ($isrCount * $seconds * $microsecondsPerCorePercent) }
+    }
+    $loads
+}
+
+function Get-ColocationRow {
+    param([Parameter(Mandatory)][string]$Label, [Parameter(Mandatory)][object[]]$StockBoots, [Parameter(Mandatory)][object[]]$StateBoots)
+    foreach ($anchor in @($testMetrics | Where-Object { $_.source -eq 'probe' } | ForEach-Object { $_.driver } | Select-Object -Unique)) {
+        $except = @($anchor) + @($changedDrivers[$Label])
+        $stockLoads = @($StockBoots | ForEach-Object { Get-CoreLoad -Boot $_ -Cpu (Get-ProbeCore -Boot $_ -Driver $anchor).cpu -Except $except })
+        $stateLoads = @($StateBoots | ForEach-Object { Get-CoreLoad -Boot $_ -Cpu (Get-ProbeCore -Boot $_ -Driver $anchor).cpu -Except $except })
+        $names = [System.Collections.Generic.SortedSet[string]]::new([System.StringComparer]::Ordinal)
+        foreach ($loads in @($stockLoads) + @($stateLoads)) { foreach ($name in $loads.Keys) { $null = $names.Add($name) } }
+        foreach ($name in $names) {
+            $stockMedian = Get-Median -Values ([decimal[]]@($stockLoads | ForEach-Object { if ($_.Contains($name)) { $_[$name] } else { 0d } }))
+            $stateMedian = Get-Median -Values ([decimal[]]@($stateLoads | ForEach-Object { if ($_.Contains($name)) { $_[$name] } else { 0d } }))
+            if ($stockMedian -lt $colocationMarginPct -and $stateMedian -lt $colocationMarginPct) { continue }
+            [pscustomobject]@{
+                state       = $Label
+                probeCoreOf = $anchor
+                driver      = $name
+                stockMedian = ConvertTo-OutputNumber $stockMedian
+                stateMedian = ConvertTo-OutputNumber $stateMedian
+                moved       = [math]::Abs($stateMedian - $stockMedian) -ge $colocationMarginPct
+            }
+        }
+    }
 }
 
 function Get-MetricValue {
@@ -610,7 +661,7 @@ function Get-SeriesAnalysis {
         if (-not $changedDrivers.Contains($label)) { throw "state '$label' has no changed-driver entry, so its pre-registered tests are not defined" }
     }
     $family = $testMetrics.Count * $compared.Count
-    if ($family -eq 0) { return [pscustomobject]@{ family = 0; bottleneck = $null; tests = @(); load = @(); pHolmExact = @() } }
+    if ($family -eq 0) { return [pscustomobject]@{ family = 0; bottleneck = $null; tests = @(); load = @(); colocation = @(); pHolmExact = @() } }
 
     $loadName = Get-SeriesLoadName -Boots @($Labels | ForEach-Object { $StateBoots[$_] })
     if (-not $marginRules.Contains($loadName)) { throw "no margins for load '$loadName': the pre-registered margins cover $(@($marginRules.Keys) -join ', ')" }
@@ -619,8 +670,11 @@ function Get-SeriesAnalysis {
 
     $rows = New-Object System.Collections.Generic.List[object]
     $loadRows = New-Object System.Collections.Generic.List[object]
+    $colocationRows = New-Object System.Collections.Generic.List[object]
     foreach ($label in $compared) {
         $compareBoots = @($StateBoots[$label])
+        $labelColocation = @(Get-ColocationRow -Label $label -StockBoots $stockBoots -StateBoots $compareBoots)
+        foreach ($colocation in $labelColocation) { $colocationRows.Add($colocation) }
         $load = Get-LoadCheck -Stock @($stockBoots | ForEach-Object { ConvertTo-WrittenDecimal (Get-Field $_.Bench 'frames.avgFps' "boot $($_.Boot)") }) -State @($compareBoots | ForEach-Object { ConvertTo-WrittenDecimal (Get-Field $_.Bench 'frames.avgFps' "boot $($_.Boot)") })
         $loadRows.Add([pscustomobject]@{
                 state         = $label
@@ -648,7 +702,9 @@ function Get-SeriesAnalysis {
             $stockCpu = @()
             $stateCpu = @()
             $coreNote = $null
+            $movedDrivers = @()
             if ($isProbe) {
+                $movedDrivers = @($labelColocation | Where-Object { $_.probeCoreOf -eq $metric.driver -and $_.moved })
                 $rowDrivers = @($metric.driver)
                 $stockCpu = @($sides[0].Readings | ForEach-Object { $_.cpu } | Sort-Object -Unique)
                 $stateCpu = @($sides[1].Readings | ForEach-Object { $_.cpu } | Sort-Object -Unique)
@@ -659,6 +715,7 @@ function Get-SeriesAnalysis {
                     Test   = $test
                     Shift  = $shift
                     Margin = Get-MetricMargin -Rule $marginRules[$loadName][$metric.margin] -StockMedian $stockMedian
+                    Colocated = $movedDrivers.Count -gt 0
                     Row    = [ordered]@{
                         state           = $label
                         metric          = $metric.key
@@ -666,6 +723,7 @@ function Get-SeriesAnalysis {
                         stockCpu        = @($stockCpu)
                         stateCpu        = @($stateCpu)
                         coreNote        = $coreNote
+                        colocationNote  = if ($movedDrivers.Count) { 'other driver moved on this core: ' + ((@($movedDrivers | ForEach-Object { '{0} (stock {1}, state {2} % of the core)' -f $_.driver, (Format-Rounded $_.stockMedian), (Format-Rounded $_.stateMedian) })) -join ', ') } else { $null }
                         stockValues     = @($stockValues | ForEach-Object { ConvertTo-OutputNumber $_ })
                         stateValues     = @($stateValues | ForEach-Object { ConvertTo-OutputNumber $_ })
                         stockMedian     = ConvertTo-OutputNumber $stockMedian
@@ -693,7 +751,7 @@ function Get-SeriesAnalysis {
         $cannotShow = $null -ne $entry.Metric.cannotShowOn -and $entry.Metric.cannotShowOn -eq $bottleneck
         if (-not $cannotShow) { $entry.Row.margin = ConvertTo-OutputNumber $entry.Margin }
         $entry.Row.pHolm = $holm[$i].pHolm
-        $entry.Row.verdict = Get-Verdict -Significant $holm[$i].significant -Direction $entry.Test.direction -CiLow $entry.Shift.ciLow -CiHigh $entry.Shift.ciHigh -Margin $entry.Margin -CannotShow:$cannotShow
+        $entry.Row.verdict = Get-Verdict -Significant $holm[$i].significant -Direction $entry.Test.direction -CiLow $entry.Shift.ciLow -CiHigh $entry.Shift.ciHigh -Margin $entry.Margin -CannotShow:$cannotShow -Colocated:$entry.Colocated
         [pscustomobject]$entry.Row
     }
     [pscustomobject]@{
@@ -701,6 +759,7 @@ function Get-SeriesAnalysis {
         bottleneck = $bottleneck
         tests      = @($tests)
         load       = $loadRows.ToArray()
+        colocation = $colocationRows.ToArray()
         pHolmExact = @($holm | ForEach-Object { $_.numerator / $_.denominator })
     }
 }
@@ -730,7 +789,7 @@ function Get-CheckList {
         [ordered]@{ name = 'GPU and audio driver versions identical'; source = 'private runner wrapper environment.drivers'; benchJson = $false; status = 'passed' }
         [ordered]@{ name = 'explicit power settings identical'; source = 'private runner wrapper environment.powerExplicit'; benchJson = $false; status = $(if ($hasExplicit) { 'passed' } else { 'not recorded' }) }
         [ordered]@{ name = 'bench script, PresentMon, load build, video config and refresh rate identical'; source = 'bench JSON metadata.benchScript, metadata.presentMonVersion, presentMon, load, frames.refreshHz'; benchJson = $true; status = $(if ($benchRecorded) { 'passed' } else { 'not recorded' }) }
-        [ordered]@{ name = 'HVCI, BIOS version, microcode and clock flags identical'; source = 'private runner wrapper environment'; benchJson = $false; status = $(if ($wrapperRecorded) { 'passed' } else { 'not recorded' }) }
+        [ordered]@{ name = 'HVCI, BIOS version, microcode, clock flags and enabled network adapters identical'; source = 'private runner wrapper environment'; benchJson = $false; status = $(if ($wrapperRecorded) { 'passed' } else { 'not recorded' }) }
         [ordered]@{ name = 'tone played on the planned audio controller'; source = 'bench JSON background.tone.controllerInstanceId'; benchJson = $true; status = $(if (@($Plan.background) -contains 'tone') { 'passed' } else { 'not planned' }) }
     )
     $checks | ForEach-Object { [pscustomobject]$_ }
@@ -739,7 +798,7 @@ function Get-CheckList {
 function Get-FileMap {
     param([bool]$SystemCpu, [bool]$Tests)
     $rows = @(
-        [ordered]@{ table = 'Pre-registered tests'; files = 'msi-bench-bootNN-stateNN.json, bench/loads/<load.name>.json'; fields = 'probes[].devices, probes[].cpu, probes[].stalledPct, probes[].gapP99Us, frames.low1PctMs, frames.avgFps, trace.seconds, trace.drivers[].isrTotalUs, trace.drivers[].dpcTotalUs, load.name; the recipe bottleneck'; runner = $false }
+        [ordered]@{ table = 'Pre-registered tests'; files = 'msi-bench-bootNN-stateNN.json, bench/loads/<load.name>.json'; fields = 'probes[].devices, probes[].cpu, probes[].stalledPct, probes[].gapP99Us, frames.low1PctMs, frames.avgFps, trace.seconds, trace.drivers[].isrTotalUs, trace.drivers[].dpcTotalUs, trace.drivers[].isrPlain, trace.drivers[].isrMessage, trace.drivers[].isrPerCpu, load.name; the recipe bottleneck'; runner = $false }
         [ordered]@{ table = 'Frames'; files = 'msi-bench-bootNN-stateNN.json'; fields = $(if ($SystemCpu) { 'frames.*, systemCpu' } else { 'frames.*' }); runner = $false }
         [ordered]@{ table = 'Drivers'; files = 'msi-bench-bootNN-stateNN.json'; fields = 'trace.seconds, trace.drivers[]'; runner = $false }
         [ordered]@{ table = 'Probes'; files = 'msi-bench-bootNN-stateNN.json, msi-bench-bootNN-stateNN-stalls.csv'; fields = 'probes[]; stall file rows per cpu'; runner = $false }
@@ -775,6 +834,8 @@ function Get-Testbed {
     $presentMon = Get-OptionalField $first.Bench 'metadata.presentMonVersion'
     if ($presentMon) { $rows['PresentMon'] = [string]$presentMon }
     if ($null -ne (Get-OptionalField $Plan 'settleSeconds')) { $rows['Settle before capture'] = "$($Plan.settleSeconds) s" }
+    $enabledAdapters = Get-OptionalField $first.Wrapper 'environment.enabledNetworkAdapters'
+    if ($null -ne $enabledAdapters) { $rows['Enabled physical network adapters'] = [string]$enabledAdapters }
     $rows['Boots'] = "$($Boots.Count)"
     $start = @($Journal | Where-Object { $_.event -eq 'start' }) | Select-Object -First 1
     if ($start) {
@@ -848,13 +909,14 @@ function New-SeriesReport {
             alpha                  = $alpha
             confidence             = $confidence
             fpsLoadLimitPct        = $fpsLoadLimitPct
+            colocationMarginPct    = $colocationMarginPct
             margins                = $marginRules
             changedDrivers         = $changedDrivers
             metrics                = @($testMetrics | ForEach-Object { $_.key })
         }
         checks    = $checks
         testbed   = $testbed
-        analysis  = [ordered]@{ family = $analysis.family; bottleneck = $analysis.bottleneck; tests = $analysis.tests; load = $analysis.load }
+        analysis  = [ordered]@{ family = $analysis.family; bottleneck = $analysis.bottleneck; tests = $analysis.tests; load = $analysis.load; colocation = $analysis.colocation }
         states    = $states
         fileMap   = $fileMap
     }
@@ -872,7 +934,7 @@ function New-SeriesReport {
         $md.Add('## Pre-registered tests')
         $md.Add('')
         $md.Add(('Each state against {0}, lower is better for every metric: a two-sided exact permutation test of the rank sum, Holm-corrected over the {1} tests at alpha {2}, and the Hodges-Lehmann shift (state minus {0}) with an interval of at least {3}% confidence.' -f $referenceState, $analysis.family, $alpha.ToString($invariant), ($confidence * 100).ToString('0.##', $invariant)))
-        $md.Add(('Verdicts: helped or hurt when the Holm-adjusted p is under {0}; no difference when the whole interval lies strictly inside the margin; cannot tell otherwise. The note names the boots whose probe core differs.' -f $alpha.ToString($invariant)))
+        $md.Add(('Verdicts: helped or hurt when the Holm-adjusted p is under {0}; no difference when the whole interval lies strictly inside the margin; cannot tell otherwise. A test of a probe core reads cannot tell, whatever its p and interval, when the load of another driver on that core differs between the state and {1} by {2} points or more (table Other drivers on the probe cores). The note names the boots whose probe core differs and the drivers that moved.' -f $alpha.ToString($invariant), $referenceState, $colocationMarginPct.ToString($invariant)))
         $cannotShowLabels = @($testMetrics | Where-Object { $_.cannotShowOn -and $_.cannotShowOn -eq $analysis.bottleneck } | ForEach-Object { $_.label })
         if ($cannotShowLabels.Count) { $md.Add(('On this {0}-bound load a test that is not significant reads cannot show for: {1}.' -f $analysis.bottleneck, ($cannotShowLabels -join ', '))) }
         $md.Add('')
@@ -880,7 +942,7 @@ function New-SeriesReport {
         foreach ($metric in $testMetrics) { $metricLabel[$metric.key] = $metric.label }
         $testRows = @(for ($i = 0; $i -lt $analysis.tests.Count; $i++) {
                 $test = $analysis.tests[$i]
-                $notes = @(@($test.coreNote, $(if ($test.loadDiffers) { 'load differs' })) | Where-Object { $_ })
+                $notes = @(@($test.coreNote, $test.colocationNote, $(if ($test.loadDiffers) { 'load differs' })) | Where-Object { $_ })
                 , @(
                     $test.state
                     $metricLabel[$test.metric]
@@ -904,6 +966,15 @@ function New-SeriesReport {
                 , @($load.state, (Format-Rounded $load.stockMedian), (Format-Rounded $load.stateMedian), $(if ($null -eq $load.differencePct) { 'n/a' } else { Format-Rounded $load.differencePct }), $(if ($load.differs) { 'differs' } else { 'same' }))
             })
         $md.AddRange([string[]]@(Format-MarkdownTable -Header 'State', 'Avg FPS, stock median', 'Avg FPS, state median', 'Difference (%)', 'Load' -Rows @($loadTableRows)))
+        $md.Add('')
+        $md.Add('## Other drivers on the probe cores')
+        $md.Add('')
+        $md.Add(('Load of a driver on the probe core of dxgkrnl.sys or Wdf01000.sys: its share of ISRs on that CPU times its ISR plus DPC time, in % of one core. The core''s own driver and the changed drivers of the state are left out. Median over the boots, listed when either median is at least {0}%; moved when the two medians differ by {0} points or more.' -f $colocationMarginPct.ToString($invariant)))
+        $md.Add('')
+        if ($analysis.colocation.Count) {
+            $md.AddRange([string[]]@(Format-MarkdownTable -Header 'State', 'Probe core of', 'Driver', 'Stock median (% of the core)', 'State median', 'Moved' -Rows @($analysis.colocation | ForEach-Object { , @($_.state, $_.probeCoreOf, $_.driver, (Format-Rounded $_.stockMedian), (Format-Rounded $_.stateMedian), $(if ($_.moved) { 'yes' } else { 'no' })) })))
+        }
+        else { $md.Add(('No other driver reached {0}% of a probe core.' -f $colocationMarginPct.ToString($invariant))) }
         $md.Add('')
     }
     $md.Add('## Frames')

@@ -23,6 +23,18 @@ section is empty or its compare link at the bottom is missing.
 
 - On the PowerShell Gallery the script page links this changelog as its release notes, shows the license's copyright
   line, and lists the script for both Windows PowerShell and PowerShell 7.
+- `bench/msi-bench.ps1`: the stall probe no longer allocates memory inside the measurement window. Before, its gap
+  list grew during a long window and could trigger a .NET garbage collection that paused every probe thread at once,
+  which showed up as one 8 to 17 ms stall on all probes. It now counts gaps below 1 ms in a preallocated array, so
+  every percentile and the stalled share come out exactly as before. Each probe records the garbage collections that
+  ran during it (`gcCollections`), and a `-Load` run with one is rejected.
+- `bench/tools/Get-MsiSeriesTable.ps1`: a probe-core test now reads "cannot tell" when another driver's load on that core
+  differs between a state and stock by 0.1 points of one core or more, whatever its p value and interval. Before, a driver
+  whose interrupts moved onto the probe core in one state (a Wi-Fi adapter after an HD Audio change) could read as an effect
+  of the changed driver. The p value, shift and interval are still printed, and a new table, "Other drivers on the probe
+  cores", names each such driver with its median load in both states.
+- The series table lists `environment.enabledNetworkAdapters` in the testbed when the wrappers record it, and refuses a
+  series whose boots differ in it.
 
 ### Fixed
 

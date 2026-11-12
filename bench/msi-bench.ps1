@@ -26,7 +26,9 @@
          -GapThresholdUs (default 2 us). Every interrupt, DPC or hypervisor intercept that lands on
          that core shows up as a gap. Per CPU: total stalled time (us and % of the window), a
          histogram (gap counts and summed us per bucket), p50 / p99 / p99.9 / max, and a timeline
-         of the gaps of 1 ms or more in msi-bench-<phase>-stalls.csv.
+         of the gaps of 1 ms or more in msi-bench-<phase>-stalls.csv. The probe allocates no memory
+         inside the window, and each probe records the .NET garbage collections that ran during it
+         (gcCollections): a collection pauses every probe thread, so a -Load run with one is rejected.
 
       4. -Device <driver.sys>[,...] (needs admin): a 5 s pre-trace finds the CPU that takes most of
          each driver's ISRs, and the probe is pinned there as well. The picks and the CPU the main
@@ -41,8 +43,8 @@
          result adds load, loadWindow (seconds from the load start to the start of the window and to
          the end of the captured frames), presentMon, frames and rejected, and the bench throws after
          saving the JSON when the run is rejected (capped frame rate, lost frames, frames that stop
-         short of the capture window, a window that ends past a fixed route, or a video config that
-         differs from the recipe).
+         short of the capture window, a window that ends past a fixed route, a garbage collection
+         inside the window, or a video config that differs from the recipe).
 
       6. -Background tone,usb-read -UsbReadFile <path> (needs admin, with -Load): plays a 440 Hz tone
          at -40 dBFS on the default output and reads <path> in a loop with the file cache bypassed,
@@ -91,6 +93,7 @@ $preTraceSeconds = 5
 $defaultProbeCpu = 0
 $histogramEdgesUs = @(5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000)
 $roundDigits = 1
+$gcKeyPrefix = 'gen'
 $toneFrequencyHz = 440
 $toneDbfs = -40
 $toneSampleRate = 48000
@@ -117,51 +120,100 @@ using System.Threading;
 
 public class StallProbe {
     public const double TimelineMinUs = 1000.0;
+    const double MicrosecondsPerSecond = 1e6;
+    const double MicrosecondsPerMillisecond = 1000.0;
+    const int TimeCriticalPriority = 15;
+    const int ShortGapSlack = 2;
     [DllImport("kernel32.dll")] static extern IntPtr GetCurrentThread();
     [DllImport("kernel32.dll")] static extern bool SetThreadPriority(IntPtr thread, int priority);
     [DllImport("kernel32.dll")] static extern UIntPtr SetThreadAffinityMask(IntPtr thread, UIntPtr mask);
 
     readonly int cpu, seconds;
-    readonly double thresholdUs;
-    readonly List<double> gaps = new List<double>(1 << 16);
-    readonly List<double> timelineOffsetsMs = new List<double>();
-    readonly List<double> timelineGapsUs = new List<double>();
+    readonly double thresholdUs, usPerTick;
+    readonly int[] shortGapCounts;
+    readonly double[] timelineOffsetsMs, timelineGapsUs;
+    readonly int[] gcBefore, gcAfter;
+    int timelineCount;
     Thread worker;
     long spanTicks;
 
     public StallProbe(int cpu, int seconds, double thresholdUs) {
         this.cpu = cpu; this.seconds = seconds; this.thresholdUs = thresholdUs;
+        usPerTick = MicrosecondsPerSecond / Stopwatch.Frequency;
+        shortGapCounts = new int[(int)Math.Ceiling(TimelineMinUs / usPerTick) + ShortGapSlack];
+        int capacity = (int)Math.Floor(seconds * MicrosecondsPerSecond / TimelineMinUs) + 1;
+        timelineOffsetsMs = new double[capacity];
+        timelineGapsUs = new double[capacity];
+        for (int i = 0; i < shortGapCounts.Length; i++) shortGapCounts[i] = 0;
+        for (int i = 0; i < capacity; i++) { timelineOffsetsMs[i] = 0.0; timelineGapsUs[i] = 0.0; }
+        gcBefore = new int[GC.MaxGeneration + 1];
+        gcAfter = new int[GC.MaxGeneration + 1];
     }
-    public double[] TimelineOffsetsMs { get { return timelineOffsetsMs.ToArray(); } }
-    public double[] TimelineGapsUs { get { return timelineGapsUs.ToArray(); } }
+    public int TimelineCapacity { get { return timelineGapsUs.Length; } }
+    public double[] TimelineOffsetsMs { get { return Trim(timelineOffsetsMs); } }
+    public double[] TimelineGapsUs { get { return Trim(timelineGapsUs); } }
+    public int[] GcCollections {
+        get {
+            int[] delta = new int[gcAfter.Length];
+            for (int g = 0; g < delta.Length; g++) delta[g] = gcAfter[g] - gcBefore[g];
+            return delta;
+        }
+    }
+
+    double[] Trim(double[] source) {
+        double[] copy = new double[timelineCount];
+        Array.Copy(source, copy, timelineCount);
+        return copy;
+    }
+
+    public void Record(long ticks, long offsetTicks) {
+        double gap = ticks * usPerTick;
+        if (gap >= TimelineMinUs) {
+            timelineOffsetsMs[timelineCount] = offsetTicks * usPerTick / MicrosecondsPerMillisecond;
+            timelineGapsUs[timelineCount] = gap;
+            timelineCount++;
+        } else {
+            shortGapCounts[ticks]++;
+        }
+    }
 
     public void Start() {
         worker = new Thread(() => {
             SetThreadAffinityMask(GetCurrentThread(), (UIntPtr)(1UL << cpu));
-            SetThreadPriority(GetCurrentThread(), 15);
-            double usPerTick = 1e6 / Stopwatch.Frequency;
+            SetThreadPriority(GetCurrentThread(), TimeCriticalPriority);
+            for (int g = 0; g < gcBefore.Length; g++) gcBefore[g] = GC.CollectionCount(g);
             long start = Stopwatch.GetTimestamp(), end = start + seconds * Stopwatch.Frequency;
             long prev = start;
             while (prev < end) {
                 long now = Stopwatch.GetTimestamp();
-                double gap = (now - prev) * usPerTick;
-                if (gap > thresholdUs) {
-                    gaps.Add(gap);
-                    if (gap >= TimelineMinUs) {
-                        timelineOffsetsMs.Add((prev - start) * usPerTick / 1000.0);
-                        timelineGapsUs.Add(gap);
-                    }
-                }
+                long d = now - prev;
+                if (d * usPerTick > thresholdUs) Record(d, prev - start);
                 prev = now;
             }
+            for (int g = 0; g < gcAfter.Length; g++) gcAfter[g] = GC.CollectionCount(g);
             spanTicks = prev - start;
         });
         worker.Start();
     }
-    public double[] Stop(out double spanSeconds) {
+    public void Join() {
         worker.Join();
+    }
+    public double[] Gaps() {
+        int total = timelineCount;
+        for (int t = 0; t < shortGapCounts.Length; t++) total += shortGapCounts[t];
+        double[] result = new double[total];
+        int n = 0;
+        for (int t = 0; t < shortGapCounts.Length; t++) {
+            double gap = t * usPerTick;
+            for (int c = 0; c < shortGapCounts[t]; c++) result[n++] = gap;
+        }
+        Array.Copy(timelineGapsUs, 0, result, n, timelineCount);
+        return result;
+    }
+    public double[] Stop(out double spanSeconds) {
+        Join();
         spanSeconds = (double)spanTicks / Stopwatch.Frequency;
-        return gaps.ToArray();
+        return Gaps();
     }
 }
 
@@ -687,6 +739,21 @@ function Get-StallSummary {
     }
 }
 
+function ConvertTo-GcRecord {
+    param([Parameter(Mandatory)][int[]]$Count)
+    $record = [ordered]@{}
+    for ($g = 0; $g -lt $Count.Count; $g++) { $record["$gcKeyPrefix$g"] = $Count[$g] }
+    $record
+}
+
+function Get-GcRejection {
+    param([Parameter(Mandatory)][object[]]$Probe)
+    $hit = @($Probe | Where-Object { (@($_.gcCollections.Values) | Measure-Object -Sum).Sum -gt 0 } | ForEach-Object {
+        "CPU $($_.cpu) ($(@($_.gcCollections.GetEnumerator() | ForEach-Object { "$($_.Key) $($_.Value)" }) -join ', '))"
+    })
+    if ($hit.Count) { "a garbage collection ran inside the window on $($hit -join ', ')" }
+}
+
 function Assert-LoadArgument {
     param([string]$Load, [string]$PresentMon, [Parameter(Mandatory)][bool]$SecondsGiven, [string[]]$Background, [string]$UsbReadFile, [switch]$ProcessCpu)
     if ($Load -and -not $PresentMon) { throw '-Load needs -PresentMon <path to the pinned PresentMon exe>.' }
@@ -1004,6 +1071,7 @@ if ($MyInvocation.InvocationName -ne '.') {
                 $capture = Invoke-PresentMonCapture -PresentMonPath $PresentMon -ProcessName $recipe.presentMonProcess -OutputFile (Join-Path $OutDir $presentMonCsvName) -Seconds $windowSeconds -ExpectedSha256 $recipe.presentMon.sha256
                 $loadWindowEnd = $loadClock.Elapsed.TotalSeconds
             }
+            foreach ($p in $probes) { $p.Join() }
             for ($i = 0; $i -lt $probes.Count; $i++) {
                 $span = 0.0
                 $gapSets[$i] = $probes[$i].Stop([ref]$span)
@@ -1038,6 +1106,7 @@ if ($MyInvocation.InvocationName -ne '.') {
             stalledUs      = $summary.stalledUs
             stalledPct     = $summary.stalledPct
             histogram      = $summary.histogram
+            gcCollections  = ConvertTo-GcRecord -Count $probes[$i].GcCollections
         })
         $timelineLines.AddRange([string[]]@(Get-StallTimelineLine -Cpu $plan[$i].cpu -OffsetsMs $probes[$i].TimelineOffsetsMs -GapsUs $probes[$i].TimelineGapsUs))
     }
@@ -1103,7 +1172,7 @@ if ($MyInvocation.InvocationName -ne '.') {
     if ($recipe) {
         $stats = Import-Csv -Path $capture.csv | Get-FrameStats
         $loadWindow = [ordered]@{ startSeconds = [math]::Round($loadWindowStart, $roundDigits); endSeconds = [math]::Round($loadWindowEnd, $roundDigits) }
-        $rejected = Join-Rejection -Reason @((Get-GameRejection -Stats $stats -Capture $capture -Video $loadRecord.videoConfig -Recipe $recipe), (Get-BackgroundRejection -Background $backgroundStats), (Get-RouteRejection -Recipe $recipe -EndSeconds $loadWindow.endSeconds))
+        $rejected = Join-Rejection -Reason @((Get-GameRejection -Stats $stats -Capture $capture -Video $loadRecord.videoConfig -Recipe $recipe), (Get-BackgroundRejection -Background $backgroundStats), (Get-RouteRejection -Recipe $recipe -EndSeconds $loadWindow.endSeconds), (Get-GcRejection -Probe $probeResults.ToArray()))
         $files += $presentMonCsvName
         $result.load = $loadRecord
         $result.loadWindow = $loadWindow
