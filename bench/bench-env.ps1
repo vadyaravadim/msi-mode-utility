@@ -109,19 +109,24 @@ function Get-MonitorRefreshHz {
     [double](Get-CimInstance Win32_VideoController | ForEach-Object { $_.CurrentRefreshRate } | Measure-Object -Maximum).Maximum
 }
 
+function Get-PresentMonSha256 {
+    param([Parameter(Mandatory)][string]$PresentMonPath, [string]$ExpectedSha256)
+    $sha = (Get-FileHash -Path $PresentMonPath -Algorithm SHA256).Hash.ToLower()
+    if ($ExpectedSha256 -and $sha -ne $ExpectedSha256.ToLower()) {
+        throw "PresentMon at $PresentMonPath has SHA256 $sha, expected $ExpectedSha256. Use the pinned release."
+    }
+    $sha
+}
+
 function Invoke-PresentMonCapture {
     param(
         [Parameter(Mandatory)][string]$PresentMonPath,
         [Parameter(Mandatory)][string]$ProcessName,
         [Parameter(Mandatory)][string]$OutputFile,
         [int]$Seconds = 60,
-        [string]$ExpectedSha256
+        [Parameter(Mandatory)][string]$PresentMonSha256
     )
     $cfg = Get-BenchConfig
-    $sha = (Get-FileHash -Path $PresentMonPath -Algorithm SHA256).Hash.ToLower()
-    if ($ExpectedSha256 -and $sha -ne $ExpectedSha256.ToLower()) {
-        throw "PresentMon at $PresentMonPath has SHA256 $sha, expected $ExpectedSha256. Use the pinned release."
-    }
     $captureArgs = @('--process_name', $ProcessName, '--output_file', $OutputFile, '--timed', $Seconds, '--terminate_after_timed',
         '--stop_existing_session', '--session_name', $cfg.PresentMonSession, '--no_console_stats',
         '--set_circular_buffer_size', $cfg.PresentMonCircularBufferSize)
@@ -136,7 +141,7 @@ function Invoke-PresentMonCapture {
     if ($LASTEXITCODE -ne 0) { throw "PresentMon exited with code $LASTEXITCODE" }
     if (-not (Test-Path -Path $OutputFile)) { throw "PresentMon wrote no CSV for $ProcessName (is the process running and the shell elevated?)" }
     [pscustomobject]@{
-        presentMonSha256 = $sha
+        presentMonSha256 = $PresentMonSha256
         csv = $OutputFile
         overflowedPresents = $overflowed
     }

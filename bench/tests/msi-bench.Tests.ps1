@@ -337,6 +337,12 @@ Describe 'the GC-free stall probe' {
         $output = & (Get-Process -Id $PID).Path -NoProfile -Command $command
         $output | Should -Be (@(0) * ([GC]::MaxGeneration + 1) -join ',')
     }
+    It 'sees no garbage collection inside the no-GC region while the main thread allocates 32 MB, more than a gen0 budget' {
+        $probeScript = '. ''BENCH'' -Phase ''unit-test''; Add-Type -TypeDefinition $msiBenchSource; Enter-NoGcRegion; $p = New-Object StallProbe -ArgumentList 0, 1, 2.0; $p.Start(); for ($i = 0; $i -lt 512; $i++) { $null = New-Object byte[] 65536 }; $p.Join(); Exit-NoGcRegion; $p.GcCollections -join '','''
+        $command = $probeScript.Replace('BENCH', $script:benchScript)
+        $output = & (Get-Process -Id $PID).Path -NoProfile -Command $command
+        $output | Should -Be (@(0) * ([GC]::MaxGeneration + 1) -join ',')
+    }
     It 'counts a collection that runs inside the window' {
         $probe = New-Object StallProbe -ArgumentList 0, 1, 2.0
         $probe.Start()
@@ -874,9 +880,10 @@ Describe 'the order around the capture window' {
         Mock Get-InterruptTable { @() }
         Mock Start-LoadWithBackground { [pscustomobject]@{ Process = 1; Background = [pscustomobject]@{ h = 1 } } }
         Mock Get-LoadRecord { @{} }
+        Mock Get-PresentMonSha256 { 'h' }
         Mock Start-KernelTrace { throw 'session held' }
-        $run = [scriptblock]::Create('param($OutDir, $Load, $Background, $Device, $SkipTrace, $isAdmin)' + "`n" + $body)
-        { & $run -OutDir $TestDrive -Load 'x' -Background @('tone') -Device @() -SkipTrace $false -isAdmin $true } | Should -Throw 'session held'
+        $run = [scriptblock]::Create('param($OutDir, $Load, $Background, $Device, $SkipTrace, $isAdmin, $PresentMon)' + "`n" + $body)
+        { & $run -OutDir $TestDrive -Load 'x' -Background @('tone') -Device @() -SkipTrace $false -isAdmin $true -PresentMon 'pm.exe' } | Should -Throw 'session held'
         Should -Invoke Stop-BenchBackground -Times 1 -Exactly
     }
     It 'decodes the trace only after the capture window is stopped' {
@@ -987,6 +994,7 @@ Describe 'the load pause in the main flow' {
             if ($Milliseconds) { $calls.Add("sleep ms $Milliseconds"); $state.now += $Milliseconds / 1000 } else { $calls.Add("sleep $Seconds"); $state.now += $Seconds }
         }.GetNewClosure()
         Mock Get-SystemCpuSnapshot { [pscustomobject]@{ idle = 1; kernel = 2; user = 3 } }
+        Mock Get-PresentMonSha256 { $calls.Add('presentmon-hash'); 'h' }.GetNewClosure()
         Mock Invoke-PresentMonCapture {
             $calls.Add('capture')
             $state.now = $state.captureEnd
@@ -999,7 +1007,7 @@ Describe 'the load pause in the main flow' {
             $probe = [pscustomobject]@{ TimelineOffsetsMs = [double[]]@(); TimelineGapsUs = [double[]]@(); GcCollections = [int[]]$state.gc; Log = $calls }
             $probe | Add-Member -MemberType ScriptMethod -Name Start -Value {}
             $probe | Add-Member -MemberType ScriptMethod -Name Join -Value { $this.Log.Add('probe-join') }
-            $probe | Add-Member -MemberType ScriptMethod -Name Stop -Value { param($span) $this.Log.Add('probe-stop'); $span.Value = 100.0; , [double[]]@() }
+            $probe | Add-Member -MemberType ScriptMethod -Name Stop -Value { param($span) $this.Log.Add('probe-stop'); $this.Log.Add('latency-at-stop ' + [System.Runtime.GCSettings]::LatencyMode); $span.Value = 100.0; , [double[]]@() }
             $probe
         }.GetNewClosure() -ParameterFilter { $TypeName -eq 'StallProbe' }
     }
@@ -1008,7 +1016,7 @@ Describe 'the load pause in the main flow' {
         Mock Get-LoadRecipe { $recipe }.GetNewClosure()
         Invoke-BenchMain -Device @('drv.sys')
         $order = $calls.ToArray()
-        $order[0..([array]::IndexOf($order, 'trace-start'))] | Should -Be @('load-wait', 'load-record', 'pretrace-start', 'sleep 5', 'pretrace-stop', 'pretrace-read', 'sleep ms 8800', 'trace-start')
+        $order[0..([array]::IndexOf($order, 'trace-start'))] | Should -Be @('presentmon-hash', 'load-wait', 'load-record', 'pretrace-start', 'sleep 5', 'pretrace-stop', 'pretrace-read', 'sleep ms 8800', 'trace-start')
     }
     It 'sleeps nothing before the trace when the pre-trace already used the whole pause on a route' {
         $recipe = $script:routeRecipe
@@ -1022,7 +1030,7 @@ Describe 'the load pause in the main flow' {
         Mock Get-LoadRecipe { $recipe }.GetNewClosure()
         Invoke-BenchMain -Device @('drv.sys')
         $order = $calls.ToArray()
-        $order[0..([array]::IndexOf($order, 'trace-start'))] | Should -Be @('load-wait', 'sleep 20', 'load-record', 'pretrace-start', 'sleep 5', 'pretrace-stop', 'pretrace-read', 'trace-start')
+        $order[0..([array]::IndexOf($order, 'trace-start'))] | Should -Be @('presentmon-hash', 'load-wait', 'sleep 20', 'load-record', 'pretrace-start', 'sleep 5', 'pretrace-stop', 'pretrace-read', 'trace-start')
     }
     It 'sleeps the load pause once, with -Seconds, on a load without a route and no -Device' {
         $recipe = $script:plainRecipe
@@ -1071,6 +1079,38 @@ Describe 'the load pause in the main flow' {
         Mock Get-LoadRecipe { $recipe }.GetNewClosure()
         Invoke-BenchMain -Cpu @('0', '1')
         @($calls | Where-Object { $_ -like 'probe-*' }) | Should -Be @('probe-join', 'probe-join', 'probe-stop', 'probe-stop')
+    }
+    It 'hashes PresentMon before it waits for the load and hands that hash to the capture' {
+        $recipe = $script:plainRecipe
+        Mock Get-LoadRecipe { $recipe }.GetNewClosure()
+        Invoke-BenchMain
+        $order = $calls.ToArray()
+        [array]::IndexOf($order, 'presentmon-hash') | Should -BeLessThan ([array]::IndexOf($order, 'load-wait'))
+        Should -Invoke Invoke-PresentMonCapture -Times 1 -Exactly -ParameterFilter { $PresentMonSha256 -eq 'h' }
+    }
+    It 'keeps the capture window in a .NET no-GC region: open during the capture, closed before the probes stop and before the window is stopped' {
+        $recipe = $script:plainRecipe
+        Mock Get-LoadRecipe { $recipe }.GetNewClosure()
+        Mock Get-SystemCpuSnapshot { $calls.Add('snapshot ' + [System.Runtime.GCSettings]::LatencyMode); [pscustomobject]@{ idle = 1; kernel = 2; user = 3 } }.GetNewClosure()
+        Mock Invoke-PresentMonCapture {
+            $calls.Add('capture ' + [System.Runtime.GCSettings]::LatencyMode)
+            $state.now = $state.captureEnd
+            [pscustomobject]@{ csv = 'x.csv'; presentMonSha256 = 'h'; overflowedPresents = 0 }
+        }.GetNewClosure()
+        Invoke-BenchMain -Cpu @('0', '1')
+        $order = $calls.ToArray()
+        $order | Should -Contain 'capture NoGCRegion'
+        $afterWindow = @($order | Where-Object { $_ -like 'latency-at-stop *' }) + @($order | Where-Object { $_ -like 'snapshot *' })[-1]
+        $afterWindow | Should -HaveCount 3
+        foreach ($entry in $afterWindow) { $entry | Should -Not -Match 'NoGCRegion' }
+        [System.Runtime.GCSettings]::LatencyMode | Should -Not -Be 'NoGCRegion'
+    }
+    It 'closes the no-GC region when the capture throws' {
+        $recipe = $script:plainRecipe
+        Mock Get-LoadRecipe { $recipe }.GetNewClosure()
+        Mock Invoke-PresentMonCapture { throw 'capture failed' }
+        { Invoke-BenchMain } | Should -Throw 'capture failed'
+        [System.Runtime.GCSettings]::LatencyMode | Should -Not -Be 'NoGCRegion'
     }
     It 'records the garbage collections of each probe and accepts a run without one' {
         $recipe = $script:plainRecipe
