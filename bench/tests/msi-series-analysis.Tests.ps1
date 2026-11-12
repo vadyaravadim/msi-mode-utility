@@ -2,6 +2,13 @@ BeforeAll {
     $script:tool = Join-Path $PSScriptRoot '..\tools\Get-MsiSeriesTable.ps1'
     . $script:tool -SeriesPath 'unit-test'
 
+    function New-DriverRow {
+        param([string]$Name, [double]$IsrUs = 0, [double]$DpcUs = 0, [int]$Cpu = 99, [int]$Isr = 100, [int]$OnCpu = 100)
+        $perCpu = @([ordered]@{ cpu = $Cpu; isr = $OnCpu })
+        if ($OnCpu -lt $Isr) { $perCpu += [ordered]@{ cpu = 98; isr = $Isr - $OnCpu } }
+        [ordered]@{ driver = $Name; isrPlain = $Isr; isrMessage = 0; isrPerCpu = $perCpu; isrTotalUs = $IsrUs; dpcTotalUs = $DpcUs }
+    }
+
     function New-Boot {
         param(
             [int]$Boot,
@@ -17,7 +24,8 @@ BeforeAll {
             [System.Collections.IDictionary]$DriverMs = @{},
             [object[]]$Drivers,
             [string]$Load = 'superposition',
-            [object[]]$Probes
+            [object[]]$Probes,
+            [object[]]$Extra = @()
         )
         if (-not $Probes) {
             $Probes = @(
@@ -25,7 +33,8 @@ BeforeAll {
                 [ordered]@{ cpu = $UsbCpu; devices = @('HDAudBus.sys', 'Wdf01000.sys'); stalledPct = $UsbStalled; gapP99Us = $UsbGap }
             )
         }
-        if (-not $Drivers) { $Drivers = @(foreach ($name in $DriverMs.Keys) { [ordered]@{ driver = $name; isrTotalUs = 10000 * $DriverMs[$name]; dpcTotalUs = 0 } }) }
+        if (-not $Drivers) { $Drivers = @(foreach ($name in $DriverMs.Keys) { New-DriverRow -Name $name -IsrUs (10000 * $DriverMs[$name]) }) }
+        $Drivers = @(@($Drivers) + @($Extra))
         $bench = [ordered]@{
             probes = @($Probes)
             trace  = [ordered]@{ seconds = 10; drivers = @($Drivers) }
@@ -498,19 +507,167 @@ Describe 'the bench JSON numbers as written' {
         @($analysis.load | ForEach-Object { $_.differs }) | Should -Be @($false, $false)
     }
     It 'ties boots whose recorded ISR and DPC totals add up to the same time' {
-        $stock = @([ordered]@{ driver = 'Wdf01000.sys'; isrTotalUs = 12000.1; dpcTotalUs = 0.2 })
-        $state = @([ordered]@{ driver = 'Wdf01000.sys'; isrTotalUs = 12000.3; dpcTotalUs = 0 })
+        $stock = @(New-DriverRow -Name 'Wdf01000.sys' -IsrUs 12000.1 -DpcUs 0.2)
+        $state = @(New-DriverRow -Name 'Wdf01000.sys' -IsrUs 12000.3)
         $boots = @(0..2 | ForEach-Object { New-Boot -Boot (2 * $_) -Label 'stock' -Drivers $stock; New-Boot -Boot (2 * $_ + 1) -Label 'usb-line' -Drivers $state })
         (Get-Test (Invoke-Analysis -Boots $boots) 'usb-line' 'changedDriverMsPerSecond').extreme | Should -Be 20
     }
 }
 
+Describe 'Get-CoreLoad' {
+    It 'takes the share of the driver ISRs on the CPU times its ISR and DPC time, in percent of one core' {
+        $boot = New-Boot -Boot 0 -Label 'stock' -Extra @(New-DriverRow -Name 'ndis.sys' -IsrUs 300000 -DpcUs 100000 -Cpu 1 -Isr 100 -OnCpu 25)
+        $load = Get-CoreLoad -Boot $boot -Cpu 1
+        $load['ndis.sys'] | Should -Be 1d
+        (Get-CoreLoad -Boot $boot -Cpu 98)['ndis.sys'] | Should -Be 3d
+        (Get-CoreLoad -Boot $boot -Cpu 7)['ndis.sys'] | Should -Be 0d
+    }
+    It 'gives zero for a driver with no ISRs' {
+        $boot = New-Boot -Boot 0 -Label 'stock' -Extra @(New-DriverRow -Name 'dpconly.sys' -DpcUs 500000 -Cpu 1 -Isr 0 -OnCpu 0)
+        (Get-CoreLoad -Boot $boot -Cpu 1)['dpconly.sys'] | Should -Be 0d
+    }
+    It 'leaves out the named drivers' {
+        $boot = New-Boot -Boot 0 -Label 'stock' -Extra @((New-DriverRow -Name 'a.sys' -IsrUs 100000 -Cpu 1), (New-DriverRow -Name 'B.SYS' -IsrUs 100000 -Cpu 1))
+        @((Get-CoreLoad -Boot $boot -Cpu 1 -Except @('b.sys')).Keys) | Should -Be @('a.sys')
+    }
+    It 'refuses a driver row without the ISR counts' {
+        $boot = New-Boot -Boot 0 -Label 'stock' -Extra @([ordered]@{ driver = 'x.sys'; isrTotalUs = 1; dpcTotalUs = 0 })
+        { Get-CoreLoad -Boot $boot -Cpu 1 } | Should -Throw '*boot 0 driver x.sys has no field isrPlain*'
+    }
+}
+
+Describe 'Get-Verdict on a co-located core' {
+    It 'reads cannot tell before any other word' {
+        Get-Verdict -Significant $true -Direction 1 -CiLow 1 -CiHigh 2 -Margin 0.3 -Colocated | Should -Be 'cannot tell'
+        Get-Verdict -Significant $true -Direction -1 -CiLow -2 -CiHigh -1 -Margin 0.3 -Colocated | Should -Be 'cannot tell'
+        Get-Verdict -Significant $false -Direction 1 -CiLow -0.1 -CiHigh 0.1 -Margin 0.3 -Colocated | Should -Be 'cannot tell'
+    }
+}
+
+Describe 'the co-location rule' {
+    BeforeAll {
+        function New-Series5 {
+            param([string]$State = 'usb-line', [scriptblock]$Stock = { @() }, [scriptblock]$StateExtra = { @() })
+            @(0..4 | ForEach-Object {
+                    New-Boot -Boot (2 * $_) -Label 'stock' -DxStalled @(5.0, 5.1, 5.2, 5.3, 5.4)[$_] -Extra @(& $Stock)
+                    New-Boot -Boot (2 * $_ + 1) -Label $State -DxStalled @(6.0, 6.1, 6.2, 6.3, 6.4)[$_] -Extra @(& $StateExtra)
+                })
+        }
+    }
+    It 'reads both dxgkrnl tests cannot tell when another driver is 1.5% of that core in the state only, keeping p and Holm' {
+        $plain = Invoke-Analysis -Boots (New-Series5)
+        $analysis = Invoke-Analysis -Boots (New-Series5 -StateExtra { New-DriverRow -Name 'ndis.sys' -IsrUs 150000 -Cpu 1 })
+        (Get-Test $plain 'usb-line' 'dxgkrnlStalledPct').verdict | Should -Be 'hurt'
+        foreach ($metric in 'dxgkrnlStalledPct', 'dxgkrnlGapP99Us') {
+            $test = Get-Test $analysis 'usb-line' $metric
+            $before = Get-Test $plain 'usb-line' $metric
+            $test.verdict | Should -Be 'cannot tell'
+            $test.p | Should -Be $before.p
+            $test.pHolm | Should -Be $before.pHolm
+            $test.shift | Should -Be $before.shift
+            $test.ciLow | Should -Be $before.ciLow
+            $test.ciHigh | Should -Be $before.ciHigh
+            $test.colocationNote | Should -Be 'other driver moved on this core: ndis.sys (stock 0, state 1.5 % of the core)'
+            $test.coreNote | Should -BeNullOrEmpty
+        }
+        (Get-Test $analysis 'usb-line' 'dxgkrnlStalledPct').pHolm | Should -Be 0.047619
+        $analysis.family | Should -Be 6
+        foreach ($metric in 'wdf01000StalledPct', 'wdf01000GapP99Us') {
+            (Get-Test $analysis 'usb-line' $metric).verdict | Should -Be 'no difference'
+            (Get-Test $analysis 'usb-line' $metric).colocationNote | Should -BeNullOrEmpty
+        }
+        $analysis.colocation.Count | Should -Be 1
+        $analysis.colocation[0].state | Should -Be 'usb-line'
+        $analysis.colocation[0].probeCoreOf | Should -Be 'dxgkrnl.sys'
+        $analysis.colocation[0].driver | Should -Be 'ndis.sys'
+        $analysis.colocation[0].stockMedian | Should -Be 0
+        $analysis.colocation[0].stateMedian | Should -Be 1.5
+        $analysis.colocation[0].moved | Should -BeTrue
+    }
+    It 'reads the Wdf01000 tests cannot tell for a driver on that core and leaves dxgkrnl alone' {
+        $analysis = Invoke-Analysis -Boots (New-Series5 -StateExtra { New-DriverRow -Name 'ndis.sys' -IsrUs 150000 -Cpu 11 })
+        (Get-Test $analysis 'usb-line' 'dxgkrnlStalledPct').verdict | Should -Be 'hurt'
+        foreach ($metric in 'wdf01000StalledPct', 'wdf01000GapP99Us') { (Get-Test $analysis 'usb-line' $metric).verdict | Should -Be 'cannot tell' }
+        $analysis.colocation[0].probeCoreOf | Should -Be 'Wdf01000.sys'
+    }
+    It 'counts a load of exactly 0.1 points as moved' {
+        $analysis = Invoke-Analysis -Boots (New-Series5 -StateExtra { New-DriverRow -Name 'ndis.sys' -IsrUs 10000 -Cpu 1 })
+        (Get-Test $analysis 'usb-line' 'dxgkrnlStalledPct').verdict | Should -Be 'cannot tell'
+        $analysis.colocation[0].moved | Should -BeTrue
+    }
+    It 'does not count a load of 0.0999 points as moved or list it' {
+        $analysis = Invoke-Analysis -Boots (New-Series5 -StateExtra { New-DriverRow -Name 'ndis.sys' -IsrUs 9990 -Cpu 1 })
+        (Get-Test $analysis 'usb-line' 'dxgkrnlStalledPct').verdict | Should -Be 'hurt'
+        $analysis.colocation.Count | Should -Be 0
+    }
+    It 'counts a difference of exactly 0.1 points between two listed medians as moved and 0.0999 as not' {
+        $moved = Invoke-Analysis -Boots (New-Series5 -Stock { New-DriverRow -Name 'ndis.sys' -IsrUs 50000 -Cpu 1 } -StateExtra { New-DriverRow -Name 'ndis.sys' -IsrUs 60000 -Cpu 1 })
+        $moved.colocation[0].moved | Should -BeTrue
+        $still = Invoke-Analysis -Boots (New-Series5 -Stock { New-DriverRow -Name 'ndis.sys' -IsrUs 50000 -Cpu 1 } -StateExtra { New-DriverRow -Name 'ndis.sys' -IsrUs 59990 -Cpu 1 })
+        $still.colocation[0].moved | Should -BeFalse
+        (Get-Test $still 'usb-line' 'dxgkrnlStalledPct').verdict | Should -Be 'hurt'
+    }
+    It 'lists an equal driver with both medians and reads nothing from it' {
+        $same = { New-DriverRow -Name 'ndis.sys' -IsrUs 150000 -Cpu 1 }
+        $analysis = Invoke-Analysis -Boots (New-Series5 -Stock $same -StateExtra $same)
+        (Get-Test $analysis 'usb-line' 'dxgkrnlStalledPct').verdict | Should -Be 'hurt'
+        $analysis.colocation.Count | Should -Be 1
+        $analysis.colocation[0].stockMedian | Should -Be 1.5
+        $analysis.colocation[0].stateMedian | Should -Be 1.5
+        $analysis.colocation[0].moved | Should -BeFalse
+    }
+    It 'lists a driver that left the core: stock at or above the threshold, state below' {
+        $analysis = Invoke-Analysis -Boots (New-Series5 -Stock { New-DriverRow -Name 'ndis.sys' -IsrUs 150000 -Cpu 1 })
+        $analysis.colocation[0].stockMedian | Should -Be 1.5
+        $analysis.colocation[0].stateMedian | Should -Be 0
+        $analysis.colocation[0].moved | Should -BeTrue
+        (Get-Test $analysis 'usb-line' 'dxgkrnlGapP99Us').verdict | Should -Be 'cannot tell'
+    }
+    It 'does not flag the changed driver of the state' {
+        $analysis = Invoke-Analysis -Boots (New-Series5 -State 'gpu-line' -StateExtra { New-DriverRow -Name 'amdkmdag.sys' -IsrUs 150000 -Cpu 1; New-DriverRow -Name 'Wdf01000.sys' -IsrUs 150000 -Cpu 1 })
+        $analysis.colocation.Count | Should -Be 1
+        $analysis.colocation[0].driver | Should -Be 'Wdf01000.sys'
+        $analysis.colocation[0].probeCoreOf | Should -Be 'dxgkrnl.sys'
+    }
+    It 'does not flag the changed driver of another state' {
+        $analysis = Invoke-Analysis -Boots (New-Series5 -StateExtra { New-DriverRow -Name 'amdkmdag.sys' -IsrUs 150000 -Cpu 1 })
+        $analysis.colocation[0].driver | Should -Be 'amdkmdag.sys'
+    }
+    It 'excludes the anchor driver from its own core' {
+        $analysis = Invoke-Analysis -Boots (New-Series5 -State 'audio-msi' -StateExtra { New-DriverRow -Name 'dxgkrnl.sys' -IsrUs 150000 -Cpu 1 })
+        (Get-Test $analysis 'audio-msi' 'dxgkrnlStalledPct').verdict | Should -Be 'hurt'
+        $analysis.colocation.Count | Should -Be 0
+    }
+    It 'counts only the ISR share on the probe CPU' {
+        $analysis = Invoke-Analysis -Boots (New-Series5 -StateExtra { New-DriverRow -Name 'ndis.sys' -IsrUs 300000 -DpcUs 100000 -Cpu 1 -Isr 100 -OnCpu 25 })
+        $analysis.colocation[0].stateMedian | Should -Be 1
+        $elsewhere = Invoke-Analysis -Boots (New-Series5 -StateExtra { New-DriverRow -Name 'ndis.sys' -IsrUs 300000 -DpcUs 100000 -Cpu 5 })
+        $elsewhere.colocation.Count | Should -Be 0
+        (Get-Test $elsewhere 'usb-line' 'dxgkrnlStalledPct').verdict | Should -Be 'hurt'
+    }
+    It 'reads the load on the core each boot has its probe on' {
+        $boots = @(
+            New-Boot -Boot 0 -Label 'stock' -DxCpu 1
+            New-Boot -Boot 1 -Label 'usb-line' -DxCpu 3 -Extra @(New-DriverRow -Name 'ndis.sys' -IsrUs 150000 -Cpu 3)
+        )
+        $analysis = Invoke-Analysis -Boots $boots
+        $analysis.colocation[0].stateMedian | Should -Be 1.5
+        $analysis.colocation[0].stockMedian | Should -Be 0
+    }
+    It 'prints the medians of the note and rows in the order of state, core, driver' {
+        $analysis = Invoke-Analysis -Boots (New-Series5 -StateExtra { New-DriverRow -Name 'zeta.sys' -IsrUs 150000 -Cpu 11; New-DriverRow -Name 'beta.sys' -IsrUs 150000 -Cpu 1; New-DriverRow -Name 'alpha.sys' -IsrUs 150000 -Cpu 1 })
+        @($analysis.colocation | ForEach-Object { "$($_.probeCoreOf)/$($_.driver)" }) | Should -Be @('dxgkrnl.sys/alpha.sys', 'dxgkrnl.sys/beta.sys', 'Wdf01000.sys/zeta.sys')
+        (Get-Test $analysis 'usb-line' 'dxgkrnlStalledPct').colocationNote | Should -Be 'other driver moved on this core: alpha.sys (stock 0, state 1.5 % of the core), beta.sys (stock 0, state 1.5 % of the core)'
+    }
+}
 Describe 'the analysis constants' {
     It 'pins the values fixed before the series was read' {
         $referenceState | Should -Be 'stock'
         $alpha | Should -Be 0.05d
         $confidence | Should -Be 0.9d
         $fpsLoadLimitPct | Should -Be 1
+        $colocationMarginPct | Should -Be 0.1d
+        $microsecondsPerCorePercent | Should -Be 10000
         @($marginRules.Keys) | Should -Be @('superposition', 'cs2')
         foreach ($load in 'superposition', 'cs2') {
             $marginRules[$load].stalledPct.absolute | Should -Be 0.3d

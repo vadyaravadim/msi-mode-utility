@@ -673,6 +673,78 @@ Describe 'the testbed journal block' {
     }
 }
 
+Describe 'the other drivers on the probe cores' {
+    It 'prints the empty line and the section for a clean series' {
+        $report = New-SeriesReport -SeriesPath (New-Series -Root (Join-Path $TestDrive 'co-clean'))
+        $report.Markdown | Should -Match '## Other drivers on the probe cores'
+        $report.Markdown | Should -Match 'No other driver reached 0\.1% of a probe core\.'
+        @($report.Summary.analysis.colocation).Count | Should -Be 0
+        $report.Summary.constants.colocationMarginPct | Should -Be 0.1d
+    }
+    It 'prints the section after the load table and before the frames' {
+        $report = New-SeriesReport -SeriesPath (New-Series -Root (Join-Path $TestDrive 'co-order'))
+        $section = $report.Markdown.IndexOf('## Other drivers on the probe cores')
+        $section | Should -BeGreaterThan $report.Markdown.IndexOf('## Pre-registered tests')
+        $section | Should -BeLessThan $report.Markdown.IndexOf('## Frames')
+    }
+    It 'names a moved driver in the note, the verdict and the section, and keeps the family' {
+        $root = New-Series -Root (Join-Path $TestDrive 'co-moved') -Mutate {
+            param($ctx)
+            if ($ctx.Label -eq 'M') { $ctx.Bench.trace.drivers = @($ctx.Bench.trace.drivers) + (New-DriverRow 'ndis.sys' 150000 0 -Cpu 0) }
+        }
+        $report = New-SeriesReport -SeriesPath $root
+        $report.Summary.analysis.family | Should -Be 6
+        $dx = $report.Summary.analysis.tests | Where-Object { $_.metric -eq 'dxgkrnlStalledPct' }
+        $dx.verdict | Should -Be 'cannot tell'
+        $dx.colocationNote | Should -Be 'other driver moved on this core: ndis.sys (stock 0, state 1.5 % of the core)'
+        $report.Markdown | Should -Match '\| mobo-audio-msi \| Stalled \(%\), dxgkrnl\.sys core \| 0 / 0 \|.* \| cannot tell \| other driver moved on this core: ndis\.sys \(stock 0, state 1\.5 % of the core\); load differs \|'
+        $report.Markdown | Should -Match '\| State \| Probe core of \| Driver \| Stock median \(% of the core\) \| State median \| Moved \|'
+        $report.Markdown | Should -Match '\| mobo-audio-msi \| dxgkrnl\.sys \| ndis\.sys \| 0 \| 1\.5 \| yes \|'
+        $report.Markdown | Should -Not -Match 'No other driver reached'
+        ($report.Summary.analysis.tests | Where-Object { $_.metric -eq 'wdf01000StalledPct' }).colocationNote | Should -BeNullOrEmpty
+    }
+    It 'prints the rule in the verdict sentence' {
+        $report = New-SeriesReport -SeriesPath (New-Series -Root (Join-Path $TestDrive 'co-sentence'))
+        $report.Markdown | Should -Match 'cannot tell, whatever its p and interval, when'
+    }
+    It 'lists the probe-core and ISR fields in the file map' {
+        $report = New-SeriesReport -SeriesPath (New-Series -Root (Join-Path $TestDrive 'co-map'))
+        ($report.Summary.fileMap | Where-Object { $_.table -eq 'Pre-registered tests' }).fields | Should -Match 'trace\.drivers\[\]\.isrPlain, trace\.drivers\[\]\.isrMessage, trace\.drivers\[\]\.isrPerCpu'
+    }
+}
+
+Describe 'the enabled network adapters' {
+    It 'prints a testbed row when the wrappers record the count' {
+        $root = New-Series -Root (Join-Path $TestDrive 'net-row') -Mutate { param($ctx) $ctx.Wrapper.environment.enabledNetworkAdapters = 0 }
+        $report = New-SeriesReport -SeriesPath $root
+        $report.Summary.testbed['Enabled physical network adapters'] | Should -Be '0'
+        $report.Markdown | Should -Match '\| Enabled physical network adapters \| 0 \|'
+    }
+    It 'prints no row when no wrapper records it' {
+        $report = New-SeriesReport -SeriesPath (New-Series -Root (Join-Path $TestDrive 'net-none'))
+        $report.Summary.testbed.Contains('Enabled physical network adapters') | Should -BeFalse
+    }
+    It 'refuses a changed environment.enabledNetworkAdapters' {
+        $root = New-Series -Root (Join-Path $TestDrive 'net-diff') -Mutate { param($ctx) $ctx.Wrapper.environment.enabledNetworkAdapters = if ($ctx.Boot -eq 2) { 1 } else { 0 } }
+        { New-SeriesReport -SeriesPath $root } | Should -Throw '*boot 2 field environment.enabledNetworkAdapters differs from boot 0*'
+    }
+    It 'counts the adapters in the wrapper check' {
+        $root = New-Series -Root (Join-Path $TestDrive 'net-check') -Mutate { param($ctx) $ctx.Wrapper.environment.enabledNetworkAdapters = 0 }
+        $report = New-SeriesReport -SeriesPath $root
+        ($report.Summary.checks | Where-Object { $_.name -like 'HVCI*' }).name | Should -Be 'HVCI, BIOS version, microcode, clock flags and enabled network adapters identical'
+        ($report.Summary.checks | Where-Object { $_.name -like 'HVCI*' }).status | Should -Be 'passed'
+    }
+    It 'passes the wrapper check on a wrapper that records only the adapter count' {
+        $root = New-Series -Root (Join-Path $TestDrive 'net-only') -Mutate {
+            param($ctx)
+            foreach ($key in 'hvciEnabled', 'microcodeRaw', 'clockFlags') { $ctx.Wrapper.environment.Remove($key) }
+            $ctx.Wrapper.environment.bios.Remove('version')
+            $ctx.Wrapper.environment.enabledNetworkAdapters = 0
+        }
+        $report = New-SeriesReport -SeriesPath $root
+        ($report.Summary.checks | Where-Object { $_.name -like 'HVCI*' }).status | Should -Be 'passed'
+    }
+}
 Describe 'the system CPU column' {
     BeforeAll {
         $root = New-Series -Root (Join-Path $TestDrive 'syscpu') -Mutate {
