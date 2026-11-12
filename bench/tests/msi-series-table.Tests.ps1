@@ -156,6 +156,36 @@ Describe 'Get-Median' {
     }
 }
 
+Describe 'display rounding is the same in every engine' {
+    It 'rounds the double <Value> through decimal' -ForEach @(
+        @{ Value = 1.005; Expected = '1' }
+        @{ Value = 2.675; Expected = '2.68' }
+        @{ Value = 0.285; Expected = '0.28' }
+        @{ Value = 1.115; Expected = '1.12' }
+        @{ Value = -2.675; Expected = '-2.68' }
+    ) {
+        Format-Rounded $Value | Should -Be $Expected
+    }
+    It 'prints a spread whose median is a midpoint: <Expected>' -ForEach @(
+        @{ Values = @(2.67, 2.68); Expected = '2.68 [2.67-2.68]' }
+        @{ Values = @(1.00, 1.01); Expected = '1 [1-1.01]' }
+        @{ Values = @(0.28, 0.29); Expected = '0.28 [0.28-0.29]' }
+        @{ Values = @(1.11, 1.12); Expected = '1.12 [1.11-1.12]' }
+    ) {
+        Format-Spread (Get-Spread -Values $Values) | Should -Be $Expected
+    }
+    It 'prints the p value midpoint <Value>' -ForEach @(
+        @{ Value = 0.0125d; Expected = '0.012' }
+        @{ Value = 0.0135d; Expected = '0.014' }
+    ) {
+        Format-PValue -Value $Value | Should -Be $Expected
+    }
+    It 'rounds the summary to four digits through decimal' {
+        (Get-Spread -Values @(1.00005)).median.ToString($invariant) | Should -Be '1'
+        (Get-Spread -Values @(2.00015)).max.ToString($invariant) | Should -Be '2.0002'
+    }
+}
+
 Describe 'the constants' {
     It 'keeps the driver floor at 0.5 ms/s and the long gap at 5000 us' {
         $driverFloorMsPerSecond | Should -Be 0.5
@@ -800,6 +830,24 @@ Describe 'the script entry point' {
         $first = [System.IO.File]::ReadAllBytes($paths[0])
         $first.Count | Should -BeGreaterThan 0
         [System.Convert]::ToBase64String($first) | Should -Be ([System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes($paths[1])))
+    }
+    It 'writes the same markdown bytes and summary.json numbers under pwsh and Windows PowerShell on midpoint values' {
+        $engines = @('pwsh', 'powershell') | ForEach-Object { Get-Command $_ -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1 }
+        if (@($engines).Count -lt 2) { Set-ItResult -Skipped -Because 'one of the two engines is not installed'; return }
+        $root = New-Series -Root (Join-Path $TestDrive 'engines') -Mutate {
+            param($ctx)
+            $ctx.Bench.probes[0].gapP50Us = @(2.67, 2.67, 2.68, 2.68)[$ctx.Boot]
+            $ctx.Bench.probes[0].stalledPct = @(1.00, 1.01, 1.115, 1.12)[$ctx.Boot]
+            $ctx.Bench.frames.low1PctMs = @(0.285, 0.29, 0.28, 0.285)[$ctx.Boot]
+        }
+        $bytes = foreach ($engine in $engines) {
+            $name = [System.IO.Path]::GetFileNameWithoutExtension($engine.Source)
+            $md = Join-Path $TestDrive "engines-$name.md"
+            $json = Join-Path $TestDrive "engines-$name.json"
+            & $engine.Source -NoProfile -ExecutionPolicy Bypass -File $tool -SeriesPath $root -MarkdownPath $md -SummaryPath $json
+            [System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes($md)) + '|' + ((Get-Content -LiteralPath $json -Raw | ConvertFrom-Json | ConvertTo-Json -Depth 20 -Compress) -replace '(\d)\.0(?=[,}\]])', '$1')
+        }
+        $bytes[0] | Should -Be $bytes[1]
     }
     It 'keeps the field order of the checks and the file map' {
         $report = New-SeriesReport -SeriesPath (New-Series -Root (Join-Path $TestDrive 'field-order'))

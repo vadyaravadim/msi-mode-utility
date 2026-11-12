@@ -38,6 +38,10 @@ section is empty or its compare link at the bottom is missing.
 
 ### Fixed
 
+- `bench/tools/Get-MsiSeriesTable.ps1` printed the same series with different digits under PowerShell 7 and Windows
+  PowerShell 5.1: some two-decimal cells (medians, interval bounds, the stall timeline) differed by 0.01 because the
+  two runtimes round a double that sits on a midpoint differently. The values are now rounded as decimals, so both
+  engines print byte-identical markdown. No statistic, p value, verdict or `summary.json` number changed.
 - On Windows Server Core the run stopped with a raw error after the device scan instead of saying the edition is not
   supported. It now says so before the scan. Nothing was ever changed.
 - When every selected device failed to update, the run still ended with "REBOOT REQUIRED for changes to take effect"

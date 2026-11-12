@@ -20,6 +20,8 @@ $colocationMarginPct = 0.1d
 $microsecondsPerCorePercent = 10000
 $pValueDigits = 6
 $pDisplayDigits = 3
+$stableDoubleFormat = 'G15'
+$displayFormat = '0.##'
 $marginRules = [ordered]@{
     superposition = [ordered]@{
         stalledPct        = [ordered]@{ absolute = 0.3d }
@@ -61,22 +63,29 @@ function Get-Median {
     ($sorted[$middle - 1] + $sorted[$middle]) / 2
 }
 
+function ConvertTo-DisplayDecimal {
+    param([Parameter(Mandatory)]$Value)
+    if ($Value -is [decimal]) { return $Value }
+    [decimal]::Parse(([double]$Value).ToString($stableDoubleFormat, $invariant), [System.Globalization.NumberStyles]::Float, $invariant)
+}
+
 function Get-Spread {
     param([Parameter(Mandatory)][double[]]$Values)
-    $sorted = @($Values | Sort-Object)
+    $sorted = [decimal[]]@($Values | ForEach-Object { ConvertTo-DisplayDecimal $_ })
+    [Array]::Sort($sorted)
     [pscustomobject]@{
-        median = [math]::Round([double](Get-Median -Values $Values), $summaryDigits)
-        min    = [math]::Round([double]$sorted[0], $summaryDigits)
-        max    = [math]::Round([double]$sorted[-1], $summaryDigits)
+        median = ConvertTo-OutputNumber (Get-Median -Values $sorted)
+        min    = ConvertTo-OutputNumber $sorted[0]
+        max    = ConvertTo-OutputNumber $sorted[-1]
         n      = $sorted.Count
     }
 }
 
 function Format-Rounded {
-    param([Parameter(Mandatory)][double]$Value)
-    $rounded = [math]::Round($Value, $displayDigits)
-    if ($rounded -eq 0) { $rounded = 0.0 }
-    $rounded.ToString('0.##', $invariant)
+    param([Parameter(Mandatory)]$Value)
+    $rounded = [math]::Round((ConvertTo-DisplayDecimal $Value), $displayDigits)
+    if ($rounded -eq 0) { $rounded = [decimal]0 }
+    $rounded.ToString($displayFormat, $invariant)
 }
 
 function Format-Spread {
@@ -532,7 +541,7 @@ function Get-PercentOf {
 function ConvertTo-OutputNumber {
     param($Value, [int]$Digits = $summaryDigits)
     if ($null -eq $Value) { return $null }
-    $rounded = [math]::Round([decimal]$Value, $Digits)
+    $rounded = [math]::Round((ConvertTo-DisplayDecimal $Value), $Digits)
     if ($rounded -eq 0) { return 0.0 }
     [double]$rounded
 }
@@ -933,7 +942,7 @@ function New-SeriesReport {
     if ($analysis.family -gt 0) {
         $md.Add('## Pre-registered tests')
         $md.Add('')
-        $md.Add(('Each state against {0}, lower is better for every metric: a two-sided exact permutation test of the rank sum, Holm-corrected over the {1} tests at alpha {2}, and the Hodges-Lehmann shift (state minus {0}) with an interval of at least {3}% confidence.' -f $referenceState, $analysis.family, $alpha.ToString($invariant), ($confidence * 100).ToString('0.##', $invariant)))
+        $md.Add(('Each state against {0}, lower is better for every metric: a two-sided exact permutation test of the rank sum, Holm-corrected over the {1} tests at alpha {2}, and the Hodges-Lehmann shift (state minus {0}) with an interval of at least {3}% confidence.' -f $referenceState, $analysis.family, $alpha.ToString($invariant), ($confidence * 100).ToString($displayFormat, $invariant)))
         $md.Add(('Verdicts: helped or hurt when the Holm-adjusted p is under {0}; no difference when the whole interval lies strictly inside the margin; cannot tell otherwise. A test of a probe core reads cannot tell, whatever its p and interval, when the load of another driver on that core differs between the state and {1} by {2} points or more (table Other drivers on the probe cores). The note names the boots whose probe core differs and the drivers that moved.' -f $alpha.ToString($invariant), $referenceState, $colocationMarginPct.ToString($invariant)))
         $cannotShowLabels = @($testMetrics | Where-Object { $_.cannotShowOn -and $_.cannotShowOn -eq $analysis.bottleneck } | ForEach-Object { $_.label })
         if ($cannotShowLabels.Count) { $md.Add(('On this {0}-bound load a test that is not significant reads cannot show for: {1}.' -f $analysis.bottleneck, ($cannotShowLabels -join ', '))) }
