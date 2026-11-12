@@ -94,6 +94,7 @@ $defaultProbeCpu = 0
 $histogramEdgesUs = @(5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000)
 $roundDigits = 1
 $gcKeyPrefix = 'gen'
+$noGcRegionBytes = 64MB
 $toneFrequencyHz = 440
 $toneDbfs = -40
 $toneSampleRate = 48000
@@ -753,6 +754,14 @@ function Get-GcRejection {
     })
     if ($hit.Count) { "a garbage collection ran inside the window on $($hit -join ', ')" }
 }
+function Enter-NoGcRegion {
+    if (-not [GC]::TryStartNoGCRegion($noGcRegionBytes)) {
+        throw "The .NET runtime could not reserve $($noGcRegionBytes / 1MB) MB for a capture window without garbage collections. Free memory, then run the bench again."
+    }
+}
+function Exit-NoGcRegion {
+    if ([System.Runtime.GCSettings]::LatencyMode -eq [System.Runtime.GCLatencyMode]::NoGCRegion) { [GC]::EndNoGCRegion() }
+}
 
 function Assert-LoadArgument {
     param([string]$Load, [string]$PresentMon, [Parameter(Mandatory)][bool]$SecondsGiven, [string[]]$Background, [string]$UsbReadFile, [switch]$ProcessCpu)
@@ -1019,8 +1028,10 @@ if ($MyInvocation.InvocationName -ne '.') {
     $loadClock = $null
     $loadPause = 0
     $onRoute = $false
+    $presentMonSha = $null
     try {
         if ($recipe) {
+            $presentMonSha = Get-PresentMonSha256 -PresentMonPath $PresentMon -ExpectedSha256 $recipe.presentMon.sha256
             Write-Host "Load: $($recipe.title). Start it as bench\README.md says; this window waits."
             if ($recipe.consoleLine) { Write-Host "Console line: $($recipe.consoleLine)" }
             $started = Start-LoadWithBackground -Recipe $recipe -Background $Background -UsbReadFile $UsbReadFile
@@ -1066,18 +1077,21 @@ if ($MyInvocation.InvocationName -ne '.') {
         $traceWatch = [System.Diagnostics.Stopwatch]::StartNew()
         if ($loadClock) { $loadWindowStart = $loadClock.Elapsed.TotalSeconds }
         try {
+            Enter-NoGcRegion
             foreach ($p in $probes) { $p.Start() }
             if ($recipe) {
-                $capture = Invoke-PresentMonCapture -PresentMonPath $PresentMon -ProcessName $recipe.presentMonProcess -OutputFile (Join-Path $OutDir $presentMonCsvName) -Seconds $windowSeconds -ExpectedSha256 $recipe.presentMon.sha256
+                $capture = Invoke-PresentMonCapture -PresentMonPath $PresentMon -ProcessName $recipe.presentMonProcess -OutputFile (Join-Path $OutDir $presentMonCsvName) -Seconds $windowSeconds -PresentMonSha256 $presentMonSha
                 $loadWindowEnd = $loadClock.Elapsed.TotalSeconds
             }
             foreach ($p in $probes) { $p.Join() }
+            Exit-NoGcRegion
             for ($i = 0; $i -lt $probes.Count; $i++) {
                 $span = 0.0
                 $gapSets[$i] = $probes[$i].Stop([ref]$span)
                 $spans[$i] = $span
             }
         } finally {
+            Exit-NoGcRegion
             $window = Stop-CaptureWindow -Trace $doTrace -Watch $traceWatch -Background $backgroundHandle -ProcessCpu:$ProcessCpu
             $backgroundHandle = $null
             $cpuAfter = $window.ProcessCpuAfter

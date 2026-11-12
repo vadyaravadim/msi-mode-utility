@@ -182,9 +182,9 @@ Describe 'Invoke-PresentMonCapture' {
     It 'requires the PresentMon path' {
         { Invoke-PresentMonCapture -PresentMonPath $null -ProcessName 'x.exe' -OutputFile (Join-Path $TestDrive 'a.csv') } | Should -Throw
     }
-    It 'records the SHA256 of the PresentMon it ran and no version field (the 2.6.0 exe has no version resource)' {
+    It 'records the PresentMon SHA256 it was handed and no version field (the 2.6.0 exe has no version resource)' {
         $out = Join-Path $TestDrive 'frames.csv'
-        $capture = Invoke-PresentMonCapture -PresentMonPath $fakePm -ProcessName 'x.exe' -OutputFile $out -Seconds 1 -ExpectedSha256 $fakeSha
+        $capture = Invoke-PresentMonCapture -PresentMonPath $fakePm -ProcessName 'x.exe' -OutputFile $out -Seconds 1 -PresentMonSha256 $fakeSha
         $capture.presentMonSha256 | Should -Be $fakeSha
         $capture.csv | Should -Be $out
         $capture.PSObject.Properties.Name | Should -Be @('presentMonSha256', 'csv', 'overflowedPresents')
@@ -198,7 +198,7 @@ Describe 'Invoke-PresentMonCapture' {
         $argsFile = Join-Path $TestDrive 'pm-args.txt'
         $pm = Join-Path $TestDrive 'PresentMon-args.cmd'
         [System.IO.File]::WriteAllText($pm, "@echo off`r`necho MsBetweenPresents> %4`r`necho %*> `"$argsFile`"`r`n")
-        Invoke-PresentMonCapture -PresentMonPath $pm -ProcessName 'x.exe' -OutputFile (Join-Path $TestDrive 'args.csv') -Seconds 1 | Out-Null
+        Invoke-PresentMonCapture -PresentMonPath $pm -ProcessName 'x.exe' -OutputFile (Join-Path $TestDrive 'args.csv') -Seconds 1 -PresentMonSha256 'h' | Out-Null
         (Get-Content -Raw $argsFile) | Should -Match "--set_circular_buffer_size $size"
     }
     It 'sums the overflowed present events from every PresentMon stderr line without throwing under Stop' {
@@ -207,18 +207,35 @@ Describe 'Invoke-PresentMonCapture' {
         $previous = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
         try {
-            $capture = Invoke-PresentMonCapture -PresentMonPath $pm -ProcessName 'x.exe' -OutputFile (Join-Path $TestDrive 'overflow.csv') -Seconds 1 -WarningAction SilentlyContinue
+            $capture = Invoke-PresentMonCapture -PresentMonPath $pm -ProcessName 'x.exe' -OutputFile (Join-Path $TestDrive 'overflow.csv') -Seconds 1 -PresentMonSha256 'h' -WarningAction SilentlyContinue
         } finally { $ErrorActionPreference = $previous }
         $capture.overflowedPresents | Should -Be 130
     }
     It 're-emits PresentMon stderr as warnings' {
         $pm = Join-Path $TestDrive 'PresentMon-warn.cmd'
         [System.IO.File]::WriteAllText($pm, "@echo off`r`necho MsBetweenPresents> %4``necho 5 overflowed present events detected. 1>&2``n")
-        $null = Invoke-PresentMonCapture -PresentMonPath $pm -ProcessName 'x.exe' -OutputFile (Join-Path $TestDrive 'warn.csv') -Seconds 1 -WarningVariable pmWarnings -WarningAction SilentlyContinue
+        $null = Invoke-PresentMonCapture -PresentMonPath $pm -ProcessName 'x.exe' -OutputFile (Join-Path $TestDrive 'warn.csv') -Seconds 1 -PresentMonSha256 'h' -WarningVariable pmWarnings -WarningAction SilentlyContinue
         ($pmWarnings -join ' ') | Should -Match '5 overflowed present events'
     }
+    It 'hashes nothing itself: the SHA256 is checked by Get-PresentMonSha256 before the window and handed in' {
+        Mock Get-FileHash { throw 'hashed inside the window' }
+        $capture = Invoke-PresentMonCapture -PresentMonPath $fakePm -ProcessName 'x.exe' -OutputFile (Join-Path $TestDrive 'nohash.csv') -Seconds 1 -PresentMonSha256 'h'
+        $capture.presentMonSha256 | Should -Be 'h'
+    }
+}
+
+Describe 'Get-PresentMonSha256' {
+    BeforeAll {
+        $script:fakePm = Join-Path $TestDrive 'PresentMon-sha.cmd'
+        [System.IO.File]::WriteAllText($script:fakePm, "@echo off`r`n")
+        $script:fakeSha = (Get-FileHash -Path $script:fakePm -Algorithm SHA256).Hash.ToLower()
+    }
+    It 'returns the lowercase SHA256 and accepts the pinned hash in any case' {
+        Get-PresentMonSha256 -PresentMonPath $fakePm -ExpectedSha256 $fakeSha.ToUpper() | Should -Be $fakeSha
+        Get-PresentMonSha256 -PresentMonPath $fakePm | Should -Be $fakeSha
+    }
     It 'refuses a PresentMon whose hash is not the pinned one' {
-        { Invoke-PresentMonCapture -PresentMonPath $fakePm -ProcessName 'x.exe' -OutputFile (Join-Path $TestDrive 'b.csv') -ExpectedSha256 ('0' * 64) } | Should -Throw '*SHA256*Use the pinned release*'
+        { Get-PresentMonSha256 -PresentMonPath $fakePm -ExpectedSha256 ('0' * 64) } | Should -Throw '*SHA256*Use the pinned release*'
     }
 }
 
