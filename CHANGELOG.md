@@ -10,6 +10,8 @@ section is empty or its compare link at the bottom is missing.
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-11-12
+
 ### Added
 
 - Each release also carries `msi-mode-utility.ps1.sigstore.json`, the script's signed build provenance, as a
@@ -309,7 +311,8 @@ section is empty or its compare link at the bottom is missing.
   dependencies - one readable PowerShell script on Windows PowerShell 5.1+, an open-source
   alternative to the closed-source MSI Util v3. A reboot is needed for the change to take effect.
 
-[Unreleased]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.1.5...v1.2.0
 [1.1.5]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.1.4...v1.1.5
