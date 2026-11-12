@@ -37,8 +37,10 @@
     Lists PCI devices, shows their MSI status in Out-GridView, and enables MSI
     for the devices you select. Zero external dependencies. Windows PowerShell 5.1+.
 .PARAMETER ShowAll
-    Show every MSI-capable PCI device, including bridges and abstract
-    controllers (hidden by default).
+    Show every PCI device with an Interrupt Management key, including
+    storage controllers and bridges (hidden by default). Picking a storage
+    controller asks first: if it runs your boot drive and fails in the new
+    mode, Windows may not start, Safe Mode included.
 .PARAMETER Disable
     Set the selected devices to MSI OFF instead of ON.
 .PARAMETER Status
@@ -194,7 +196,11 @@ Write-Host "Scanning PCI devices..." -ForegroundColor Cyan
 # old GPU), and writing those changes nothing. Windows resolves the names.
 $present = @(Get-PnpDevice -PresentOnly)
 $names = @{}
-foreach ($d in $present) { $names[$d.InstanceId] = $d.FriendlyName }
+$classOf = @{}
+foreach ($d in $present) {
+    $names[$d.InstanceId] = $d.FriendlyName
+    $classOf[$d.InstanceId] = $d.ClassGuid
+}
 
 # The interrupts Windows actually assigned this boot - what the device runs
 # in, whatever MSISupported says: a negative IRQ number is a message-signaled
@@ -214,7 +220,8 @@ $hidden = 0
 foreach ($dev in $present) {
     if ($dev.InstanceId -notlike 'PCI\*' -or -not $dev.FriendlyName) { continue }
 
-    # MSI-capable devices expose "Device Parameters\Interrupt Management".
+    # Only devices with "Device Parameters\Interrupt Management" are listed:
+    # MSISupported lives under it. The key does not prove MSI support.
     $imPath = "Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Enum\$($dev.InstanceId)\Device Parameters\Interrupt Management"
     if (-not (Test-Path $imPath)) { continue }
 
@@ -262,7 +269,7 @@ if ($rows.Count -eq 0) {
     return
 }
 if ($hidden) {
-    Write-Host "$hidden more MSI-capable device(s) (storage controllers, bridges, ...) are hidden by the default filter. Use -ShowAll to include them." -ForegroundColor DarkGray
+    Write-Host "$hidden more device(s) with an Interrupt Management key (storage controllers, bridges, ...) are hidden by the default filter. Use -ShowAll to include them, and leave the controller of your boot drive alone." -ForegroundColor DarkGray
 }
 
 # Line-IRQ devices sort first: they are the ones MSI can change.
@@ -290,6 +297,25 @@ if (-not $selected) {
     Write-Host "Every selected device is already $($targetState.ToLower()) - nothing to change, no undo file written." -ForegroundColor Green
     Wait-IfElevatedWindow
     return
+}
+
+# A storage controller that fails in the new mode can take the boot drive with
+# it, and Safe Mode loads the same controller driver, so the undo file may be
+# out of reach. Only -ShowAll lists these classes.
+$storageClassGuids = @(
+    '{4d36e96a-e325-11ce-bfc1-08002be10318}',  # HDC (SATA/AHCI controllers)
+    '{4d36e97b-e325-11ce-bfc1-08002be10318}'   # SCSIAdapter (NVMe, RAID, VMD)
+)
+$storage = @($selected | Where-Object { $classOf[$_.DeviceID] -in $storageClassGuids })
+if ($storage) {
+    Write-Host "You picked a storage controller: $(($storage | ForEach-Object Name) -join '; ')" -ForegroundColor Yellow
+    Write-Host "If it runs your boot drive and fails in the new mode, Windows may not start, Safe Mode included. The README's Disclaimer says how to recover." -ForegroundColor Yellow
+    $answer = Read-Host "Continue anyway? [y/N]"
+    if ($answer -notmatch '^y') {
+        Write-Host "Nothing changed." -ForegroundColor Green
+        Wait-IfElevatedWindow; return
+    }
+    Write-Host ""
 }
 
 # Lightweight rollback: record the CURRENT state of every selected key into a
