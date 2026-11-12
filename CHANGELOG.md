@@ -10,6 +10,8 @@ section is empty or its compare link at the bottom is missing.
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-11-12
+
 ### Added
 
 - Each release also carries `msi-mode-utility.ps1.sigstore.json`, the script's signed build provenance, as a
@@ -18,8 +20,17 @@ section is empty or its compare link at the bottom is missing.
   `gh release verify-asset`, which works for every immutable release whichever workflow built it.
 - The README FAQ says how to remove the script and the files it leaves behind.
 - `Get-Help .\msi-mode-utility.ps1 -Examples` shows how to run the script and each of its switches.
+- Picking a storage controller, which only `-ShowAll` lists, now asks first and changes nothing unless you
+  answer y. If the controller of your boot drive fails in the new mode, Windows may not start at all, Safe Mode
+  included.
 
 ### Changed
+
+- The README said the undo file works from Safe Mode for any device. That holds for most devices, not for the
+  controller of your boot drive: if it fails, Windows may not start, Safe Mode included. The README's Disclaimer
+  now says how to recover from the Windows recovery environment, and the `-ShowAll` help warns about the boot drive.
+- The script and README no longer call the listed devices MSI-capable: the scan lists PCI devices with an
+  Interrupt Management key, and that key does not prove MSI support.
 
 - On the PowerShell Gallery the script page links this changelog as its release notes, shows the license's copyright
   line, and lists the script for both Windows PowerShell and PowerShell 7.
@@ -300,7 +311,8 @@ section is empty or its compare link at the bottom is missing.
   dependencies - one readable PowerShell script on Windows PowerShell 5.1+, an open-source
   alternative to the closed-source MSI Util v3. A reboot is needed for the change to take effect.
 
-[Unreleased]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.1.5...v1.2.0
 [1.1.5]: https://github.com/vadyaravadim/msi-mode-utility/compare/v1.1.4...v1.1.5

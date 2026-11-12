@@ -71,7 +71,7 @@ However you launch it:
 
 | Switch | Effect |
 | --- | --- |
-| `-ShowAll` | Show every MSI-capable PCI device, including bridges/controllers hidden by default |
+| `-ShowAll` | Show every PCI device with an Interrupt Management key, including the storage controllers and bridges hidden by default. Picking a storage controller asks first |
 | `-Disable` | Turn MSI **off** for the selected devices |
 | `-Status` | Print the device list with the interrupt mode each device actually runs in. Changes nothing, needs no admin rights |
 
@@ -91,7 +91,7 @@ Calling `.\msi-mode-utility.ps1` directly only works if your execution policy al
 2. **Backs up** the previous state of every selected device to a timestamped `msi_undo_*.reg` file next to the script (in `%USERPROFILE%` when run via the one-liner) — **before** changing anything
 3. **Enables MSI mode** for the devices you selected (sets the documented `MSISupported` registry value)
 
-Rollback = double-click the undo file, then reboot. No System Restore needed — works from Safe Mode too.
+Rollback = double-click the undo file, then reboot. No System Restore needed, and it works from Safe Mode for any device except the controller of your boot drive (see [Disclaimer](#disclaimer)).
 
 ## The Problem: Line-Based (IRQ) vs Message Signaled Interrupts
 
@@ -138,10 +138,10 @@ After the reboot, confirm the device actually runs in MSI mode:
 
 Two options:
 
-1. Double-click the `msi_undo_*.reg` file created before your change, then reboot (restores the previous `MSISupported` state, works from Safe Mode). If you ran the script several times against the same device, apply the undo files newest-to-oldest — each one is a snapshot of the state before *that* run, so only the oldest holds the original state.
+1. Double-click the `msi_undo_*.reg` file created before your change, then reboot (restores the previous `MSISupported` state; works from Safe Mode for any device except the controller of your boot drive, see [Disclaimer](#disclaimer)). If you ran the script several times against the same device, apply the undo files newest-to-oldest — each one is a snapshot of the state before *that* run, so only the oldest holds the original state.
 2. Run the script again with `-Disable` (`.\Run.bat -Disable` from a ZIP or clone; [other install methods](#optional-switches) pass the switch differently) and select the same devices. Note: this writes an explicit `MSISupported = 0`; if the device originally had no `MSISupported` value at all (shown as **Default** in the grid), only the undo file restores that exact state.
 
-Prefer a System Restore point anyway? Create one yourself before running: `Checkpoint-Computer -Description "Before MSI"` (note: Windows silently skips it if a point was made within the last 24 hours).
+Prefer a System Restore point anyway? It is the easy way back if you change a storage controller. Create one yourself before running: `Checkpoint-Computer -Description "Before MSI"` (note: Windows silently skips it if a point was made within the last 24 hours).
 
 ## FAQ
 
@@ -163,7 +163,7 @@ MSI mode removes one specific cost. When two devices share an interrupt line, Wi
 
 ### Is it safe to enable MSI mode?
 
-`MSISupported` is a documented, reversible registry value. Before every change the script saves a `.reg` undo file with the previous state of the values it changes. Worst case, a device that misbehaves with MSI reverts as soon as you apply the undo file and reboot (works from Safe Mode too).
+`MSISupported` is a documented, reversible registry value. Before every change the script saves a `.reg` undo file with the previous state of the values it changes. Worst case, a device that misbehaves with MSI reverts as soon as you apply the undo file and reboot, from Safe Mode if need be. The exception is the controller of your boot drive: if it fails, Windows may not start at all, Safe Mode included, and the [Disclaimer](#disclaimer) says how to recover. That is why storage controllers are hidden by default and the script asks before it changes one.
 
 ### Should I enable MSI mode for my NVIDIA or AMD GPU?
 
@@ -179,7 +179,7 @@ MSI Util v3 is a closed-source `.exe` passed around via forum threads. This is a
 
 ### Where are my NVMe drives?
 
-Hidden by the default filter on purpose: NVMe uses MSI-X out of the box, so there is nothing to gain. Use `-ShowAll` if you want to see them anyway.
+Hidden by the default filter on purpose: NVMe uses MSI-X out of the box, so there is nothing to gain. Use `-ShowAll` if you want to see them anyway. The script asks before it changes a storage controller: if it runs your boot drive, a failure can stop Windows from starting.
 
 ### How do I re-enable the old interrupt mode?
 
@@ -205,7 +205,7 @@ Same idea across the series: one transparent PowerShell script, no binaries, you
 
 ## Disclaimer
 
-Editing interrupt settings can, in rare cases, cause a device to fail to start. A reboot and reverting the value fixes it. Use at your own risk.
+Editing interrupt settings can, in rare cases, cause a device to fail to start. For most devices, applying the undo file and rebooting fixes it, from Safe Mode if need be. The controller of your boot drive is the exception: if it fails in the new mode, Windows may not start at all, Safe Mode included. Then boot into the Windows recovery environment and use System Restore, or open regedit there, load `Windows\System32\config\SYSTEM` from the Windows drive (File > Load Hive) and set `MSISupported` back in the control set that `Select\Current` names (usually `ControlSet001`), under `Enum\<device>\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties`. Create a restore point before you change a storage controller. Use at your own risk.
 
 ## License
 

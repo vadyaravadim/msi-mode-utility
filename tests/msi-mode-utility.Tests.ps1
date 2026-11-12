@@ -102,6 +102,28 @@ Describe 'a run that picks devices in the grid' {
         Should -Invoke Write-Host -Times 1 -Exactly -ParameterFilter { "$Object" -like 'Done. 0 of 1*' }
         Should -Invoke Write-Host -Times 0 -Exactly -ParameterFilter { "$Object" -like 'REBOOT REQUIRED*' } -Because 'nothing was changed, so there is nothing to reboot for'
     }
+
+    It 'asks before changing a storage controller and changes nothing on a no' -Skip:(-not $isAdmin) {
+        Mock Get-PnpDevice { [pscustomobject]@{ InstanceId = 'PCI\VEN_FAKE&DEV_0002\0'; FriendlyName = 'Fake NVMe controller'; ClassGuid = '{4d36e97b-e325-11ce-bfc1-08002be10318}'; Service = 'stornvme' } }
+        & $copy -ShowAll
+        Should -Invoke Read-Host -Times 1 -Exactly -ParameterFilter { "$Prompt" -like 'Continue anyway*' }
+        Should -Invoke Set-Content -Times 0 -Exactly -Because 'a declined run writes no undo file'
+        Should -Invoke New-ItemProperty -Times 0 -Exactly -Because 'a declined run changes nothing'
+    }
+
+    It 'changes a storage controller after a yes' -Skip:(-not $isAdmin) {
+        Mock Get-PnpDevice { [pscustomobject]@{ InstanceId = 'PCI\VEN_FAKE&DEV_0002\0'; FriendlyName = 'Fake NVMe controller'; ClassGuid = '{4d36e97b-e325-11ce-bfc1-08002be10318}'; Service = 'stornvme' } }
+        Mock Read-Host { 'y' }
+        & $copy -ShowAll
+        Should -Invoke Read-Host -Times 1 -Exactly -ParameterFilter { "$Prompt" -like 'Continue anyway*' }
+        Should -Invoke New-ItemProperty -Times 1 -Exactly
+    }
+
+    It 'does not ask when no storage controller is picked' -Skip:(-not $isAdmin) {
+        & $copy
+        Should -Invoke Read-Host -Times 0 -Exactly -ParameterFilter { "$Prompt" -like 'Continue anyway*' }
+        Should -Invoke New-ItemProperty -Times 1 -Exactly
+    }
 }
 
 Describe 'PSScriptInfo metadata for the PowerShell Gallery' {
