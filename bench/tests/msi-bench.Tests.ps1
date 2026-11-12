@@ -266,6 +266,7 @@ Describe 'stall timeline' {
     It 'records gaps of at least 1 ms with an offset from the window start' {
         $probe = New-Object StallProbe -ArgumentList 0, 1, 2.0
         $probe.Start()
+        $probe.Join()
         $span = 0.0
         $gaps = $probe.Stop([ref]$span)
         $offsets = $probe.TimelineOffsetsMs
@@ -277,6 +278,91 @@ Describe 'stall timeline' {
         foreach ($g in $stalls) { $g | Should -BeGreaterOrEqual 1000 }
         foreach ($o in $offsets) { $o | Should -BeLessOrEqual ($span * 1000 + 1) }
         foreach ($g in $gaps) { $g | Should -BeGreaterThan 2.0 }
+    }
+}
+
+Describe 'the GC-free stall probe' {
+    BeforeAll {
+        $script:usPerTick = 1e6 / [System.Diagnostics.Stopwatch]::Frequency
+        $script:offsetStepTicks = 12345
+        $longestShortTicks = [long][math]::Ceiling([StallProbe]::TimelineMinUs / $script:usPerTick)
+        while ($longestShortTicks * $script:usPerTick -ge [StallProbe]::TimelineMinUs) { $longestShortTicks-- }
+        $recorded = @(foreach ($us in 2.5, 3, 3, 7, 12, 150, 150, 999.9, 1000, 1000.1, 1500, 25000, 100000) { [long][math]::Ceiling($us / $script:usPerTick) })
+        $script:recordedTicks = @($recorded) + @($longestShortTicks)
+        function Format-Exact {
+            param([double[]]$Value)
+            (@($Value | ForEach-Object { $_.ToString('R', [cultureinfo]::InvariantCulture) })) -join ','
+        }
+        function New-RecordedProbe {
+            $probe = New-Object StallProbe -ArgumentList 0, 1, 2.0
+            for ($k = 0; $k -lt $script:recordedTicks.Count; $k++) { $probe.Record($script:recordedTicks[$k], [long]($k * $script:offsetStepTicks)) }
+            $probe
+        }
+    }
+    It 'rebuilds the exact gap values, so every summary field and bucket is unchanged' {
+        $probe = New-RecordedProbe
+        $reference = [double[]]@($script:recordedTicks | ForEach-Object { $_ * $script:usPerTick })
+        $actual = Get-StallSummary -Gaps $probe.Gaps() -SpanSeconds 1 -ThresholdUs 2
+        $expected = Get-StallSummary -Gaps $reference -SpanSeconds 1 -ThresholdUs 2
+        $probe.Gaps().Count | Should -Be $reference.Count
+        $actual.gapP99Us | Should -Be $expected.gapP99Us
+        $actual.stalledPct | Should -Be $expected.stalledPct
+        $actual.stalledUs | Should -Be $expected.stalledUs
+        ($actual | ConvertTo-Json -Depth 6) | Should -Be ($expected | ConvertTo-Json -Depth 6)
+        $sorted = [double[]]$probe.Gaps().Clone()
+        [Array]::Sort($sorted)
+        $expectedSorted = [double[]]$reference.Clone()
+        [Array]::Sort($expectedSorted)
+        Format-Exact $sorted | Should -Be (Format-Exact $expectedSorted)
+    }
+    It 'puts the gaps of 1 ms or more into the timeline in order, with their offsets' {
+        $probe = New-RecordedProbe
+        $kept = @(for ($k = 0; $k -lt $script:recordedTicks.Count; $k++) { if ($script:recordedTicks[$k] * $script:usPerTick -ge [StallProbe]::TimelineMinUs) { $k } })
+        $kept.Count | Should -BeGreaterThan 0
+        $expectedGaps = @($kept | ForEach-Object { $script:recordedTicks[$_] * $script:usPerTick })
+        $expectedOffsets = @($kept | ForEach-Object { [long]($_ * $script:offsetStepTicks) * $script:usPerTick / 1000.0 })
+        Format-Exact $probe.TimelineGapsUs | Should -Be (Format-Exact $expectedGaps)
+        Format-Exact $probe.TimelineOffsetsMs | Should -Be (Format-Exact $expectedOffsets)
+    }
+    It 'reserves one timeline slot per millisecond of the window plus one, and fills them without growing' {
+        $probe = New-Object StallProbe -ArgumentList 0, 3, 2.0
+        $probe.TimelineCapacity | Should -Be 3001
+        $ticks = [long][math]::Ceiling(1500 / $script:usPerTick)
+        { for ($k = 0; $k -lt 3001; $k++) { $probe.Record($ticks, 0) } } | Should -Not -Throw
+        $probe.TimelineGapsUs.Count | Should -Be 3001
+    }
+    It 'sees no garbage collection while it spins idle in a quiet process' {
+        $probeScript = '. ''BENCH'' -Phase ''unit-test''; Add-Type -TypeDefinition $msiBenchSource; [GC]::Collect(); $p = New-Object StallProbe -ArgumentList 0, 1, 2.0; $p.Start(); $p.Join(); $p.GcCollections -join '','''
+        $command = $probeScript.Replace('BENCH', $script:benchScript)
+        $output = & (Get-Process -Id $PID).Path -NoProfile -Command $command
+        $output | Should -Be (@(0) * ([GC]::MaxGeneration + 1) -join ',')
+    }
+    It 'counts a collection that runs inside the window' {
+        $probe = New-Object StallProbe -ArgumentList 0, 1, 2.0
+        $probe.Start()
+        Start-Sleep -Milliseconds 300
+        [GC]::Collect()
+        $span = 0.0
+        $null = $probe.Stop([ref]$span)
+        $probe.GcCollections[[GC]::MaxGeneration] | Should -BeGreaterOrEqual 1
+    }
+}
+
+Describe 'Get-GcRejection' {
+    BeforeAll {
+        function New-GcProbe {
+            param([int]$Cpu, [int]$Gen0 = 0, [int]$Gen1 = 0, [int]$Gen2 = 0)
+            [pscustomobject]@{ cpu = $Cpu; gcCollections = [ordered]@{ gen0 = $Gen0; gen1 = $Gen1; gen2 = $Gen2 } }
+        }
+    }
+    It 'accepts probes that saw no collection' {
+        Get-GcRejection -Probe @((New-GcProbe -Cpu 0), (New-GcProbe -Cpu 5)) | Should -BeNullOrEmpty
+    }
+    It 'names the CPU and the generations of a probe that saw one' {
+        Get-GcRejection -Probe @((New-GcProbe -Cpu 0), (New-GcProbe -Cpu 5 -Gen0 2 -Gen1 1)) | Should -Be 'a garbage collection ran inside the window on CPU 5 (gen0 2, gen1 1, gen2 0)'
+    }
+    It 'names every probe that saw one' {
+        Get-GcRejection -Probe @((New-GcProbe -Cpu 0 -Gen2 1), (New-GcProbe -Cpu 5 -Gen0 1)) | Should -Be 'a garbage collection ran inside the window on CPU 0 (gen0 0, gen1 0, gen2 1), CPU 5 (gen0 1, gen1 0, gen2 0)'
     }
 }
 
@@ -853,15 +939,15 @@ Describe 'the load pause in the main flow' {
             timings = [pscustomobject]@{ loadPauseSeconds = 20; captureSeconds = 60 }
         }
         function Invoke-BenchMain {
-            param([string[]]$Device = @(), [string[]]$Background = @())
+            param([string[]]$Device = @(), [string[]]$Background = @(), [string[]]$Cpu = @())
             $tokens = $null
             $errors = $null
             $ast = [System.Management.Automation.Language.Parser]::ParseFile($script:benchScript, [ref]$tokens, [ref]$errors)
             $guard = $ast.Find({ param($node) $node -is [System.Management.Automation.Language.IfStatementAst] -and $node.Clauses[0].Item1.Extent.Text -like '*InvocationName*' }, $true)
             $body = (@($guard.Clauses[0].Item2.Statements | ForEach-Object { $_.Extent.Text }) -join "`n")
             $body = $body.Replace('$PSCommandPath', '$script:benchScript')
-            $run = [scriptblock]::Create('param($OutDir, $Load, $Background, $Device, $SkipTrace, $isAdmin, $PresentMon, $Phase)' + "`n" + $body)
-            & $run -OutDir $TestDrive -Load 'x' -Background $Background -Device $Device -SkipTrace $false -isAdmin $true -PresentMon 'pm.exe' -Phase 'main-flow'
+            $run = [scriptblock]::Create('param($OutDir, $Load, $Background, $Device, $SkipTrace, $isAdmin, $PresentMon, $Phase, $Cpu)' + "`n" + $body)
+            & $run -OutDir $TestDrive -Load 'x' -Background $Background -Device $Device -SkipTrace $false -isAdmin $true -PresentMon 'pm.exe' -Phase 'main-flow' -Cpu $Cpu
         }
         function Read-MainResult {
             Get-Content -Path (Join-Path $TestDrive 'msi-bench-main-flow.json') -Raw | ConvertFrom-Json
@@ -869,7 +955,7 @@ Describe 'the load pause in the main flow' {
     }
     BeforeEach {
         $script:calls = New-Object System.Collections.Generic.List[string]
-        $script:state = @{ now = 0.0; decode = 0.2; captureEnd = 116.4; phase = 'main' }
+        $script:state = @{ now = 0.0; decode = 0.2; captureEnd = 116.4; phase = 'main'; gc = @(0, 0, 0) }
         $calls = $script:calls
         $state = $script:state
         $traceCsv = $script:traceCsv
@@ -910,11 +996,12 @@ Describe 'the load pause in the main flow' {
         Mock Get-FrameStats { [pscustomobject]@{ frames = 1; avgFps = 1; p50Ms = 1; low1PctMs = 1 } }
         Mock Get-GameRejection { $null }
         Mock New-Object {
-            $probe = [pscustomobject]@{ TimelineOffsetsMs = [double[]]@(); TimelineGapsUs = [double[]]@() }
+            $probe = [pscustomobject]@{ TimelineOffsetsMs = [double[]]@(); TimelineGapsUs = [double[]]@(); GcCollections = [int[]]$state.gc; Log = $calls }
             $probe | Add-Member -MemberType ScriptMethod -Name Start -Value {}
-            $probe | Add-Member -MemberType ScriptMethod -Name Stop -Value { param($span) $span.Value = 100.0; , [double[]]@() }
+            $probe | Add-Member -MemberType ScriptMethod -Name Join -Value { $this.Log.Add('probe-join') }
+            $probe | Add-Member -MemberType ScriptMethod -Name Stop -Value { param($span) $this.Log.Add('probe-stop'); $span.Value = 100.0; , [double[]]@() }
             $probe
-        } -ParameterFilter { $TypeName -eq 'StallProbe' }
+        }.GetNewClosure() -ParameterFilter { $TypeName -eq 'StallProbe' }
     }
     It 'runs the -Device pre-trace inside the load pause on a route' {
         $recipe = $script:routeRecipe
@@ -978,6 +1065,35 @@ Describe 'the load pause in the main flow' {
         $result.loadWindow.startSeconds | Should -Be 26.2
         $result.loadWindow.endSeconds | Should -Be 500
         $result.rejected | Should -BeNullOrEmpty
+    }
+    It 'joins every probe before it stops the first one' {
+        $recipe = $script:plainRecipe
+        Mock Get-LoadRecipe { $recipe }.GetNewClosure()
+        Invoke-BenchMain -Cpu @('0', '1')
+        @($calls | Where-Object { $_ -like 'probe-*' }) | Should -Be @('probe-join', 'probe-join', 'probe-stop', 'probe-stop')
+    }
+    It 'records the garbage collections of each probe and accepts a run without one' {
+        $recipe = $script:plainRecipe
+        Mock Get-LoadRecipe { $recipe }.GetNewClosure()
+        Invoke-BenchMain -Cpu @('0', '1')
+        $result = Read-MainResult
+        @($result.probes).Count | Should -Be 2
+        foreach ($p in @($result.probes)) {
+            $p.gcCollections.gen0 | Should -Be 0
+            $p.gcCollections.gen1 | Should -Be 0
+            $p.gcCollections.gen2 | Should -Be 0
+        }
+        $result.rejected | Should -BeNullOrEmpty
+    }
+    It 'rejects a run with a collection in the window and keeps the result file' {
+        $recipe = $script:plainRecipe
+        $state.gc = @(3, 1, 0)
+        Mock Get-LoadRecipe { $recipe }.GetNewClosure()
+        { Invoke-BenchMain } | Should -Throw '*a garbage collection ran inside the window on CPU 0 (gen0 3, gen1 1, gen2 0)*'
+        $result = Read-MainResult
+        $result.probes[0].gcCollections.gen0 | Should -Be 3
+        $result.probes[0].gcCollections.gen1 | Should -Be 1
+        $result.rejected | Should -BeLike '*garbage collection*'
     }
     It 'stops the background once when the load pause is interrupted without a route' {
         $recipe = $script:plainRecipe
