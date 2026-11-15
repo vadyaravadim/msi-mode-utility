@@ -86,6 +86,7 @@ The bench rejects the run when:
 - frame times cluster at the monitor refresh period
 - cs2.exe is not the captured process
 - the captured frames cover less than 95 s of the 100 s capture (the load stopped presenting or exited)
+- the frames used more than one present mode (a window appeared over the load)
 
 ### Unigine Superposition 1.1 (free), infinite scene (`superposition`)
 
@@ -116,3 +117,4 @@ The bench rejects the run when:
 - frame times cluster at the monitor refresh period
 - superposition.exe is not the captured process
 - the captured frames cover less than 57 s of the 60 s capture (the load stopped presenting or exited)
+- the frames used more than one present mode (a window appeared over the load)

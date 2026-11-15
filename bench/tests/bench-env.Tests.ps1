@@ -307,7 +307,7 @@ Describe 'Get-VideoConfigMismatch' {
 Describe 'Get-GameRejection' {
     BeforeAll {
         $script:recipe = [pscustomobject]@{ videoConfig = [pscustomobject]@{ file = 'video.txt' }; timings = [pscustomobject]@{ captureSeconds = 60 } }
-        $script:okStats = [pscustomobject]@{ capped = $false; cappedReason = ''; spanSeconds = 59.9 }
+        $script:okStats = [pscustomobject]@{ capped = $false; cappedReason = ''; spanSeconds = 59.9; presentModes = @('Hardware: Independent Flip') }
     }
     It 'accepts a run with no capped frames and no lost frames' {
         Get-GameRejection -Stats $okStats -Capture ([pscustomobject]@{ overflowedPresents = 0 }) -Video $null -Recipe $recipe | Should -BeNullOrEmpty
@@ -315,6 +315,11 @@ Describe 'Get-GameRejection' {
     It 'rejects a run that lost frames to a present event buffer overflow' {
         $reason = Get-GameRejection -Stats $okStats -Capture ([pscustomobject]@{ overflowedPresents = 130 }) -Video $null -Recipe $recipe
         $reason | Should -Be 'PresentMon lost 130 frames (present event buffer overflow)'
+    }
+    It 'rejects a run whose frames used more than one present mode' {
+        $mixed = [pscustomobject]@{ capped = $false; cappedReason = ''; spanSeconds = 59.9; presentModes = @('Hardware: Independent Flip', 'Composed: Flip') }
+        $reason = Get-GameRejection -Stats $mixed -Capture ([pscustomobject]@{ overflowedPresents = 0 }) -Video $null -Recipe $recipe
+        $reason | Should -Be 'the frames used 2 present modes (Hardware: Independent Flip, Composed: Flip): a window appeared over the load'
     }
     It 'rejects a run whose frames do not cover the capture window' {
         $short = [pscustomobject]@{ capped = $false; cappedReason = ''; spanSeconds = 12.8 }
