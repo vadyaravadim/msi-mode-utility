@@ -310,6 +310,8 @@ function Get-GameRejection {
     $reasons = New-Object System.Collections.Generic.List[string]
     if ($Stats.capped) { $reasons.Add("$((Get-BenchConfig).CappedMessage) ($($Stats.cappedReason))") }
     if ($Capture.overflowedPresents -gt 0) { $reasons.Add("PresentMon lost $($Capture.overflowedPresents) frames (present event buffer overflow)") }
+    $modes = @($Stats.presentModes)
+    if ($modes.Count -gt 1) { $reasons.Add("the frames used $($modes.Count) present modes ($($modes -join ', ')): a window appeared over the load") }
     $window = $Recipe.timings.captureSeconds
     if ($Stats.spanSeconds -lt $window * (Get-BenchConfig).Limits.CaptureCoverageShare) { $reasons.Add("the captured frames cover $($Stats.spanSeconds) s of the $window s window (the load stopped presenting or exited)") }
     if ($Video -and -not $Video.found) { $reasons.Add("no installed $($Recipe.videoConfig.file) found under the Steam userdata folder") }
