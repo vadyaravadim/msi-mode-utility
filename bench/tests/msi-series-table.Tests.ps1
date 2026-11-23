@@ -26,6 +26,18 @@ BeforeAll {
         $rows
     }
 
+    function New-CpuPick {
+        param([object[]]$Probes)
+        [ordered]@{
+            preTraceSeconds = 5
+            devices         = @(foreach ($probe in $Probes) {
+                    foreach ($device in @($probe.devices)) {
+                        [ordered]@{ driver = $device; cpu = $probe.cpu; isrOnCpu = 100; isrTotal = 100; mainTraceCpu = $probe.cpu }
+                    }
+                })
+        }
+    }
+
     function New-Series {
         param(
             [string]$Root,
@@ -96,6 +108,7 @@ BeforeAll {
                     benchScript = [ordered]@{ name = 'msi-bench.ps1'; sha256 = 'aaaa' }
                 }
             }
+            $bench.cpuPick = New-CpuPick -Probes $bench.probes
             $wrapper = [ordered]@{
                 series = 'fixture'; boot = $boot; stateIndex = 0
                 bench = [ordered]@{ exitCode = 0; resultFile = $benchName; files = @($benchName, "msi-bench-$name-stalls.csv") }
@@ -414,6 +427,141 @@ Describe 'the pre-registered tests end to end' {
         ($e2eTests | Where-Object { $_.metric -eq 'dxgkrnlStalledPct' }).margin | Should -Be 0.3
         $e2e.Markdown | Should -Match '\| mobo-audio-msi \| 140 \| 150 \| 7\.14 \| differs \|'
         $e2e.Markdown | Should -Match 'Holm-corrected over the 6 tests'
+    }
+}
+
+Describe 'a series with every probe on its core' {
+    BeforeAll {
+        $root = New-Series -Root (Join-Path $TestDrive 'on-core') -Layout @('S', 'M', 'S', 'M', 'S', 'M', 'S', 'M', 'S', 'M') -Mutate {
+            param($ctx)
+            $step = [int][math]::Floor($ctx.Boot / 2)
+            $ctx.Bench.probes[0].stalledPct = if ($ctx.Label -eq 'S') { @(5.0, 5.1, 5.2, 5.3, 5.4)[$step] } else { @(6.0, 6.1, 6.2, 6.3, 6.4)[$step] }
+        }
+        $script:onCore = New-SeriesReport -SeriesPath $root
+    }
+    It 'prints the same report up to the file map as before the main trace CPU was read' {
+        $text = $onCore.Markdown.Substring(0, $onCore.Markdown.IndexOf('## Table to file map'))
+        $hash = [BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash([System.Text.Encoding]::UTF8.GetBytes($text))).Replace('-', '')
+        $hash | Should -Be '6F869F8E26D571B340AC5627D35DE15383B2BF4EB816661EFF85B3249A2058F4'
+    }
+    It 'adds no field to the analysis, a test row or a probe row' {
+        @($onCore.Summary.analysis.Keys) | Should -Be @('family', 'bottleneck', 'tests', 'load', 'colocation')
+        foreach ($test in $onCore.Summary.analysis.tests) {
+            @($test.PSObject.Properties.Name) | Should -Be @('state', 'metric', 'drivers', 'stockCpu', 'stateCpu', 'coreNote', 'colocationNote', 'stockValues', 'stateValues', 'stockMedian', 'stateMedian', 'shift', 'shiftPctOfStock', 'ciLow', 'ciHigh', 'ciConfidence', 'margin', 'extreme', 'permutations', 'p', 'pHolm', 'verdict', 'loadDiffers')
+        }
+        foreach ($state in $onCore.Summary.states) {
+            foreach ($probe in $state.probes) {
+                @($probe.PSObject.Properties.Name) | Should -Be @('cpu', 'devices', 'stalledPct', 'gapP50Us', 'gapP99Us', 'gapP999Us', 'stallCount')
+            }
+        }
+        $onCore.Markdown | Should -Not -Match 'off this core|probe off the|did not measure'
+    }
+}
+
+Describe 'a probe off its driver''s core in the report' {
+    BeforeAll {
+        function New-OffCoreRoot {
+            param([string]$Name, $MainTraceCpu)
+            $mutate = {
+                param($ctx)
+                $step = [int][math]::Floor($ctx.Boot / 2)
+                $ctx.Bench.probes[0].stalledPct = if ($ctx.Label -eq 'S') { @(5.0, 5.1, 5.2, 5.3, 5.4)[$step] } else { @(6.0, 6.1, 6.2, 6.3, 6.4)[$step] }
+                if ($ctx.Boot -eq 2) {
+                    $ctx.Bench.probes[0].cpu = 4
+                    $pick = $ctx.Bench.cpuPick.devices | Where-Object { $_.driver -eq 'dxgkrnl.sys' }
+                    $pick.cpu = 4
+                    $pick.mainTraceCpu = $MainTraceCpu
+                }
+            }.GetNewClosure()
+            New-Series -Root (Join-Path $TestDrive $Name) -Layout @('S', 'M', 'S', 'M', 'S', 'M', 'S', 'M', 'S', 'M') -Mutate $mutate
+        }
+        $script:offReport = New-SeriesReport -SeriesPath (New-OffCoreRoot -Name 'off-core' -MainTraceCpu 0)
+        $script:offTests = @($offReport.Summary.analysis.tests)
+    }
+    It 'prints the note on both dxgkrnl rows and not on the others' {
+        $note = 'probe off the dxgkrnl.sys core in the main trace, left out: stock boot 2 (picked CPU 4, main trace CPU 0)'
+        foreach ($metric in 'dxgkrnlStalledPct', 'dxgkrnlGapP99Us') {
+            $row = $offTests | Where-Object { $_.metric -eq $metric }
+            @($row.offCoreBoots).Count | Should -Be 1
+            $row.offCoreBoots[0].state | Should -Be 'stock'
+            $row.offCoreBoots[0].boot | Should -Be 2
+            $row.offCoreBoots[0].pickCpu | Should -Be 4
+            $row.offCoreBoots[0].mainTraceCpu | Should -Be 0
+        }
+        $offReport.Markdown | Should -Match ([regex]::Escape($note))
+        foreach ($row in @($offTests | Where-Object { $_.metric -notin 'dxgkrnlStalledPct', 'dxgkrnlGapP99Us' })) {
+            $row.PSObject.Properties['offCoreBoots'] | Should -BeNullOrEmpty
+        }
+    }
+    It 'prints the Stalled row without the off-core reading' {
+        $test = $offTests | Where-Object { $_.metric -eq 'dxgkrnlStalledPct' }
+        $test.stockValues | Should -Be @(5, 5.2, 5.3, 5.4)
+        $test.stockCpu | Should -Be @(0)
+        $test.coreNote | Should -BeNullOrEmpty
+        @($offReport.Markdown -split "`n" | Where-Object { $_ -like '| mobo-audio-msi | Stalled (%), dxgkrnl*' })[0] | Should -Be '| mobo-audio-msi | Stalled (%), dxgkrnl.sys core | 0 / 0 | 5.25 | 6.2 | 1 | 19.05 | [0.7, 1.2] | +/-0.3 | 0.095 | cannot tell | probe off the dxgkrnl.sys core in the main trace, left out: stock boot 2 (picked CPU 4, main trace CPU 0); load differs |'
+    }
+    It 'explains the rule in the preamble' {
+        $offReport.Markdown | Should -Match ([regex]::Escape('Each probe sits on the CPU a pre-trace picked for its driver. A boot whose main trace put most of that driver''s ISRs on another CPU, or recorded none, did not measure the driver''s core: it is left out of the tests of that core and of its loads in Other drivers on the probe cores, and kept in every other test. The note names it with the picked CPU and the main-trace CPU.'))
+    }
+    It 'still counts the boot in the load check' {
+        $offReport.Summary.analysis.load[0].stockValues | Should -Be @(100, 120, 140, 160, 180)
+    }
+    It 'marks the driver as off the core in the probes table and the summary' {
+        $probes = @((Get-State $offReport 'stock').probes)
+        $off = $probes | Where-Object { $_.cpu -eq 4 }
+        @($off.devices).Count | Should -Be 0
+        @($off.offCoreDrivers).Count | Should -Be 1
+        $off.offCoreDrivers[0].driver | Should -Be 'dxgkrnl.sys'
+        $off.offCoreDrivers[0].boot | Should -Be 2
+        $off.offCoreDrivers[0].mainTraceCpu | Should -Be 0
+        $offReport.Markdown | Should -Match '\| stock \| 4 \| dxgkrnl\.sys off this core in boot 2 \(main trace CPU 0\) \|'
+        $on = $probes | Where-Object { $_.cpu -eq 0 }
+        $on.devices | Should -Be @('dxgkrnl.sys')
+        $on.PSObject.Properties['offCoreDrivers'] | Should -BeNullOrEmpty
+    }
+    It 'names a driver with no ISR in the main trace' {
+        $report = New-SeriesReport -SeriesPath (New-OffCoreRoot -Name 'off-core-null' -MainTraceCpu $null)
+        $report.Markdown | Should -Match ([regex]::Escape('stock boot 2 (picked CPU 4, no ISR in the main trace)'))
+        $report.Markdown | Should -Match ([regex]::Escape('dxgkrnl.sys off this core in boot 2 (no ISR in the main trace)'))
+        ($report.Summary.analysis.tests | Where-Object { $_.metric -eq 'dxgkrnlStalledPct' }).offCoreBoots[0].mainTraceCpu | Should -BeNullOrEmpty
+    }
+    It 'refuses a boot without cpuPick' {
+        $root = New-Series -Root (Join-Path $TestDrive 'no-pick') -Mutate { param($ctx) if ($ctx.Boot -eq 3) { $ctx.Bench.Remove('cpuPick') } }
+        { New-SeriesReport -SeriesPath $root } | Should -Throw '*boot 3 has no field cpuPick.devices*'
+    }
+    It 'lists the cpuPick fields in the file map' {
+        $tests = $offReport.Summary.fileMap | Where-Object { $_.table -eq 'Pre-registered tests' }
+        $tests.fields | Should -BeLike '*probes[[]].devices, probes[[]].cpu, cpuPick.devices[[]].driver, cpuPick.devices[[]].cpu, cpuPick.devices[[]].mainTraceCpu, probes[[]].stalledPct, *'
+        ($offReport.Summary.fileMap | Where-Object { $_.table -eq 'Probes' }).fields | Should -Be 'probes[], cpuPick.devices[]; stall file rows per cpu'
+    }
+}
+
+Describe 'a driver on a probe core in some boots of the group only' {
+    BeforeAll {
+        $root = New-Series -Root (Join-Path $TestDrive 'partial') -Mutate {
+            param($ctx)
+            if ($ctx.Boot -eq 2) {
+                $ctx.Bench.probes[1].devices = @('HDAudBus.sys')
+                $ctx.Bench.probes += [ordered]@{ cpu = 5; devices = @('Wdf01000.sys'); gapP50Us = 4; gapP99Us = 20; gapP999Us = 700; stalledPct = 6 }
+                $pick = $ctx.Bench.cpuPick.devices | Where-Object { $_.driver -eq 'Wdf01000.sys' }
+                $pick.cpu = 5
+                $pick.mainTraceCpu = 5
+            }
+        }
+        $script:partial = New-SeriesReport -SeriesPath $root
+    }
+    It 'counts the boots the driver was on the core' {
+        $probe = (Get-State $partial 'stock').probes | Where-Object { $_.cpu -eq 1 }
+        $probe.devices | Should -Be @('HDAudBus.sys', 'Wdf01000.sys')
+        @($probe.deviceBoots).Count | Should -Be 1
+        $probe.deviceBoots[0].driver | Should -Be 'Wdf01000.sys'
+        $probe.deviceBoots[0].boots | Should -Be 1
+        $probe.deviceBoots[0].of | Should -Be 2
+        $partial.Markdown | Should -Match '\| stock \| 1 \| HDAudBus\.sys, Wdf01000\.sys \(1 of 2 boots\) \|'
+        $partial.Markdown | Should -Match '\| stock \| 5 \| Wdf01000\.sys \|'
+    }
+    It 'adds no deviceBoots when every driver was on its core in every boot' {
+        foreach ($probe in (Get-State $partial 'mobo-audio-msi').probes) { $probe.PSObject.Properties['deviceBoots'] | Should -BeNullOrEmpty }
     }
 }
 

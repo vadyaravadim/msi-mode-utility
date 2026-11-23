@@ -25,7 +25,8 @@ BeforeAll {
             [object[]]$Drivers,
             [string]$Load = 'superposition',
             [object[]]$Probes,
-            [object[]]$Extra = @()
+            [object[]]$Extra = @(),
+            [System.Collections.IDictionary]$MainTraceCpu = @{}
         )
         if (-not $Probes) {
             $Probes = @(
@@ -35,9 +36,15 @@ BeforeAll {
         }
         if (-not $Drivers) { $Drivers = @(foreach ($name in $DriverMs.Keys) { New-DriverRow -Name $name -IsrUs (10000 * $DriverMs[$name]) }) }
         $Drivers = @(@($Drivers) + @($Extra))
+        $picks = @(foreach ($probe in $Probes) {
+                foreach ($device in @($probe.devices)) {
+                    [ordered]@{ driver = $device; cpu = $probe.cpu; mainTraceCpu = $(if ($MainTraceCpu.Contains($device)) { $MainTraceCpu[$device] } else { $probe.cpu }) }
+                }
+            })
         $bench = [ordered]@{
             probes = @($Probes)
-            trace  = [ordered]@{ seconds = 10; drivers = @($Drivers) }
+            cpuPick = [ordered]@{ devices = @($picks) }
+            trace = [ordered]@{ seconds = 10; drivers = @($Drivers) }
             frames = [ordered]@{ low1PctMs = $Low1; avgFps = $AvgFps }
             load   = [ordered]@{ name = $Load }
         }
@@ -660,6 +667,206 @@ Describe 'the co-location rule' {
         (Get-Test $analysis 'usb-line' 'dxgkrnlStalledPct').colocationNote | Should -Be 'other driver moved on this core: alpha.sys (stock 0, state 1.5 % of the core), beta.sys (stock 0, state 1.5 % of the core)'
     }
 }
+
+Describe 'Get-ProbeCore against the main trace' {
+    It 'reads a probe on the core when the main trace shows the picked CPU' {
+        $core = Get-ProbeCore -Boot (New-Boot -Boot 0 -Label 'stock') -Driver 'dxgkrnl.sys'
+        $core.cpu | Should -Be 1
+        $core.mainTraceCpu | Should -Be 1
+        $core.onCore | Should -Be $true
+    }
+    It 'reads a probe off the core when the main trace shows another CPU' {
+        $core = Get-ProbeCore -Boot (New-Boot -Boot 0 -Label 'stock' -MainTraceCpu @{ 'dxgkrnl.sys' = 2 }) -Driver 'dxgkrnl.sys'
+        $core.cpu | Should -Be 1
+        $core.mainTraceCpu | Should -Be 2
+        $core.onCore | Should -Be $false
+    }
+    It 'reads a probe off the core when the main trace recorded no ISR of the driver' {
+        $core = Get-ProbeCore -Boot (New-Boot -Boot 0 -Label 'stock' -MainTraceCpu @{ 'dxgkrnl.sys' = $null }) -Driver 'dxgkrnl.sys'
+        $core.cpu | Should -Be 1
+        $core.mainTraceCpu | Should -BeNullOrEmpty
+        $core.onCore | Should -Be $false
+    }
+    It 'refuses a boot without cpuPick' {
+        $boot = New-Boot -Boot 0 -Label 'stock'
+        $boot.Bench.PSObject.Properties.Remove('cpuPick')
+        { Get-ProbeCore -Boot $boot -Driver 'dxgkrnl.sys' } | Should -Throw '*boot 0 has no field cpuPick.devices*'
+    }
+    It 'refuses a cpuPick without an entry for the driver' {
+        $boot = New-Boot -Boot 0 -Label 'stock'
+        $boot.Bench.cpuPick.devices = @($boot.Bench.cpuPick.devices | Where-Object { $_.driver -ne 'dxgkrnl.sys' })
+        { Get-ProbeCore -Boot $boot -Driver 'dxgkrnl.sys' } | Should -Throw '*0 cpuPick entries for dxgkrnl.sys, expected 1*'
+    }
+    It 'refuses a cpuPick entry without mainTraceCpu' {
+        $boot = New-Boot -Boot 0 -Label 'stock'
+        $boot.Bench.cpuPick.devices[0].PSObject.Properties.Remove('mainTraceCpu')
+        { Get-ProbeCore -Boot $boot -Driver 'dxgkrnl.sys' } | Should -Throw '*cpuPick entry for dxgkrnl.sys has no field mainTraceCpu*'
+    }
+    It 'refuses a cpuPick CPU that is not the CPU of the probe listing the driver' {
+        $boot = New-Boot -Boot 0 -Label 'stock'
+        $boot.Bench.cpuPick.devices[0].cpu = 5
+        { Get-ProbeCore -Boot $boot -Driver 'dxgkrnl.sys' } | Should -Throw '*cpuPick puts dxgkrnl.sys on CPU 5, the probe listing it is on CPU 1*'
+    }
+}
+
+Describe 'a probe off its driver''s core' {
+    BeforeAll {
+        function New-OffCoreSeries {
+            $stock = @(0..4 | ForEach-Object { New-Boot -Boot (2 * $_) -Label 'stock' -DxStalled @(5.0, 5.1, 5.2, 5.3, 5.4)[$_] })
+            $state = @(0..5 | ForEach-Object { New-Boot -Boot (2 * $_ + 1) -Label 'usb-line' -DxStalled @(6.0, 6.1, 6.2, 6.3, 6.4, 6.5)[$_] })
+            $off = New-Boot -Boot 10 -Label 'stock' -DxCpu 10 -MainTraceCpu @{ 'dxgkrnl.sys' = 2 } -DxStalled 99 -DxGap 9999
+            @($stock) + @($state) + @($off)
+        }
+    }
+    It 'leaves the off-core stock boot out of both dxgkrnl tests, with the family and Holm unchanged' {
+        $analysis = Invoke-Analysis -Boots (New-OffCoreSeries)
+        $analysis.family | Should -Be 6
+        $test = Get-Test $analysis 'usb-line' 'dxgkrnlStalledPct'
+        $test.stockValues | Should -Be @(5, 5.1, 5.2, 5.3, 5.4)
+        $test.permutations | Should -Be 462
+        $test.extreme | Should -Be 2
+        $test.p | Should -Be 0.004329
+        $test.pHolm | Should -Be 0.025974
+        $test.verdict | Should -Be 'hurt'
+        $test.shift | Should -Be 1.05
+        $test.ciLow | Should -Be 0.8
+        $test.ciHigh | Should -Be 1.3
+        $test.ciConfidence | Should -Be 0.9177
+        $test.stockCpu | Should -Be @(1)
+        $test.coreNote | Should -BeNullOrEmpty
+        foreach ($metric in 'dxgkrnlStalledPct', 'dxgkrnlGapP99Us') {
+            $row = Get-Test $analysis 'usb-line' $metric
+            @($row.offCoreBoots).Count | Should -Be 1
+            $row.offCoreBoots[0].state | Should -Be 'stock'
+            $row.offCoreBoots[0].boot | Should -Be 10
+            $row.offCoreBoots[0].pickCpu | Should -Be 10
+            $row.offCoreBoots[0].mainTraceCpu | Should -Be 2
+        }
+        (Get-Test $analysis 'usb-line' 'dxgkrnlGapP99Us').stockValues | Should -Be @(100, 100, 100, 100, 100)
+    }
+    It 'keeps the off-core boot in the Wdf01000, 1% low and changed-driver tests' {
+        $analysis = Invoke-Analysis -Boots (New-OffCoreSeries)
+        foreach ($metric in 'wdf01000StalledPct', 'wdf01000GapP99Us', 'low1PctMs', 'changedDriverMsPerSecond') {
+            $row = Get-Test $analysis 'usb-line' $metric
+            @($row.stockValues).Count | Should -Be 6
+            $row.PSObject.Properties['offCoreBoots'] | Should -BeNullOrEmpty
+        }
+        (Get-Test $analysis 'usb-line' 'wdf01000StalledPct').permutations | Should -Be 924
+        $analysis.load[0].stockValues.Count | Should -Be 6
+    }
+    It 'leaves an off-core state boot out of that state''s tests only' {
+        $boots = @(
+            0..2 | ForEach-Object {
+                New-Boot -Boot (3 * $_) -Label 'stock'
+                New-Boot -Boot (3 * $_ + 1) -Label 'usb-line'
+                if ($_ -eq 2) { New-Boot -Boot (3 * $_ + 2) -Label 'audio-msi' -DxCpu 10 -MainTraceCpu @{ 'dxgkrnl.sys' = 2 } }
+                else { New-Boot -Boot (3 * $_ + 2) -Label 'audio-msi' }
+            }
+        )
+        $analysis = Invoke-Analysis -Boots $boots
+        $audio = Get-Test $analysis 'audio-msi' 'dxgkrnlStalledPct'
+        @($audio.stockValues).Count | Should -Be 3
+        @($audio.stateValues).Count | Should -Be 2
+        $audio.stateCpu | Should -Be @(1)
+        $audio.offCoreBoots[0].state | Should -Be 'audio-msi'
+        $audio.offCoreBoots[0].boot | Should -Be 8
+        $audio.offCoreBoots[0].pickCpu | Should -Be 10
+        @((Get-Test $analysis 'audio-msi' 'wdf01000StalledPct').stateValues).Count | Should -Be 3
+        $usb = Get-Test $analysis 'usb-line' 'dxgkrnlStalledPct'
+        @($usb.stateValues).Count | Should -Be 3
+        $usb.PSObject.Properties['offCoreBoots'] | Should -BeNullOrEmpty
+        $analysis.family | Should -Be 12
+    }
+    It 'drops only the off-core driver of a probe shared by two drivers' {
+        $boots = @(
+            New-Boot -Boot 0 -Label 'stock'
+            New-Boot -Boot 1 -Label 'usb-line'
+            New-Boot -Boot 2 -Label 'stock' -MainTraceCpu @{ 'Wdf01000.sys' = 3 }
+            New-Boot -Boot 3 -Label 'usb-line'
+            New-Boot -Boot 4 -Label 'stock'
+            New-Boot -Boot 5 -Label 'usb-line'
+        )
+        $analysis = Invoke-Analysis -Boots $boots
+        @((Get-Test $analysis 'usb-line' 'wdf01000StalledPct').stockValues).Count | Should -Be 2
+        @((Get-Test $analysis 'usb-line' 'wdf01000GapP99Us').offCoreBoots).Count | Should -Be 1
+        @((Get-Test $analysis 'usb-line' 'dxgkrnlStalledPct').stockValues).Count | Should -Be 3
+        @((Get-Test $analysis 'usb-line' 'changedDriverMsPerSecond').stockValues).Count | Should -Be 3
+        (Get-Test $analysis 'usb-line' 'dxgkrnlStalledPct').PSObject.Properties['offCoreBoots'] | Should -BeNullOrEmpty
+        $probe = @(Get-StateProbe -Boots @($boots | Where-Object { $_.Label -eq 'stock' })) | Where-Object { $_.cpu -eq 11 }
+        $probe.devices | Should -Be @('HDAudBus.sys', 'Wdf01000.sys')
+        @($probe.offCoreDrivers).Count | Should -Be 1
+        $probe.offCoreDrivers[0].driver | Should -Be 'Wdf01000.sys'
+        $probe.offCoreDrivers[0].boot | Should -Be 2
+        $probe.offCoreDrivers[0].mainTraceCpu | Should -Be 3
+    }
+    It 'drops a boot with both drivers off their cores from all four probe-core tests only' {
+        $boots = @(
+            New-Boot -Boot 0 -Label 'stock'
+            New-Boot -Boot 1 -Label 'usb-line'
+            New-Boot -Boot 2 -Label 'stock'
+            New-Boot -Boot 3 -Label 'usb-line'
+            New-Boot -Boot 4 -Label 'stock'
+            New-Boot -Boot 5 -Label 'usb-line'
+            New-Boot -Boot 6 -Label 'stock' -MainTraceCpu @{ 'dxgkrnl.sys' = 2; 'Wdf01000.sys' = 3 }
+            New-Boot -Boot 7 -Label 'usb-line'
+        )
+        $analysis = Invoke-Analysis -Boots $boots
+        foreach ($metric in 'dxgkrnlStalledPct', 'dxgkrnlGapP99Us', 'wdf01000StalledPct', 'wdf01000GapP99Us') {
+            $row = Get-Test $analysis 'usb-line' $metric
+            @($row.stockValues).Count | Should -Be 3
+            @($row.offCoreBoots).Count | Should -Be 1
+            $row.offCoreBoots[0].boot | Should -Be 6
+        }
+        foreach ($metric in 'low1PctMs', 'changedDriverMsPerSecond') {
+            $row = Get-Test $analysis 'usb-line' $metric
+            @($row.stockValues).Count | Should -Be 4
+            $row.PSObject.Properties['offCoreBoots'] | Should -BeNullOrEmpty
+        }
+    }
+    It 'refuses a side whose every boot was off the core and names the boots' {
+        $boots = @(
+            New-Boot -Boot 0 -Label 'stock' -MainTraceCpu @{ 'dxgkrnl.sys' = 2 }
+            New-Boot -Boot 1 -Label 'usb-line'
+            New-Boot -Boot 2 -Label 'stock' -MainTraceCpu @{ 'dxgkrnl.sys' = 2 }
+            New-Boot -Boot 3 -Label 'usb-line'
+        )
+        { Invoke-Analysis -Boots $boots } | Should -Throw "*state stock : every boot's dxgkrnl.sys probe was off the driver's core in the main trace (boots 0, 2)*"
+    }
+    It 'counts the loads on a probe core only from the boots on that core' {
+        $off = @{ DxCpu = 10; MainTraceCpu = @{ 'dxgkrnl.sys' = 1 }; Extra = @((New-DriverRow -Name 'ndis.sys' -IsrUs 150000 -Cpu 10), (New-DriverRow -Name 'zeta.sys' -IsrUs 150000 -Cpu 11)) }
+        $boots = @(
+            New-Boot -Boot 0 -Label 'stock'
+            New-Boot -Boot 1 -Label 'usb-line'
+            New-Boot -Boot 2 -Label 'stock'
+            New-Boot -Boot 3 -Label 'usb-line' @off
+            New-Boot -Boot 4 -Label 'stock'
+            New-Boot -Boot 5 -Label 'usb-line' @off
+        )
+        $analysis = Invoke-Analysis -Boots $boots
+        $analysis.colocation.Count | Should -Be 1
+        $analysis.colocation[0].probeCoreOf | Should -Be 'Wdf01000.sys'
+        $analysis.colocation[0].driver | Should -Be 'zeta.sys'
+        $analysis.colocation[0].stockMedian | Should -Be 0
+        $analysis.colocation[0].stateMedian | Should -Be 1.5
+        $analysis.colocation[0].moved | Should -BeTrue
+        (Get-Test $analysis 'usb-line' 'dxgkrnlStalledPct').colocationNote | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'Get-OffCoreNote' {
+    It 'names the boot with the picked CPU and the main trace CPU' {
+        $boots = @([pscustomobject]@{ state = 'stock'; boot = 7; pickCpu = 10; mainTraceCpu = 2 })
+        Get-OffCoreNote -Driver 'dxgkrnl.sys' -Boots $boots | Should -Be 'probe off the dxgkrnl.sys core in the main trace, left out: stock boot 7 (picked CPU 10, main trace CPU 2)'
+    }
+    It 'says no ISR in the main trace for a null main trace CPU and joins several boots' {
+        $boots = @(
+            [pscustomobject]@{ state = 'stock'; boot = 7; pickCpu = 10; mainTraceCpu = $null }
+            [pscustomobject]@{ state = 'usb-line'; boot = 9; pickCpu = 10; mainTraceCpu = 3 }
+        )
+        Get-OffCoreNote -Driver 'dxgkrnl.sys' -Boots $boots | Should -Be 'probe off the dxgkrnl.sys core in the main trace, left out: stock boot 7 (picked CPU 10, no ISR in the main trace), usb-line boot 9 (picked CPU 10, main trace CPU 3)'
+    }
+}
+
 Describe 'the analysis constants' {
     It 'pins the values fixed before the series was read' {
         $referenceState | Should -Be 'stock'

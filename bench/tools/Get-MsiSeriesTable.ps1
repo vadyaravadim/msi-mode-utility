@@ -348,21 +348,38 @@ function Get-StateSystemCpu {
 function Get-StateProbe {
     param([Parameter(Mandatory)][object[]]$Boots)
     $probes = foreach ($boot in $Boots) {
-        foreach ($probe in @(Get-Field $boot.Bench probes "boot $($boot.Boot)")) { [pscustomobject]@{ Probe = $probe; Stalls = $boot.Stalls } }
+        foreach ($probe in @(Get-Field $boot.Bench probes "boot $($boot.Boot)")) {
+            $readings = @(@(Get-OptionalField $probe 'devices') | Where-Object { $_ } | ForEach-Object {
+                    $driver = [string]$_
+                    $core = Get-ProbeCore -Boot $boot -Driver $driver
+                    [pscustomobject]@{ driver = $driver; boot = $boot.Boot; mainTraceCpu = $core.mainTraceCpu; onCore = $core.onCore }
+                })
+            [pscustomobject]@{ Probe = $probe; Stalls = $boot.Stalls; Readings = $readings }
+        }
     }
     foreach ($group in @($probes | Group-Object -Property { [int]$_.Probe.cpu } | Sort-Object -Property { [int]$_.Name })) {
         $cpu = [int]$group.Name
         $list = @($group.Group | ForEach-Object { $_.Probe })
         $gapP99 = @($list | ForEach-Object { Get-OptionalField $_ 'gapP99Us' })
-        [pscustomobject]@{
+        $readings = @($group.Group | ForEach-Object { $_.Readings })
+        $devices = @($readings | Where-Object { $_.onCore } | ForEach-Object { $_.driver } | Sort-Object -Unique)
+        $row = [ordered]@{
             cpu        = $cpu
-            devices    = @($list | ForEach-Object { @(Get-OptionalField $_ 'devices') } | Where-Object { $_ } | ForEach-Object { [string]$_ } | Sort-Object -Unique)
+            devices    = @($devices)
             stalledPct = Get-Spread -Values @($list | ForEach-Object { [double]$_.stalledPct })
             gapP50Us   = Get-Spread -Values @($list | ForEach-Object { [double]$_.gapP50Us })
             gapP99Us   = if (@($gapP99 | Where-Object { $null -eq $_ }).Count) { $null } else { Get-Spread -Values @($gapP99 | ForEach-Object { [double]$_ }) }
             gapP999Us  = Get-Spread -Values @($list | ForEach-Object { [double]$_.gapP999Us })
             stallCount = Get-Spread -Values @($group.Group | ForEach-Object { @($_.Stalls | Where-Object { [int]$_.cpu -eq $cpu }).Count })
         }
+        $offCore = @($readings | Where-Object { -not $_.onCore } | ForEach-Object { [pscustomobject]@{ driver = $_.driver; boot = $_.boot; mainTraceCpu = $_.mainTraceCpu } })
+        if ($offCore.Count) { $row.offCoreDrivers = $offCore }
+        $partial = @(foreach ($driver in $devices) {
+                $count = @($readings | Where-Object { $_.onCore -and $_.driver -eq $driver }).Count
+                if ($count -lt $list.Count) { [pscustomobject]@{ driver = $driver; boots = $count; of = $list.Count } }
+            })
+        if ($partial.Count) { $row.deviceBoots = $partial }
+        [pscustomobject]$row
     }
 }
 
@@ -580,7 +597,28 @@ function Get-ProbeCore {
     $where = "boot $($Boot.Boot)"
     $found = @(@(Get-Field $Boot.Bench 'probes' $where) | Where-Object { @(Get-OptionalField $_ 'devices') -contains $Driver })
     if ($found.Count -ne 1) { throw "$where has $($found.Count) probes listing $Driver, expected 1" }
-    [pscustomobject]@{ probe = $found[0]; cpu = [int](Get-Field $found[0] 'cpu' "$where probe listing $Driver") }
+    $cpu = [int](Get-Field $found[0] 'cpu' "$where probe listing $Driver")
+    $picks = @(@(Get-Field $Boot.Bench 'cpuPick.devices' $where) | Where-Object { $_.driver -eq $Driver })
+    if ($picks.Count -ne 1) { throw "$where has $($picks.Count) cpuPick entries for $Driver, expected 1" }
+    $pickWhere = "$where cpuPick entry for $Driver"
+    $pickCpu = [int](Get-Field $picks[0] 'cpu' $pickWhere)
+    if ($pickCpu -ne $cpu) { throw "$where cpuPick puts $Driver on CPU $pickCpu, the probe listing it is on CPU $cpu" }
+    if (-not $picks[0].PSObject.Properties['mainTraceCpu']) { throw "$pickWhere has no field mainTraceCpu" }
+    $mainTraceCpu = if ($null -eq $picks[0].mainTraceCpu) { $null } else { [int]$picks[0].mainTraceCpu }
+    [pscustomobject]@{ probe = $found[0]; cpu = $cpu; mainTraceCpu = $mainTraceCpu; onCore = $mainTraceCpu -eq $cpu }
+}
+
+function Get-OnCoreBoot {
+    param([Parameter(Mandatory)][string]$Label, [Parameter(Mandatory)][object[]]$Boots, [Parameter(Mandatory)][string]$Driver)
+    $onCore = New-Object System.Collections.Generic.List[object]
+    $offCore = New-Object System.Collections.Generic.List[object]
+    foreach ($boot in $Boots) {
+        $core = Get-ProbeCore -Boot $boot -Driver $Driver
+        if ($core.onCore) { $onCore.Add($boot) }
+        else { $offCore.Add([pscustomobject]@{ state = $Label; boot = $boot.Boot; pickCpu = $core.cpu; mainTraceCpu = $core.mainTraceCpu }) }
+    }
+    if ($onCore.Count -eq 0) { throw "state $Label : every boot's $Driver probe was off the driver's core in the main trace (boots $(@($offCore | ForEach-Object { $_.boot }) -join ', ')), so the tests of that core have no reading" }
+    [pscustomobject]@{ Boots = $onCore.ToArray(); OffCore = $offCore.ToArray() }
 }
 
 function Get-ProbeMetricValue {
@@ -612,8 +650,8 @@ function Get-ColocationRow {
     param([Parameter(Mandatory)][string]$Label, [Parameter(Mandatory)][object[]]$StockBoots, [Parameter(Mandatory)][object[]]$StateBoots)
     foreach ($anchor in @($testMetrics | Where-Object { $_.source -eq 'probe' } | ForEach-Object { $_.driver } | Select-Object -Unique)) {
         $except = @($anchor) + @($changedDrivers[$Label])
-        $stockLoads = @($StockBoots | ForEach-Object { Get-CoreLoad -Boot $_ -Cpu (Get-ProbeCore -Boot $_ -Driver $anchor).cpu -Except $except })
-        $stateLoads = @($StateBoots | ForEach-Object { Get-CoreLoad -Boot $_ -Cpu (Get-ProbeCore -Boot $_ -Driver $anchor).cpu -Except $except })
+        $stockLoads = @((Get-OnCoreBoot -Label $referenceState -Boots $StockBoots -Driver $anchor).Boots | ForEach-Object { Get-CoreLoad -Boot $_ -Cpu (Get-ProbeCore -Boot $_ -Driver $anchor).cpu -Except $except })
+        $stateLoads = @((Get-OnCoreBoot -Label $Label -Boots $StateBoots -Driver $anchor).Boots | ForEach-Object { Get-CoreLoad -Boot $_ -Cpu (Get-ProbeCore -Boot $_ -Driver $anchor).cpu -Except $except })
         $names = [System.Collections.Generic.SortedSet[string]]::new([System.StringComparer]::Ordinal)
         foreach ($loads in @($stockLoads) + @($stateLoads)) { foreach ($name in $loads.Keys) { $null = $names.Add($name) } }
         foreach ($name in $names) {
@@ -653,6 +691,18 @@ function Get-CoreNote {
         '{0}: {1}' -f $side.Label, ($groups -join ', ')
     }
     $parts -join '; '
+}
+
+function Format-MainTraceCpu {
+    param($Cpu)
+    if ($null -eq $Cpu) { return 'no ISR in the main trace' }
+    'main trace CPU {0}' -f $Cpu
+}
+
+function Get-OffCoreNote {
+    param([Parameter(Mandatory)][string]$Driver, [Parameter(Mandatory)][object[]]$Boots)
+    $items = foreach ($entry in $Boots) { '{0} boot {1} (picked CPU {2}, {3})' -f $entry.state, $entry.boot, $entry.pickCpu, (Format-MainTraceCpu $entry.mainTraceCpu) }
+    'probe off the {0} core in the main trace, left out: {1}' -f $Driver, ($items -join ', ')
 }
 
 function Get-SeriesLoadName {
@@ -698,10 +748,21 @@ function Get-SeriesAnalysis {
             $isProbe = $metric.source -eq 'probe'
             $drivers = @()
             if ($metric.source -eq 'driver') { $drivers = @($changedDrivers[$label]) }
-            $sides = @(
-                [pscustomobject]@{ Label = $referenceState; Readings = @($stockBoots | ForEach-Object { $reading = Get-MetricValue -Metric $metric -Boot $_ -Drivers $drivers; [pscustomobject]@{ boot = $_.Boot; value = $reading.value; cpu = $reading.cpu } }) }
-                [pscustomobject]@{ Label = $label; Readings = @($compareBoots | ForEach-Object { $reading = Get-MetricValue -Metric $metric -Boot $_ -Drivers $drivers; [pscustomobject]@{ boot = $_.Boot; value = $reading.value; cpu = $reading.cpu } }) }
-            )
+            $sides = @(foreach ($side in @(@{ Label = $referenceState; Boots = $stockBoots }, @{ Label = $label; Boots = $compareBoots })) {
+                    $sideBoots = $side.Boots
+                    $sideOffCore = @()
+                    if ($isProbe) {
+                        $picked = Get-OnCoreBoot -Label $side.Label -Boots $side.Boots -Driver $metric.driver
+                        $sideBoots = $picked.Boots
+                        $sideOffCore = $picked.OffCore
+                    }
+                    [pscustomobject]@{
+                        Label    = $side.Label
+                        OffCore  = @($sideOffCore)
+                        Readings = @($sideBoots | ForEach-Object { $reading = Get-MetricValue -Metric $metric -Boot $_ -Drivers $drivers; [pscustomobject]@{ boot = $_.Boot; value = $reading.value; cpu = $reading.cpu } })
+                    }
+                })
+            $offCore = @($sides | ForEach-Object { $_.OffCore })
             $stockValues = [decimal[]]@($sides[0].Readings | ForEach-Object { $_.value })
             $stateValues = [decimal[]]@($sides[1].Readings | ForEach-Object { $_.value })
             $stockMedian = Get-Median -Values $stockValues
@@ -719,37 +780,39 @@ function Get-SeriesAnalysis {
                 $stateCpu = @($sides[1].Readings | ForEach-Object { $_.cpu } | Sort-Object -Unique)
                 $coreNote = Get-CoreNote -Sides $sides
             }
+            $row = [ordered]@{
+                state           = $label
+                metric          = $metric.key
+                drivers         = @($rowDrivers)
+                stockCpu        = @($stockCpu)
+                stateCpu        = @($stateCpu)
+                coreNote        = $coreNote
+                colocationNote  = if ($movedDrivers.Count) { 'other driver moved on this core: ' + ((@($movedDrivers | ForEach-Object { '{0} (stock {1}, state {2} % of the core)' -f $_.driver, (Format-Rounded $_.stockMedian), (Format-Rounded $_.stateMedian) })) -join ', ') } else { $null }
+                stockValues     = @($stockValues | ForEach-Object { ConvertTo-OutputNumber $_ })
+                stateValues     = @($stateValues | ForEach-Object { ConvertTo-OutputNumber $_ })
+                stockMedian     = ConvertTo-OutputNumber $stockMedian
+                stateMedian     = ConvertTo-OutputNumber (Get-Median -Values $stateValues)
+                shift           = ConvertTo-OutputNumber $shift.shift
+                shiftPctOfStock = ConvertTo-OutputNumber (Get-PercentOf -Value $shift.shift -Reference $stockMedian)
+                ciLow           = ConvertTo-OutputNumber $shift.ciLow
+                ciHigh          = ConvertTo-OutputNumber $shift.ciHigh
+                ciConfidence    = ConvertTo-OutputNumber $shift.ciConfidence
+                margin          = $null
+                extreme         = [long]$test.extreme
+                permutations    = [long]$test.permutations
+                p               = ConvertTo-OutputNumber ($test.extreme / $test.permutations) $pValueDigits
+                pHolm           = $null
+                verdict         = $null
+                loadDiffers     = $load.differs
+            }
+            if ($offCore.Count) { $row.offCoreBoots = $offCore }
             $rows.Add([pscustomobject]@{
-                    Metric = $metric
-                    Test   = $test
-                    Shift  = $shift
-                    Margin = Get-MetricMargin -Rule $marginRules[$loadName][$metric.margin] -StockMedian $stockMedian
+                    Metric    = $metric
+                    Test      = $test
+                    Shift     = $shift
+                    Margin    = Get-MetricMargin -Rule $marginRules[$loadName][$metric.margin] -StockMedian $stockMedian
                     Colocated = $movedDrivers.Count -gt 0
-                    Row    = [ordered]@{
-                        state           = $label
-                        metric          = $metric.key
-                        drivers         = @($rowDrivers)
-                        stockCpu        = @($stockCpu)
-                        stateCpu        = @($stateCpu)
-                        coreNote        = $coreNote
-                        colocationNote  = if ($movedDrivers.Count) { 'other driver moved on this core: ' + ((@($movedDrivers | ForEach-Object { '{0} (stock {1}, state {2} % of the core)' -f $_.driver, (Format-Rounded $_.stockMedian), (Format-Rounded $_.stateMedian) })) -join ', ') } else { $null }
-                        stockValues     = @($stockValues | ForEach-Object { ConvertTo-OutputNumber $_ })
-                        stateValues     = @($stateValues | ForEach-Object { ConvertTo-OutputNumber $_ })
-                        stockMedian     = ConvertTo-OutputNumber $stockMedian
-                        stateMedian     = ConvertTo-OutputNumber (Get-Median -Values $stateValues)
-                        shift           = ConvertTo-OutputNumber $shift.shift
-                        shiftPctOfStock = ConvertTo-OutputNumber (Get-PercentOf -Value $shift.shift -Reference $stockMedian)
-                        ciLow           = ConvertTo-OutputNumber $shift.ciLow
-                        ciHigh          = ConvertTo-OutputNumber $shift.ciHigh
-                        ciConfidence    = ConvertTo-OutputNumber $shift.ciConfidence
-                        margin          = $null
-                        extreme         = [long]$test.extreme
-                        permutations    = [long]$test.permutations
-                        p               = ConvertTo-OutputNumber ($test.extreme / $test.permutations) $pValueDigits
-                        pHolm           = $null
-                        verdict         = $null
-                        loadDiffers     = $load.differs
-                    }
+                    Row       = $row
                 })
         }
     }
@@ -807,10 +870,10 @@ function Get-CheckList {
 function Get-FileMap {
     param([bool]$SystemCpu, [bool]$Tests)
     $rows = @(
-        [ordered]@{ table = 'Pre-registered tests'; files = 'msi-bench-bootNN-stateNN.json, bench/loads/<load.name>.json'; fields = 'probes[].devices, probes[].cpu, probes[].stalledPct, probes[].gapP99Us, frames.low1PctMs, frames.avgFps, trace.seconds, trace.drivers[].isrTotalUs, trace.drivers[].dpcTotalUs, trace.drivers[].isrPlain, trace.drivers[].isrMessage, trace.drivers[].isrPerCpu, load.name; the recipe bottleneck'; runner = $false }
+        [ordered]@{ table = 'Pre-registered tests'; files = 'msi-bench-bootNN-stateNN.json, bench/loads/<load.name>.json'; fields = 'probes[].devices, probes[].cpu, cpuPick.devices[].driver, cpuPick.devices[].cpu, cpuPick.devices[].mainTraceCpu, probes[].stalledPct, probes[].gapP99Us, frames.low1PctMs, frames.avgFps, trace.seconds, trace.drivers[].isrTotalUs, trace.drivers[].dpcTotalUs, trace.drivers[].isrPlain, trace.drivers[].isrMessage, trace.drivers[].isrPerCpu, load.name; the recipe bottleneck'; runner = $false }
         [ordered]@{ table = 'Frames'; files = 'msi-bench-bootNN-stateNN.json'; fields = $(if ($SystemCpu) { 'frames.*, systemCpu' } else { 'frames.*' }); runner = $false }
         [ordered]@{ table = 'Drivers'; files = 'msi-bench-bootNN-stateNN.json'; fields = 'trace.seconds, trace.drivers[]'; runner = $false }
-        [ordered]@{ table = 'Probes'; files = 'msi-bench-bootNN-stateNN.json, msi-bench-bootNN-stateNN-stalls.csv'; fields = 'probes[]; stall file rows per cpu'; runner = $false }
+        [ordered]@{ table = 'Probes'; files = 'msi-bench-bootNN-stateNN.json, msi-bench-bootNN-stateNN-stalls.csv'; fields = 'probes[], cpuPick.devices[]; stall file rows per cpu'; runner = $false }
         [ordered]@{ table = 'Runs with a gap of 5 ms or more'; files = 'msi-bench-bootNN-stateNN-stalls.csv'; fields = 'cpu, offsetMs, gapUs'; runner = $false }
         [ordered]@{ table = 'USB reads'; files = 'msi-bench-bootNN-stateNN.json'; fields = 'background.usbRead.mibPerSecond'; runner = $false }
         [ordered]@{ table = 'Testbed: OS, power, present mode, load, PresentMon'; files = 'msi-bench-bootNN-stateNN.json'; fields = 'metadata.*, frames.presentModes, load'; runner = $false }
@@ -944,6 +1007,7 @@ function New-SeriesReport {
         $md.Add('')
         $md.Add(('Each state against {0}, lower is better for every metric: a two-sided exact permutation test of the rank sum, Holm-corrected over the {1} tests at alpha {2}, and the Hodges-Lehmann shift (state minus {0}) with an interval of at least {3}% confidence.' -f $referenceState, $analysis.family, $alpha.ToString($invariant), ($confidence * 100).ToString($displayFormat, $invariant)))
         $md.Add(('Verdicts: helped or hurt when the Holm-adjusted p is under {0}; no difference when the whole interval lies strictly inside the margin; cannot tell otherwise. A test of a probe core reads cannot tell, whatever its p and interval, when the load of another driver on that core differs between the state and {1} by {2} points or more (table Other drivers on the probe cores). The note names the boots whose probe core differs and the drivers that moved.' -f $alpha.ToString($invariant), $referenceState, $colocationMarginPct.ToString($invariant)))
+        if (@($analysis.tests | Where-Object { $_.PSObject.Properties['offCoreBoots'] }).Count) { $md.Add('Each probe sits on the CPU a pre-trace picked for its driver. A boot whose main trace put most of that driver''s ISRs on another CPU, or recorded none, did not measure the driver''s core: it is left out of the tests of that core and of its loads in Other drivers on the probe cores, and kept in every other test. The note names it with the picked CPU and the main-trace CPU.') }
         $cannotShowLabels = @($testMetrics | Where-Object { $_.cannotShowOn -and $_.cannotShowOn -eq $analysis.bottleneck } | ForEach-Object { $_.label })
         if ($cannotShowLabels.Count) { $md.Add(('On this {0}-bound load a test that is not significant reads cannot show for: {1}.' -f $analysis.bottleneck, ($cannotShowLabels -join ', '))) }
         $md.Add('')
@@ -951,7 +1015,8 @@ function New-SeriesReport {
         foreach ($metric in $testMetrics) { $metricLabel[$metric.key] = $metric.label }
         $testRows = @(for ($i = 0; $i -lt $analysis.tests.Count; $i++) {
                 $test = $analysis.tests[$i]
-                $notes = @(@($test.coreNote, $test.colocationNote, $(if ($test.loadDiffers) { 'load differs' })) | Where-Object { $_ })
+                $offCoreNote = if ($test.PSObject.Properties['offCoreBoots']) { Get-OffCoreNote -Driver $test.drivers[0] -Boots $test.offCoreBoots }
+                $notes = @(@($test.coreNote, $offCoreNote, $test.colocationNote, $(if ($test.loadDiffers) { 'load differs' })) | Where-Object { $_ })
                 , @(
                     $test.state
                     $metricLabel[$test.metric]
@@ -1018,7 +1083,12 @@ function New-SeriesReport {
     $md.Add('')
     $probeRows = @(foreach ($state in $states) {
             foreach ($probe in $state.probes) {
-                , @($state.label, $probe.cpu, $(if ($probe.devices.Count) { $probe.devices -join ', ' } else { '-' }), (Format-Spread $probe.stalledPct), (Format-Spread $probe.gapP50Us), (Format-Spread $probe.gapP99Us), (Format-Spread $probe.gapP999Us), (Format-Spread $probe.stallCount))
+                $partial = @{}
+                foreach ($entry in @($probe.deviceBoots)) { if ($entry) { $partial[$entry.driver] = $entry } }
+                $onCoreText = @($probe.devices | ForEach-Object { if ($partial.ContainsKey($_)) { '{0} ({1} of {2} boots)' -f $_, $partial[$_].boots, $partial[$_].of } else { $_ } }) -join ', '
+                $offCoreText = @(@($probe.offCoreDrivers) | Where-Object { $_ } | ForEach-Object { '{0} off this core in boot {1} ({2})' -f $_.driver, $_.boot, (Format-MainTraceCpu $_.mainTraceCpu) }) -join ', '
+                $coreCell = @($onCoreText, $offCoreText | Where-Object { $_ }) -join '; '
+                , @($state.label, $probe.cpu, $(if ($coreCell) { $coreCell } else { '-' }), (Format-Spread $probe.stalledPct), (Format-Spread $probe.gapP50Us), (Format-Spread $probe.gapP99Us), (Format-Spread $probe.gapP999Us), (Format-Spread $probe.stallCount))
             }
         })
     $md.AddRange([string[]]@(Format-MarkdownTable -Header 'State', 'Probe CPU', 'Drivers on the core', 'Stalled (%)', 'Gap p50 (us)', 'Gap p99 (us)', 'Gap p99.9 (us)', $stallHeader -Rows @($probeRows)))

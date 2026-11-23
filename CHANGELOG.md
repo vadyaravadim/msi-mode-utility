@@ -10,6 +10,14 @@ section is empty or its compare link at the bottom is missing.
 
 ## [Unreleased]
 
+### Changed
+
+- In the probes table of `bench/tools/Get-MsiSeriesTable.ps1`, a driver that sat on a probe core in only some boots of a state now prints how many (`Wdf01000.sys (4 of 5 boots)`) instead of looking like it was there in all of them.
+
+### Fixed
+
+- `bench/tools/Get-MsiSeriesTable.ps1` treated every probe as sitting on the core of the driver it was pinned for. When the main trace put that driver's interrupts on a different CPU than the pre-trace had picked (`cpuPick.devices[].cpu` against `mainTraceCpu`), the probe measured another core, yet its reading went into the tests of the driver's core and the probes table named that CPU as the driver's core. Such a boot is now left out of the tests of that core and of its loads in "Other drivers on the probe cores", and kept in every other test; the note of each affected test names the boot with both CPUs, and the probes table marks the driver as off that core. A series whose probes all sat on their cores prints the same tables as before, apart from the cpuPick fields now listed in the table to file map.
+
 ## [1.4.0] - 2026-11-12
 
 ### Added

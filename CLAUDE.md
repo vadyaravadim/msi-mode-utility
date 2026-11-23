@@ -169,6 +169,8 @@ Windows PowerShell 5.1 reads fractional JSON numbers as decimals and never showe
 take `[decimal]` parameters: their tests pass and compare `d` literals (`0.3d`), because Pester's `-eq`
 converts a double operand the same way.
 
+**`Get-ProbeCore` is the one place that decides whether a boot's probe measured its driver's core: only when `cpuPick.devices[].cpu` equals `mainTraceCpu` (a `null` there, no ISR in the main trace, is off the core); an off-core boot is left out of that core's tests and co-location only, as pre-registered, and a missing `cpuPick` fails the run.**
+
 ## The RigPolice pages that mirror this script
 
 Every copy of the verdict (what MSI mode did or did not change in our measurements) is rewritten together
