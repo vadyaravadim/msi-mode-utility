@@ -73,12 +73,6 @@ BeforeAll {
     }
 }
 
-Describe 'Get-DoubledMidRank' {
-    It 'gives tied values the doubled mean of their ranks' {
-        Get-DoubledMidRank -Values @(1, 2, 2, 2, 3, 3) | Should -Be @(2, 6, 6, 6, 11, 11)
-    }
-}
-
 Describe 'Get-RankSumTest' {
     It 'gives p = 0.1 for a complete separation of 3 against 3' {
         $test = Get-RankSumTest -Stock @(1, 2, 3) -State @(4, 5, 6)
@@ -177,55 +171,6 @@ Describe 'Get-ShiftEstimate' {
     }
 }
 
-Describe 'Get-HolmAdjusted' {
-    It 'steps down and keeps the adjusted values monotone' {
-        $holm = @(Get-HolmAdjusted -Extreme @(1, 4, 3, 1) -Permutations @(100, 100, 100, 200))
-        @($holm | ForEach-Object { $_.pHolm }) | Should -Be @(0.03, 0.06, 0.06, 0.02)
-        @($holm | ForEach-Object { $_.significant }) | Should -Be @($true, $false, $false, $true)
-    }
-    It 'keeps two equal p at 1' {
-        $holm = @(Get-HolmAdjusted -Extreme @(1, 1) -Permutations @(2, 2))
-        @($holm | ForEach-Object { $_.pHolm }) | Should -Be @(1, 1)
-    }
-    It 'caps the adjusted value at 1' {
-        $holm = @(Get-HolmAdjusted -Extreme @(1, 1, 1) -Permutations @(2, 2, 2))
-        @($holm | ForEach-Object { $_.pHolm }) | Should -Be @(1, 1, 1)
-    }
-    It 'does not call p = 0.05 significant' {
-        $holm = @(Get-HolmAdjusted -Extreme @(1) -Permutations @(20))
-        $holm[0].pHolm | Should -Be 0.05
-        $holm[0].significant | Should -BeFalse
-    }
-}
-
-Describe 'Get-Verdict' {
-    It 'reads hurt for a significant rise and helped for a significant fall' {
-        Get-Verdict -Significant $true -Direction 1 -CiLow 1 -CiHigh 2 -Margin 0.3 | Should -Be 'hurt'
-        Get-Verdict -Significant $true -Direction -1 -CiLow -2 -CiHigh -1 -Margin 0.3 | Should -Be 'helped'
-    }
-    It 'keeps helped or hurt when the interval lies inside the margin' {
-        Get-Verdict -Significant $true -Direction 1 -CiLow 0.1 -CiHigh 0.2 -Margin 0.3 | Should -Be 'hurt'
-        Get-Verdict -Significant $true -Direction -1 -CiLow -0.2 -CiHigh -0.1 -Margin 0.3 | Should -Be 'helped'
-    }
-    It 'reads no difference when the interval lies strictly inside the margin' {
-        Get-Verdict -Significant $false -Direction 1 -CiLow -0.29 -CiHigh 0.29 -Margin 0.3 | Should -Be 'no difference'
-    }
-    It 'reads cannot tell for an endpoint on the margin, no interval or a crossing interval' {
-        Get-Verdict -Significant $false -Direction 1 -CiLow 0 -CiHigh 0.3 -Margin 0.3 | Should -Be 'cannot tell'
-        Get-Verdict -Significant $false -Direction 1 -CiLow -0.3 -CiHigh 0 -Margin 0.3 | Should -Be 'cannot tell'
-        Get-Verdict -Significant $false -Direction 0 -CiLow $null -CiHigh $null -Margin 0.3 | Should -Be 'cannot tell'
-        Get-Verdict -Significant $false -Direction 1 -CiLow -0.1 -CiHigh 0.5 -Margin 0.3 | Should -Be 'cannot tell'
-    }
-    It 'reads cannot tell for a zero margin' {
-        Get-Verdict -Significant $false -Direction 0 -CiLow 0 -CiHigh 0 -Margin 0 | Should -Be 'cannot tell'
-    }
-    It 'reads cannot show instead of no difference or cannot tell where the load cannot show it' {
-        Get-Verdict -Significant $false -Direction 1 -CiLow -0.1 -CiHigh 0.1 -Margin 0.3 -CannotShow | Should -Be 'cannot show'
-        Get-Verdict -Significant $false -Direction 1 -CiLow $null -CiHigh $null -Margin 0.3 -CannotShow | Should -Be 'cannot show'
-        Get-Verdict -Significant $true -Direction 1 -CiLow 1 -CiHigh 2 -Margin 0.3 -CannotShow | Should -Be 'hurt'
-    }
-}
-
 Describe 'the margins in decimal' {
     It 'does not read 8.65 against 8.95 as inside +/-0.3' {
         $shift = Get-ShiftEstimate -Stock @(8.65d, 8.65d, 8.65d) -State @(8.95d, 8.95d, 8.95d)
@@ -270,32 +215,12 @@ Describe 'Get-LoadCheck' {
     }
 }
 
-Describe 'Format-PValue' {
-    It 'prints three decimals or a floor' {
-        Format-PValue -Value 0.047619 | Should -Be '0.048'
-        Format-PValue -Value 0.0009 | Should -Be '< 0.001'
-        Format-PValue -Value 1 | Should -Be '1'
-        Format-PValue -Value 0.05 | Should -Be '0.05'
-    }
-    It 'prints a p of exactly 0.001 as 0.001, not under the floor' {
-        Format-PValue -Value 0.001d | Should -Be '0.001'
-    }
-    It 'adds digits where three would round a p under alpha up to alpha' {
-        Format-PValue -Value 0.049759 | Should -Be '0.0498'
-        Format-PValue -Value 0.0499996 | Should -Be '0.049999'
-    }
-}
-
 Describe 'the printed zero' {
     It 'prints a zero shift without a sign' {
         $shift = (Get-ShiftEstimate -Stock @(1, 2) -State @(0.9d, 2.1d)).shift
         $shift | Should -Be 0
         Format-Rounded $shift | Should -Be '0'
         (ConvertTo-OutputNumber $shift).ToString($invariant) | Should -Be '0'
-    }
-    It 'prints a value that rounds to zero without a sign' {
-        Format-Rounded -0.004 | Should -Be '0'
-        (ConvertTo-OutputNumber -0.00001).ToString($invariant) | Should -Be '0'
     }
 }
 

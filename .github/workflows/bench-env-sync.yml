@@ -25,6 +25,6 @@ jobs:
         env:
           SIBLING_SHA: ${{ steps.sibling.outputs.commit }}
         run: |
-          for f in bench/bench-env.ps1 bench/tools/New-BenchReadme.ps1 bench/loads/* bench/tests/bench-env.Tests.ps1 bench/tests/bench-static.Tests.ps1 bench/tests/bench-readme.Tests.ps1; do
+          for f in bench/bench-env.ps1 bench/tools/New-BenchReadme.ps1 bench/loads/* bench/tests/bench-env.Tests.ps1 bench/tests/bench-static.Tests.ps1 bench/tests/bench-readme.Tests.ps1 bench/tools/series-lib.ps1 bench/tests/series-lib.Tests.ps1; do
             cmp "$f" "$SIBLING_DIR/$f" || { echo "$f differs from $SIBLING_REPO main at $SIBLING_SHA: copy the change to both repos"; exit 1; }
           done

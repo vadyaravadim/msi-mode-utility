@@ -173,6 +173,8 @@ converts a double operand the same way.
 
 **`bench/results/<series>.tables.md` and `<series>.summary.json` are the output of `Get-MsiSeriesTable.ps1` over the committed series folder, and `bench/results/README.md` quotes its test and frame tables verbatim: after any change to the script or the data, rebuild them with the script under PowerShell 7, never by hand (`bench/tests/bench-results.Tests.ps1` fails otherwise).**
 
+**`bench/tools/series-lib.ps1` (with `bench/tests/series-lib.Tests.ps1`) is the shared statistics and formatting library of the series tables, byte-identical with cpu-parking-disabler and checked by the `sync` job, so a change lands in both repos.**
+
 ## The RigPolice pages that mirror this script
 
 Every copy of the verdict (what MSI mode did or did not change in our measurements) is rewritten together
