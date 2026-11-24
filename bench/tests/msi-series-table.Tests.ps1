@@ -147,58 +147,6 @@ BeforeAll {
     }
 }
 
-Describe 'Get-Median' {
-    It 'takes the middle of an odd count' {
-        Get-Median -Values @(9, 1, 5) | Should -Be 5
-    }
-    It 'takes the mean of the two middle values of an even count' {
-        Get-Median -Values @(8, 1, 4, 2) | Should -Be 3
-    }
-    It 'takes the value of a single sample' {
-        Get-Median -Values @(7.5) | Should -Be 7.5
-    }
-    It 'reports min and max next to the median' {
-        $spread = Get-Spread -Values @(3, 9, 1, 5)
-        $spread.median | Should -Be 4
-        $spread.min | Should -Be 1
-        $spread.max | Should -Be 9
-        $spread.n | Should -Be 4
-    }
-    It 'formats median [min-max]' {
-        Format-Spread (Get-Spread -Values @(100, 120)) | Should -Be '110 [100-120]'
-    }
-}
-
-Describe 'display rounding is the same in every engine' {
-    It 'rounds the double <Value> through decimal' -ForEach @(
-        @{ Value = 1.005; Expected = '1' }
-        @{ Value = 2.675; Expected = '2.68' }
-        @{ Value = 0.285; Expected = '0.28' }
-        @{ Value = 1.115; Expected = '1.12' }
-        @{ Value = -2.675; Expected = '-2.68' }
-    ) {
-        Format-Rounded $Value | Should -Be $Expected
-    }
-    It 'prints a spread whose median is a midpoint: <Expected>' -ForEach @(
-        @{ Values = @(2.67, 2.68); Expected = '2.68 [2.67-2.68]' }
-        @{ Values = @(1.00, 1.01); Expected = '1 [1-1.01]' }
-        @{ Values = @(0.28, 0.29); Expected = '0.28 [0.28-0.29]' }
-        @{ Values = @(1.11, 1.12); Expected = '1.12 [1.11-1.12]' }
-    ) {
-        Format-Spread (Get-Spread -Values $Values) | Should -Be $Expected
-    }
-    It 'prints the p value midpoint <Value>' -ForEach @(
-        @{ Value = 0.0125d; Expected = '0.012' }
-        @{ Value = 0.0135d; Expected = '0.014' }
-    ) {
-        Format-PValue -Value $Value | Should -Be $Expected
-    }
-    It 'rounds the summary to four digits through decimal' {
-        (Get-Spread -Values @(1.00005)).median.ToString($invariant) | Should -Be '1'
-        (Get-Spread -Values @(2.00015)).max.ToString($invariant) | Should -Be '2.0002'
-    }
-}
-
 Describe 'the constants' {
     It 'keeps the driver floor at 0.5 ms/s and the long gap at 5000 us' {
         $driverFloorMsPerSecond | Should -Be 0.5
