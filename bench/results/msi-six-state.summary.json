@@ -1,0 +1,5033 @@
+{
+  "series": "msi-six-state",
+  "constants": {
+    "driverFloorMsPerSecond": 0.5,
+    "longGapUs": 5000,
+    "stallFileMinUs": 1000,
+    "referenceState": "stock",
+    "alpha": 0.05,
+    "confidence": 0.9,
+    "fpsLoadLimitPct": 1.0,
+    "colocationMarginPct": 0.1,
+    "margins": {
+      "superposition": {
+        "stalledPct": {
+          "absolute": 0.3
+        },
+        "gapP99Us": {
+          "shareOfStockMedian": 0.1
+        },
+        "low1PctMs": {
+          "absolute": 0.3
+        },
+        "isrDpcMsPerSecond": {
+          "absolute": 0.5
+        }
+      },
+      "cs2": {
+        "stalledPct": {
+          "absolute": 0.3
+        },
+        "gapP99Us": {
+          "shareOfStockMedian": 0.1
+        },
+        "low1PctMs": {
+          "shareOfStockMedian": 0.033
+        },
+        "isrDpcMsPerSecond": {
+          "absolute": 0.5
+        }
+      }
+    },
+    "changedDrivers": {
+      "audio-msi": [
+        "HDAudBus.sys"
+      ],
+      "mobo-audio-msi": [
+        "HDAudBus.sys"
+      ],
+      "gpu-audio-msi": [
+        "HDAudBus.sys"
+      ],
+      "gpu-line": [
+        "dxgkrnl.sys",
+        "amdkmdag.sys"
+      ],
+      "usb-line": [
+        "Wdf01000.sys"
+      ]
+    },
+    "metrics": [
+      "dxgkrnlStalledPct",
+      "dxgkrnlGapP99Us",
+      "wdf01000StalledPct",
+      "wdf01000GapP99Us",
+      "low1PctMs",
+      "changedDriverMsPerSecond"
+    ]
+  },
+  "checks": [
+    {
+      "name": "one accepted result per boot",
+      "source": "private runner journal.jsonl and plan.json",
+      "benchJson": false,
+      "status": "passed"
+    },
+    {
+      "name": "interrupt mode of every planned device equals its state",
+      "source": "bench JSON devices[].MSISupported, Mode",
+      "benchJson": true,
+      "status": "passed"
+    },
+    {
+      "name": "line sharing equals the plan where the plan sets it",
+      "source": "private runner plan.json sharedWith, bench JSON devices[].SharedWith",
+      "benchJson": false,
+      "status": "passed"
+    },
+    {
+      "name": "OS build and UBR identical",
+      "source": "bench JSON metadata.os",
+      "benchJson": true,
+      "status": "passed"
+    },
+    {
+      "name": "power scheme GUID and processor values identical",
+      "source": "bench JSON metadata.power",
+      "benchJson": true,
+      "status": "passed"
+    },
+    {
+      "name": "present mode identical",
+      "source": "bench JSON frames.presentModes",
+      "benchJson": true,
+      "status": "passed"
+    },
+    {
+      "name": "GPU and audio driver versions identical",
+      "source": "private runner wrapper environment.drivers",
+      "benchJson": false,
+      "status": "passed"
+    },
+    {
+      "name": "explicit power settings identical",
+      "source": "private runner wrapper environment.powerExplicit",
+      "benchJson": false,
+      "status": "passed"
+    },
+    {
+      "name": "bench script, PresentMon, load build, video config and refresh rate identical",
+      "source": "bench JSON metadata.benchScript, metadata.presentMonVersion, presentMon, load, frames.refreshHz",
+      "benchJson": true,
+      "status": "passed"
+    },
+    {
+      "name": "HVCI, BIOS version, microcode, clock flags and enabled network adapters identical",
+      "source": "private runner wrapper environment",
+      "benchJson": false,
+      "status": "passed"
+    },
+    {
+      "name": "tone played on the planned audio controller",
+      "source": "bench JSON background.tone.controllerInstanceId",
+      "benchJson": true,
+      "status": "passed"
+    }
+  ],
+  "testbed": {
+    "Windows": "26H2 build 26300.9818",
+    "CPU": "Intel(R) Core(TM) i9-14900F",
+    "Board and BIOS": "Micro-Star International Co., Ltd. MAG B760M MORTAR II (MS-7E13), BIOS 1.C0",
+    "GPU driver": "AMD Radeon RX 7800 XT 32.0.32029.2010",
+    "Audio drivers": "Realtek High Definition Audio 6.0.10007.1; AMD High Definition Audio Device 10.0.1.41",
+    "Power scheme": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+    "Explicit power settings recorded": "yes",
+    "Present mode": "Hardware: Independent Flip",
+    "Refresh rate": "180 Hz",
+    "Load": "superposition 1.1",
+    "PresentMon": "2.6.0",
+    "Settle before capture": "120 s",
+    "Enabled physical network adapters": "0",
+    "Boots": "72",
+    "Disabled services": "23",
+    "Disabled tasks": "18",
+    "Disabled startup": "0"
+  },
+  "analysis": {
+    "family": 30,
+    "bottleneck": "gpu",
+    "tests": [
+      {
+        "state": "audio-msi",
+        "metric": "dxgkrnlStalledPct",
+        "drivers": [
+          "dxgkrnl.sys"
+        ],
+        "stockCpu": [
+          5
+        ],
+        "stateCpu": [
+          5
+        ],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          3.7,
+          3.56,
+          3.67,
+          3.62,
+          3.55,
+          3.52,
+          3.56,
+          3.69,
+          3.68,
+          3.7,
+          3.71,
+          3.68
+        ],
+        "stateValues": [
+          3.43,
+          3.45,
+          3.44,
+          3.46,
+          3.34,
+          3.45,
+          3.45,
+          3.32,
+          3.45,
+          3.44,
+          3.33,
+          3.44
+        ],
+        "stockMedian": 3.675,
+        "stateMedian": 3.44,
+        "shift": -0.23,
+        "shiftPctOfStock": -6.2585,
+        "ciLow": -0.25,
+        "ciHigh": -0.18,
+        "ciConfidence": 0.9113,
+        "margin": 0.3,
+        "extreme": 2,
+        "permutations": 2704156,
+        "p": 1E-06,
+        "pHolm": 2.2E-05,
+        "verdict": "helped",
+        "loadDiffers": false
+      },
+      {
+        "state": "audio-msi",
+        "metric": "dxgkrnlGapP99Us",
+        "drivers": [
+          "dxgkrnl.sys"
+        ],
+        "stockCpu": [
+          5
+        ],
+        "stateCpu": [
+          5
+        ],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          187.5,
+          188.1,
+          187.7,
+          186.6,
+          187.2,
+          187.1,
+          189.6,
+          187.6,
+          187.0,
+          188.4,
+          188.5,
+          186.9
+        ],
+        "stateValues": [
+          186.8,
+          186.2,
+          186.1,
+          187.0,
+          187.1,
+          186.8,
+          187.9,
+          186.8,
+          186.9,
+          186.5,
+          186.5,
+          186.8
+        ],
+        "stockMedian": 187.55,
+        "stateMedian": 186.8,
+        "shift": -0.8,
+        "shiftPctOfStock": -0.4266,
+        "ciLow": -1.3,
+        "ciHigh": -0.4,
+        "ciConfidence": 0.9113,
+        "margin": 18.755,
+        "extreme": 3970,
+        "permutations": 2704156,
+        "p": 0.001468,
+        "pHolm": 0.02349,
+        "verdict": "helped",
+        "loadDiffers": false
+      },
+      {
+        "state": "audio-msi",
+        "metric": "wdf01000StalledPct",
+        "drivers": [
+          "Wdf01000.sys"
+        ],
+        "stockCpu": [
+          0
+        ],
+        "stateCpu": [
+          0
+        ],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          2.61,
+          2.71,
+          2.8,
+          2.69,
+          2.68,
+          2.77,
+          2.69,
+          2.79,
+          2.62,
+          2.72,
+          2.8,
+          2.77
+        ],
+        "stateValues": [
+          2.86,
+          2.74,
+          2.88,
+          2.94,
+          2.85,
+          2.98,
+          2.99,
+          2.94,
+          2.92,
+          2.78,
+          2.81,
+          2.99
+        ],
+        "stockMedian": 2.715,
+        "stateMedian": 2.9,
+        "shift": 0.17,
+        "shiftPctOfStock": 6.2615,
+        "ciLow": 0.12,
+        "ciHigh": 0.23,
+        "ciConfidence": 0.9113,
+        "margin": 0.3,
+        "extreme": 124,
+        "permutations": 2704156,
+        "p": 4.6E-05,
+        "pHolm": 0.000917,
+        "verdict": "hurt",
+        "loadDiffers": false
+      },
+      {
+        "state": "audio-msi",
+        "metric": "wdf01000GapP99Us",
+        "drivers": [
+          "Wdf01000.sys"
+        ],
+        "stockCpu": [
+          0
+        ],
+        "stateCpu": [
+          0
+        ],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          5.5,
+          5.6,
+          6.7,
+          5.5,
+          5.1,
+          5.3,
+          5.3,
+          6.1,
+          5.1,
+          5.5,
+          6.1,
+          5.6
+        ],
+        "stateValues": [
+          17.3,
+          17.2,
+          17.3,
+          20.9,
+          17.2,
+          19.8,
+          19.7,
+          17.1,
+          17.3,
+          17.5,
+          17.2,
+          19.9
+        ],
+        "stockMedian": 5.5,
+        "stateMedian": 17.3,
+        "shift": 12.0,
+        "shiftPctOfStock": 218.1818,
+        "ciLow": 11.7,
+        "ciHigh": 13.7,
+        "ciConfidence": 0.9113,
+        "margin": 0.55,
+        "extreme": 2,
+        "permutations": 2704156,
+        "p": 1E-06,
+        "pHolm": 2.2E-05,
+        "verdict": "hurt",
+        "loadDiffers": false
+      },
+      {
+        "state": "audio-msi",
+        "metric": "low1PctMs",
+        "drivers": [],
+        "stockCpu": [],
+        "stateCpu": [],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          8.553,
+          9.211,
+          8.519,
+          8.641,
+          8.497,
+          8.517,
+          8.516,
+          8.559,
+          8.49,
+          8.495,
+          8.475,
+          8.482
+        ],
+        "stateValues": [
+          8.53,
+          8.571,
+          8.486,
+          8.535,
+          8.501,
+          8.531,
+          8.503,
+          8.454,
+          8.47,
+          8.553,
+          10.002,
+          8.492
+        ],
+        "stockMedian": 8.5165,
+        "stateMedian": 8.5165,
+        "shift": -0.0045,
+        "shiftPctOfStock": -0.0528,
+        "ciLow": -0.036,
+        "ciHigh": 0.033,
+        "ciConfidence": 0.9113,
+        "margin": null,
+        "extreme": 2432172,
+        "permutations": 2704156,
+        "p": 0.89942,
+        "pHolm": 1.0,
+        "verdict": "cannot show",
+        "loadDiffers": false
+      },
+      {
+        "state": "audio-msi",
+        "metric": "changedDriverMsPerSecond",
+        "drivers": [
+          "HDAudBus.sys"
+        ],
+        "stockCpu": [],
+        "stateCpu": [],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          2.1657,
+          2.1614,
+          2.1483,
+          1.5191,
+          2.174,
+          1.9049,
+          2.1594,
+          2.1638,
+          2.1492,
+          2.1572,
+          2.1652,
+          2.1565
+        ],
+        "stateValues": [
+          1.8767,
+          1.8752,
+          1.8751,
+          1.8733,
+          1.8877,
+          1.8696,
+          1.873,
+          1.8689,
+          1.8777,
+          1.8825,
+          1.867,
+          1.877
+        ],
+        "stockMedian": 2.1583,
+        "stateMedian": 1.8752,
+        "shift": -0.2825,
+        "shiftPctOfStock": -13.089,
+        "ciLow": -0.2885,
+        "ciHigh": -0.2741,
+        "ciConfidence": 0.9113,
+        "margin": 0.5,
+        "extreme": 544,
+        "permutations": 2704156,
+        "p": 0.000201,
+        "pHolm": 0.003621,
+        "verdict": "helped",
+        "loadDiffers": false
+      },
+      {
+        "state": "usb-line",
+        "metric": "dxgkrnlStalledPct",
+        "drivers": [
+          "dxgkrnl.sys"
+        ],
+        "stockCpu": [
+          5
+        ],
+        "stateCpu": [
+          5
+        ],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          3.7,
+          3.56,
+          3.67,
+          3.62,
+          3.55,
+          3.52,
+          3.56,
+          3.69,
+          3.68,
+          3.7,
+          3.71,
+          3.68
+        ],
+        "stateValues": [
+          3.52,
+          3.7,
+          3.67,
+          3.73,
+          3.68,
+          3.64,
+          3.6,
+          3.7,
+          3.71,
+          3.66,
+          3.69,
+          3.71
+        ],
+        "stockMedian": 3.675,
+        "stateMedian": 3.685,
+        "shift": 0.02,
+        "shiftPctOfStock": 0.5442,
+        "ciLow": -0.01,
+        "ciHigh": 0.08,
+        "ciConfidence": 0.9113,
+        "margin": 0.3,
+        "extreme": 800184,
+        "permutations": 2704156,
+        "p": 0.295909,
+        "pHolm": 1.0,
+        "verdict": "no difference",
+        "loadDiffers": false
+      },
+      {
+        "state": "usb-line",
+        "metric": "dxgkrnlGapP99Us",
+        "drivers": [
+          "dxgkrnl.sys"
+        ],
+        "stockCpu": [
+          5
+        ],
+        "stateCpu": [
+          5
+        ],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          187.5,
+          188.1,
+          187.7,
+          186.6,
+          187.2,
+          187.1,
+          189.6,
+          187.6,
+          187.0,
+          188.4,
+          188.5,
+          186.9
+        ],
+        "stateValues": [
+          188.9,
+          187.3,
+          186.8,
+          192.7,
+          187.1,
+          187.5,
+          187.2,
+          187.0,
+          189.2,
+          187.3,
+          189.2,
+          187.0
+        ],
+        "stockMedian": 187.55,
+        "stateMedian": 187.3,
+        "shift": 0.05,
+        "shiftPctOfStock": 0.0267,
+        "ciLow": -0.5,
+        "ciHigh": 0.7,
+        "ciConfidence": 0.9113,
+        "margin": 18.755,
+        "extreme": 2430164,
+        "permutations": 2704156,
+        "p": 0.898677,
+        "pHolm": 1.0,
+        "verdict": "no difference",
+        "loadDiffers": false
+      },
+      {
+        "state": "usb-line",
+        "metric": "wdf01000StalledPct",
+        "drivers": [
+          "Wdf01000.sys"
+        ],
+        "stockCpu": [
+          0
+        ],
+        "stateCpu": [
+          0
+        ],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          2.61,
+          2.71,
+          2.8,
+          2.69,
+          2.68,
+          2.77,
+          2.69,
+          2.79,
+          2.62,
+          2.72,
+          2.8,
+          2.77
+        ],
+        "stateValues": [
+          3.23,
+          3.22,
+          3.26,
+          3.29,
+          3.34,
+          3.37,
+          3.29,
+          3.37,
+          3.42,
+          3.16,
+          3.19,
+          3.27
+        ],
+        "stockMedian": 2.715,
+        "stateMedian": 3.28,
+        "shift": 0.57,
+        "shiftPctOfStock": 20.9945,
+        "ciLow": 0.5,
+        "ciHigh": 0.61,
+        "ciConfidence": 0.9113,
+        "margin": 0.3,
+        "extreme": 2,
+        "permutations": 2704156,
+        "p": 1E-06,
+        "pHolm": 2.2E-05,
+        "verdict": "hurt",
+        "loadDiffers": false
+      },
+      {
+        "state": "usb-line",
+        "metric": "wdf01000GapP99Us",
+        "drivers": [
+          "Wdf01000.sys"
+        ],
+        "stockCpu": [
+          0
+        ],
+        "stateCpu": [
+          0
+        ],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          5.5,
+          5.6,
+          6.7,
+          5.5,
+          5.1,
+          5.3,
+          5.3,
+          6.1,
+          5.1,
+          5.5,
+          6.1,
+          5.6
+        ],
+        "stateValues": [
+          8.2,
+          8.5,
+          8.4,
+          8.5,
+          8.6,
+          8.7,
+          7.8,
+          15.8,
+          10.8,
+          8.0,
+          10.6,
+          8.5
+        ],
+        "stockMedian": 5.5,
+        "stateMedian": 8.5,
+        "shift": 3.0,
+        "shiftPctOfStock": 54.5455,
+        "ciLow": 2.7,
+        "ciHigh": 3.4,
+        "ciConfidence": 0.9113,
+        "margin": 0.55,
+        "extreme": 2,
+        "permutations": 2704156,
+        "p": 1E-06,
+        "pHolm": 2.2E-05,
+        "verdict": "hurt",
+        "loadDiffers": false
+      },
+      {
+        "state": "usb-line",
+        "metric": "low1PctMs",
+        "drivers": [],
+        "stockCpu": [],
+        "stateCpu": [],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          8.553,
+          9.211,
+          8.519,
+          8.641,
+          8.497,
+          8.517,
+          8.516,
+          8.559,
+          8.49,
+          8.495,
+          8.475,
+          8.482
+        ],
+        "stateValues": [
+          8.566,
+          8.594,
+          8.503,
+          8.491,
+          8.501,
+          8.481,
+          8.493,
+          8.555,
+          8.569,
+          8.56,
+          8.502,
+          8.592
+        ],
+        "stockMedian": 8.5165,
+        "stateMedian": 8.529,
+        "shift": 0.0065,
+        "shiftPctOfStock": 0.0763,
+        "ciLow": -0.025,
+        "ciHigh": 0.044,
+        "ciConfidence": 0.9113,
+        "margin": null,
+        "extreme": 1702876,
+        "permutations": 2704156,
+        "p": 0.629726,
+        "pHolm": 1.0,
+        "verdict": "cannot show",
+        "loadDiffers": false
+      },
+      {
+        "state": "usb-line",
+        "metric": "changedDriverMsPerSecond",
+        "drivers": [
+          "Wdf01000.sys"
+        ],
+        "stockCpu": [],
+        "stateCpu": [],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          14.3511,
+          15.2093,
+          15.4799,
+          15.0388,
+          15.4863,
+          15.7313,
+          15.4611,
+          15.3566,
+          14.899,
+          15.0234,
+          15.4966,
+          15.6545
+        ],
+        "stateValues": [
+          21.2123,
+          20.7089,
+          21.0752,
+          21.4071,
+          21.7385,
+          21.8748,
+          21.8363,
+          21.7089,
+          21.9088,
+          20.855,
+          20.8881,
+          21.1119
+        ],
+        "stockMedian": 15.4088,
+        "stateMedian": 21.3097,
+        "shift": 6.0968,
+        "shiftPctOfStock": 39.5668,
+        "ciLow": 5.7185,
+        "ciHigh": 6.3837,
+        "ciConfidence": 0.9113,
+        "margin": 0.5,
+        "extreme": 2,
+        "permutations": 2704156,
+        "p": 1E-06,
+        "pHolm": 2.2E-05,
+        "verdict": "hurt",
+        "loadDiffers": false
+      },
+      {
+        "state": "mobo-audio-msi",
+        "metric": "dxgkrnlStalledPct",
+        "drivers": [
+          "dxgkrnl.sys"
+        ],
+        "stockCpu": [
+          5
+        ],
+        "stateCpu": [
+          5
+        ],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          3.7,
+          3.56,
+          3.67,
+          3.62,
+          3.55,
+          3.52,
+          3.56,
+          3.69,
+          3.68,
+          3.7,
+          3.71,
+          3.68
+        ],
+        "stateValues": [
+          3.52,
+          3.65,
+          3.55,
+          3.65,
+          3.65,
+          3.54,
+          3.66,
+          3.54,
+          3.54,
+          3.67,
+          3.55,
+          3.68
+        ],
+        "stockMedian": 3.675,
+        "stateMedian": 3.6,
+        "shift": -0.03,
+        "shiftPctOfStock": -0.8163,
+        "ciLow": -0.1,
+        "ciHigh": -0.01,
+        "ciConfidence": 0.9113,
+        "margin": 0.3,
+        "extreme": 153340,
+        "permutations": 2704156,
+        "p": 0.056705,
+        "pHolm": 0.737169,
+        "verdict": "no difference",
+        "loadDiffers": false
+      },
+      {
+        "state": "mobo-audio-msi",
+        "metric": "dxgkrnlGapP99Us",
+        "drivers": [
+          "dxgkrnl.sys"
+        ],
+        "stockCpu": [
+          5
+        ],
+        "stateCpu": [
+          5
+        ],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          187.5,
+          188.1,
+          187.7,
+          186.6,
+          187.2,
+          187.1,
+          189.6,
+          187.6,
+          187.0,
+          188.4,
+          188.5,
+          186.9
+        ],
+        "stateValues": [
+          186.9,
+          187.8,
+          187.1,
+          186.6,
+          187.1,
+          187.4,
+          187.5,
+          186.9,
+          187.3,
+          188.8,
+          192.0,
+          189.7
+        ],
+        "stockMedian": 187.55,
+        "stateMedian": 187.35,
+        "shift": -0.05,
+        "shiftPctOfStock": -0.0267,
+        "ciLow": -0.6,
+        "ciHigh": 0.5,
+        "ciConfidence": 0.9113,
+        "margin": 18.755,
+        "extreme": 2368908,
+        "permutations": 2704156,
+        "p": 0.876025,
+        "pHolm": 1.0,
+        "verdict": "no difference",
+        "loadDiffers": false
+      },
+      {
+        "state": "mobo-audio-msi",
+        "metric": "wdf01000StalledPct",
+        "drivers": [
+          "Wdf01000.sys"
+        ],
+        "stockCpu": [
+          0
+        ],
+        "stateCpu": [
+          0
+        ],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          2.61,
+          2.71,
+          2.8,
+          2.69,
+          2.68,
+          2.77,
+          2.69,
+          2.79,
+          2.62,
+          2.72,
+          2.8,
+          2.77
+        ],
+        "stateValues": [
+          2.7,
+          2.77,
+          2.75,
+          2.7,
+          2.74,
+          2.7,
+          2.81,
+          2.56,
+          2.63,
+          2.74,
+          2.73,
+          2.77
+        ],
+        "stockMedian": 2.715,
+        "stateMedian": 2.735,
+        "shift": 0.0,
+        "shiftPctOfStock": 0.0,
+        "ciLow": -0.05,
+        "ciHigh": 0.05,
+        "ciConfidence": 0.9113,
+        "margin": 0.3,
+        "extreme": 2612780,
+        "permutations": 2704156,
+        "p": 0.966209,
+        "pHolm": 1.0,
+        "verdict": "no difference",
+        "loadDiffers": false
+      },
+      {
+        "state": "mobo-audio-msi",
+        "metric": "wdf01000GapP99Us",
+        "drivers": [
+          "Wdf01000.sys"
+        ],
+        "stockCpu": [
+          0
+        ],
+        "stateCpu": [
+          0
+        ],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          5.5,
+          5.6,
+          6.7,
+          5.5,
+          5.1,
+          5.3,
+          5.3,
+          6.1,
+          5.1,
+          5.5,
+          6.1,
+          5.6
+        ],
+        "stateValues": [
+          5.1,
+          6.0,
+          5.2,
+          5.5,
+          5.7,
+          5.3,
+          5.9,
+          5.0,
+          5.0,
+          6.8,
+          5.4,
+          6.0
+        ],
+        "stockMedian": 5.5,
+        "stateMedian": 5.45,
+        "shift": -0.1,
+        "shiftPctOfStock": -1.8182,
+        "ciLow": -0.4,
+        "ciHigh": 0.3,
+        "ciConfidence": 0.9113,
+        "margin": 0.55,
+        "extreme": 1727570,
+        "permutations": 2704156,
+        "p": 0.638857,
+        "pHolm": 1.0,
+        "verdict": "no difference",
+        "loadDiffers": false
+      },
+      {
+        "state": "mobo-audio-msi",
+        "metric": "low1PctMs",
+        "drivers": [],
+        "stockCpu": [],
+        "stateCpu": [],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          8.553,
+          9.211,
+          8.519,
+          8.641,
+          8.497,
+          8.517,
+          8.516,
+          8.559,
+          8.49,
+          8.495,
+          8.475,
+          8.482
+        ],
+        "stateValues": [
+          8.537,
+          8.498,
+          8.48,
+          8.529,
+          8.54,
+          8.514,
+          8.584,
+          9.926,
+          8.538,
+          8.678,
+          8.51,
+          8.478
+        ],
+        "stockMedian": 8.5165,
+        "stateMedian": 8.533,
+        "shift": 0.0155,
+        "shiftPctOfStock": 0.182,
+        "ciLow": -0.019,
+        "ciHigh": 0.043,
+        "ciConfidence": 0.9113,
+        "margin": null,
+        "extreme": 1595116,
+        "permutations": 2704156,
+        "p": 0.589876,
+        "pHolm": 1.0,
+        "verdict": "cannot show",
+        "loadDiffers": false
+      },
+      {
+        "state": "mobo-audio-msi",
+        "metric": "changedDriverMsPerSecond",
+        "drivers": [
+          "HDAudBus.sys"
+        ],
+        "stockCpu": [],
+        "stateCpu": [],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          2.1657,
+          2.1614,
+          2.1483,
+          1.5191,
+          2.174,
+          1.9049,
+          2.1594,
+          2.1638,
+          2.1492,
+          2.1572,
+          2.1652,
+          2.1565
+        ],
+        "stateValues": [
+          1.8873,
+          1.8852,
+          1.8811,
+          1.8855,
+          1.8852,
+          1.9037,
+          1.885,
+          1.8941,
+          1.902,
+          1.8856,
+          1.8934,
+          1.8828
+        ],
+        "stockMedian": 2.1583,
+        "stateMedian": 1.8855,
+        "shift": -0.2698,
+        "shiftPctOfStock": -12.4992,
+        "ciLow": -0.2759,
+        "ciHigh": -0.2615,
+        "ciConfidence": 0.9113,
+        "margin": 0.5,
+        "extreme": 544,
+        "permutations": 2704156,
+        "p": 0.000201,
+        "pHolm": 0.003621,
+        "verdict": "helped",
+        "loadDiffers": false
+      },
+      {
+        "state": "gpu-audio-msi",
+        "metric": "dxgkrnlStalledPct",
+        "drivers": [
+          "dxgkrnl.sys"
+        ],
+        "stockCpu": [
+          5
+        ],
+        "stateCpu": [
+          5
+        ],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          3.7,
+          3.56,
+          3.67,
+          3.62,
+          3.55,
+          3.52,
+          3.56,
+          3.69,
+          3.68,
+          3.7,
+          3.71,
+          3.68
+        ],
+        "stateValues": [
+          3.44,
+          3.33,
+          3.34,
+          3.32,
+          3.44,
+          3.44,
+          3.45,
+          3.47,
+          3.34,
+          3.45,
+          3.45,
+          3.45
+        ],
+        "stockMedian": 3.675,
+        "stateMedian": 3.44,
+        "shift": -0.23,
+        "shiftPctOfStock": -6.2585,
+        "ciLow": -0.26,
+        "ciHigh": -0.19,
+        "ciConfidence": 0.9113,
+        "margin": 0.3,
+        "extreme": 2,
+        "permutations": 2704156,
+        "p": 1E-06,
+        "pHolm": 2.2E-05,
+        "verdict": "helped",
+        "loadDiffers": false
+      },
+      {
+        "state": "gpu-audio-msi",
+        "metric": "dxgkrnlGapP99Us",
+        "drivers": [
+          "dxgkrnl.sys"
+        ],
+        "stockCpu": [
+          5
+        ],
+        "stateCpu": [
+          5
+        ],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          187.5,
+          188.1,
+          187.7,
+          186.6,
+          187.2,
+          187.1,
+          189.6,
+          187.6,
+          187.0,
+          188.4,
+          188.5,
+          186.9
+        ],
+        "stateValues": [
+          186.7,
+          186.4,
+          187.3,
+          190.6,
+          187.0,
+          186.8,
+          187.3,
+          187.0,
+          187.0,
+          187.4,
+          187.0,
+          187.5
+        ],
+        "stockMedian": 187.55,
+        "stateMedian": 187.0,
+        "shift": -0.4,
+        "shiftPctOfStock": -0.2133,
+        "ciLow": -1.0,
+        "ciHigh": 0.0,
+        "ciConfidence": 0.9113,
+        "margin": 18.755,
+        "extreme": 311474,
+        "permutations": 2704156,
+        "p": 0.115183,
+        "pHolm": 1.0,
+        "verdict": "no difference",
+        "loadDiffers": false
+      },
+      {
+        "state": "gpu-audio-msi",
+        "metric": "wdf01000StalledPct",
+        "drivers": [
+          "Wdf01000.sys"
+        ],
+        "stockCpu": [
+          0
+        ],
+        "stateCpu": [
+          0
+        ],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          2.61,
+          2.71,
+          2.8,
+          2.69,
+          2.68,
+          2.77,
+          2.69,
+          2.79,
+          2.62,
+          2.72,
+          2.8,
+          2.77
+        ],
+        "stateValues": [
+          2.98,
+          2.88,
+          2.8,
+          2.93,
+          2.83,
+          2.91,
+          3.04,
+          2.87,
+          2.81,
+          2.89,
+          2.97,
+          3.14
+        ],
+        "stockMedian": 2.715,
+        "stateMedian": 2.9,
+        "shift": 0.19,
+        "shiftPctOfStock": 6.9982,
+        "ciLow": 0.12,
+        "ciHigh": 0.26,
+        "ciConfidence": 0.9113,
+        "margin": 0.3,
+        "extreme": 6,
+        "permutations": 2704156,
+        "p": 2E-06,
+        "pHolm": 4.7E-05,
+        "verdict": "hurt",
+        "loadDiffers": false
+      },
+      {
+        "state": "gpu-audio-msi",
+        "metric": "wdf01000GapP99Us",
+        "drivers": [
+          "Wdf01000.sys"
+        ],
+        "stockCpu": [
+          0
+        ],
+        "stateCpu": [
+          0
+        ],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          5.5,
+          5.6,
+          6.7,
+          5.5,
+          5.1,
+          5.3,
+          5.3,
+          6.1,
+          5.1,
+          5.5,
+          6.1,
+          5.6
+        ],
+        "stateValues": [
+          16.7,
+          16.4,
+          9.3,
+          16.5,
+          16.7,
+          17.8,
+          19.4,
+          16.6,
+          16.3,
+          18.9,
+          19.2,
+          26.9
+        ],
+        "stockMedian": 5.5,
+        "stateMedian": 16.7,
+        "shift": 11.3,
+        "shiftPctOfStock": 205.4545,
+        "ciLow": 11.0,
+        "ciHigh": 13.1,
+        "ciConfidence": 0.9113,
+        "margin": 0.55,
+        "extreme": 2,
+        "permutations": 2704156,
+        "p": 1E-06,
+        "pHolm": 2.2E-05,
+        "verdict": "hurt",
+        "loadDiffers": false
+      },
+      {
+        "state": "gpu-audio-msi",
+        "metric": "low1PctMs",
+        "drivers": [],
+        "stockCpu": [],
+        "stateCpu": [],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          8.553,
+          9.211,
+          8.519,
+          8.641,
+          8.497,
+          8.517,
+          8.516,
+          8.559,
+          8.49,
+          8.495,
+          8.475,
+          8.482
+        ],
+        "stateValues": [
+          8.552,
+          8.512,
+          8.584,
+          8.504,
+          8.469,
+          8.55,
+          8.482,
+          8.503,
+          8.469,
+          8.502,
+          8.514,
+          8.5
+        ],
+        "stockMedian": 8.5165,
+        "stateMedian": 8.5035,
+        "shift": -0.0125,
+        "shiftPctOfStock": -0.1468,
+        "ciLow": -0.047,
+        "ciHigh": 0.017,
+        "ciConfidence": 0.9113,
+        "margin": null,
+        "extreme": 1129028,
+        "permutations": 2704156,
+        "p": 0.417516,
+        "pHolm": 1.0,
+        "verdict": "cannot show",
+        "loadDiffers": false
+      },
+      {
+        "state": "gpu-audio-msi",
+        "metric": "changedDriverMsPerSecond",
+        "drivers": [
+          "HDAudBus.sys"
+        ],
+        "stockCpu": [],
+        "stateCpu": [],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          2.1657,
+          2.1614,
+          2.1483,
+          1.5191,
+          2.174,
+          1.9049,
+          2.1594,
+          2.1638,
+          2.1492,
+          2.1572,
+          2.1652,
+          2.1565
+        ],
+        "stateValues": [
+          1.8573,
+          1.863,
+          1.1251,
+          1.8647,
+          1.8728,
+          1.8701,
+          1.8616,
+          1.8649,
+          1.8619,
+          1.8638,
+          1.8556,
+          1.8438
+        ],
+        "stockMedian": 2.1583,
+        "stateMedian": 1.8624,
+        "shift": -0.2965,
+        "shiftPctOfStock": -13.7365,
+        "ciLow": -0.3036,
+        "ciHigh": -0.2876,
+        "ciConfidence": 0.9113,
+        "margin": 0.5,
+        "extreme": 390,
+        "permutations": 2704156,
+        "p": 0.000144,
+        "pHolm": 0.00274,
+        "verdict": "helped",
+        "loadDiffers": false
+      },
+      {
+        "state": "gpu-line",
+        "metric": "dxgkrnlStalledPct",
+        "drivers": [
+          "dxgkrnl.sys"
+        ],
+        "stockCpu": [
+          5
+        ],
+        "stateCpu": [
+          5
+        ],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          3.7,
+          3.56,
+          3.67,
+          3.62,
+          3.55,
+          3.52,
+          3.56,
+          3.69,
+          3.68,
+          3.7,
+          3.71,
+          3.68
+        ],
+        "stateValues": [
+          3.72,
+          3.59,
+          3.67,
+          3.66,
+          3.56,
+          3.72,
+          3.58,
+          3.53,
+          3.69,
+          3.73,
+          3.67,
+          3.6
+        ],
+        "stockMedian": 3.675,
+        "stateMedian": 3.665,
+        "shift": 0.01,
+        "shiftPctOfStock": 0.2721,
+        "ciLow": -0.04,
+        "ciHigh": 0.05,
+        "ciConfidence": 0.9113,
+        "margin": 0.3,
+        "extreme": 2187758,
+        "permutations": 2704156,
+        "p": 0.809035,
+        "pHolm": 1.0,
+        "verdict": "no difference",
+        "loadDiffers": false
+      },
+      {
+        "state": "gpu-line",
+        "metric": "dxgkrnlGapP99Us",
+        "drivers": [
+          "dxgkrnl.sys"
+        ],
+        "stockCpu": [
+          5
+        ],
+        "stateCpu": [
+          5
+        ],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          187.5,
+          188.1,
+          187.7,
+          186.6,
+          187.2,
+          187.1,
+          189.6,
+          187.6,
+          187.0,
+          188.4,
+          188.5,
+          186.9
+        ],
+        "stateValues": [
+          191.0,
+          192.5,
+          190.9,
+          191.8,
+          191.6,
+          193.6,
+          191.4,
+          191.1,
+          192.9,
+          192.0,
+          191.5,
+          191.5
+        ],
+        "stockMedian": 187.55,
+        "stateMedian": 191.55,
+        "shift": 4.1,
+        "shiftPctOfStock": 2.1861,
+        "ciLow": 3.5,
+        "ciHigh": 4.6,
+        "ciConfidence": 0.9113,
+        "margin": 18.755,
+        "extreme": 2,
+        "permutations": 2704156,
+        "p": 1E-06,
+        "pHolm": 2.2E-05,
+        "verdict": "hurt",
+        "loadDiffers": false
+      },
+      {
+        "state": "gpu-line",
+        "metric": "wdf01000StalledPct",
+        "drivers": [
+          "Wdf01000.sys"
+        ],
+        "stockCpu": [
+          0
+        ],
+        "stateCpu": [
+          0
+        ],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          2.61,
+          2.71,
+          2.8,
+          2.69,
+          2.68,
+          2.77,
+          2.69,
+          2.79,
+          2.62,
+          2.72,
+          2.8,
+          2.77
+        ],
+        "stateValues": [
+          2.81,
+          2.72,
+          2.81,
+          2.86,
+          2.66,
+          3.17,
+          2.78,
+          2.85,
+          3.22,
+          2.7,
+          2.78,
+          2.82
+        ],
+        "stockMedian": 2.715,
+        "stateMedian": 2.81,
+        "shift": 0.09,
+        "shiftPctOfStock": 3.3149,
+        "ciLow": 0.02,
+        "ciHigh": 0.16,
+        "ciConfidence": 0.9113,
+        "margin": 0.3,
+        "extreme": 28076,
+        "permutations": 2704156,
+        "p": 0.010383,
+        "pHolm": 0.155738,
+        "verdict": "no difference",
+        "loadDiffers": false
+      },
+      {
+        "state": "gpu-line",
+        "metric": "wdf01000GapP99Us",
+        "drivers": [
+          "Wdf01000.sys"
+        ],
+        "stockCpu": [
+          0
+        ],
+        "stateCpu": [
+          0
+        ],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          5.5,
+          5.6,
+          6.7,
+          5.5,
+          5.1,
+          5.3,
+          5.3,
+          6.1,
+          5.1,
+          5.5,
+          6.1,
+          5.6
+        ],
+        "stateValues": [
+          5.5,
+          5.2,
+          5.9,
+          6.1,
+          5.0,
+          26.8,
+          5.5,
+          5.7,
+          27.2,
+          5.3,
+          5.3,
+          5.7
+        ],
+        "stockMedian": 5.5,
+        "stateMedian": 5.6,
+        "shift": 0.1,
+        "shiftPctOfStock": 1.8182,
+        "ciLow": -0.2,
+        "ciHigh": 0.4,
+        "ciConfidence": 0.9113,
+        "margin": 0.55,
+        "extreme": 1779118,
+        "permutations": 2704156,
+        "p": 0.65792,
+        "pHolm": 1.0,
+        "verdict": "no difference",
+        "loadDiffers": false
+      },
+      {
+        "state": "gpu-line",
+        "metric": "low1PctMs",
+        "drivers": [],
+        "stockCpu": [],
+        "stateCpu": [],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          8.553,
+          9.211,
+          8.519,
+          8.641,
+          8.497,
+          8.517,
+          8.516,
+          8.559,
+          8.49,
+          8.495,
+          8.475,
+          8.482
+        ],
+        "stateValues": [
+          8.454,
+          8.542,
+          8.492,
+          8.51,
+          8.478,
+          8.463,
+          8.492,
+          8.474,
+          8.451,
+          8.49,
+          8.498,
+          8.486
+        ],
+        "stockMedian": 8.5165,
+        "stateMedian": 8.488,
+        "shift": -0.0305,
+        "shiftPctOfStock": -0.3581,
+        "ciLow": -0.065,
+        "ciHigh": -0.009,
+        "ciConfidence": 0.9113,
+        "margin": null,
+        "extreme": 34180,
+        "permutations": 2704156,
+        "p": 0.01264,
+        "pHolm": 0.176957,
+        "verdict": "cannot show",
+        "loadDiffers": false
+      },
+      {
+        "state": "gpu-line",
+        "metric": "changedDriverMsPerSecond",
+        "drivers": [
+          "dxgkrnl.sys",
+          "amdkmdag.sys"
+        ],
+        "stockCpu": [],
+        "stateCpu": [],
+        "coreNote": null,
+        "colocationNote": null,
+        "stockValues": [
+          44.9784,
+          44.9326,
+          44.9398,
+          44.8853,
+          44.8405,
+          44.8025,
+          44.7781,
+          45.0322,
+          44.9344,
+          44.894,
+          45.0864,
+          44.9056
+        ],
+        "stateValues": [
+          41.728,
+          41.894,
+          42.5,
+          42.1755,
+          42.0441,
+          41.7565,
+          42.0324,
+          42.1218,
+          41.7219,
+          42.3591,
+          41.7224,
+          42.188
+        ],
+        "stockMedian": 44.9191,
+        "stateMedian": 42.0382,
+        "shift": -2.8971,
+        "shiftPctOfStock": -6.4495,
+        "ciLow": -3.084,
+        "ciHigh": -2.7464,
+        "ciConfidence": 0.9113,
+        "margin": 0.5,
+        "extreme": 2,
+        "permutations": 2704156,
+        "p": 1E-06,
+        "pHolm": 2.2E-05,
+        "verdict": "helped",
+        "loadDiffers": false
+      }
+    ],
+    "load": [
+      {
+        "state": "audio-msi",
+        "stockValues": [
+          121.6,
+          121.1,
+          121.3,
+          121.5,
+          121.5,
+          121.2,
+          121.5,
+          121.4,
+          121.7,
+          121.5,
+          121.5,
+          121.5
+        ],
+        "stateValues": [
+          121.4,
+          121.6,
+          121.5,
+          121.6,
+          121.4,
+          121.3,
+          121.6,
+          121.6,
+          121.5,
+          121.6,
+          121.5,
+          121.5
+        ],
+        "stockMedian": 121.5,
+        "stateMedian": 121.5,
+        "differencePct": 0.0,
+        "differs": false
+      },
+      {
+        "state": "usb-line",
+        "stockValues": [
+          121.6,
+          121.1,
+          121.3,
+          121.5,
+          121.5,
+          121.2,
+          121.5,
+          121.4,
+          121.7,
+          121.5,
+          121.5,
+          121.5
+        ],
+        "stateValues": [
+          121.2,
+          121.3,
+          121.5,
+          121.8,
+          121.4,
+          121.6,
+          121.5,
+          121.4,
+          121.4,
+          121.4,
+          121.6,
+          121.4
+        ],
+        "stockMedian": 121.5,
+        "stateMedian": 121.4,
+        "differencePct": -0.0823,
+        "differs": false
+      },
+      {
+        "state": "mobo-audio-msi",
+        "stockValues": [
+          121.6,
+          121.1,
+          121.3,
+          121.5,
+          121.5,
+          121.2,
+          121.5,
+          121.4,
+          121.7,
+          121.5,
+          121.5,
+          121.5
+        ],
+        "stateValues": [
+          121.3,
+          121.5,
+          121.5,
+          121.5,
+          121.3,
+          121.5,
+          121.6,
+          121.5,
+          121.4,
+          121.4,
+          121.6,
+          121.7
+        ],
+        "stockMedian": 121.5,
+        "stateMedian": 121.5,
+        "differencePct": 0.0,
+        "differs": false
+      },
+      {
+        "state": "gpu-audio-msi",
+        "stockValues": [
+          121.6,
+          121.1,
+          121.3,
+          121.5,
+          121.5,
+          121.2,
+          121.5,
+          121.4,
+          121.7,
+          121.5,
+          121.5,
+          121.5
+        ],
+        "stateValues": [
+          121.3,
+          121.4,
+          121.4,
+          121.5,
+          121.6,
+          121.7,
+          121.4,
+          121.5,
+          121.6,
+          121.4,
+          121.5,
+          121.5
+        ],
+        "stockMedian": 121.5,
+        "stateMedian": 121.5,
+        "differencePct": 0.0,
+        "differs": false
+      },
+      {
+        "state": "gpu-line",
+        "stockValues": [
+          121.6,
+          121.1,
+          121.3,
+          121.5,
+          121.5,
+          121.2,
+          121.5,
+          121.4,
+          121.7,
+          121.5,
+          121.5,
+          121.5
+        ],
+        "stateValues": [
+          121.9,
+          121.5,
+          121.6,
+          121.4,
+          121.7,
+          121.8,
+          121.6,
+          121.5,
+          121.8,
+          121.7,
+          121.6,
+          121.6
+        ],
+        "stockMedian": 121.5,
+        "stateMedian": 121.6,
+        "differencePct": 0.0823,
+        "differs": false
+      }
+    ],
+    "colocation": [
+      {
+        "state": "usb-line",
+        "probeCoreOf": "dxgkrnl.sys",
+        "driver": "HDAudBus.sys",
+        "stockMedian": 0.2145,
+        "stateMedian": 0.2207,
+        "moved": false
+      },
+      {
+        "state": "gpu-line",
+        "probeCoreOf": "dxgkrnl.sys",
+        "driver": "HDAudBus.sys",
+        "stockMedian": 0.2145,
+        "stateMedian": 0.2187,
+        "moved": false
+      }
+    ]
+  },
+  "states": [
+    {
+      "label": "stock",
+      "boots": [
+        0,
+        8,
+        16,
+        23,
+        27,
+        31,
+        37,
+        45,
+        53,
+        58,
+        62,
+        66
+      ],
+      "benchFiles": [
+        "msi-bench-boot00-state00.json",
+        "msi-bench-boot08-state00.json",
+        "msi-bench-boot16-state00.json",
+        "msi-bench-boot23-state00.json",
+        "msi-bench-boot27-state00.json",
+        "msi-bench-boot31-state00.json",
+        "msi-bench-boot37-state00.json",
+        "msi-bench-boot45-state00.json",
+        "msi-bench-boot53-state00.json",
+        "msi-bench-boot58-state00.json",
+        "msi-bench-boot62-state00.json",
+        "msi-bench-boot66-state00.json"
+      ],
+      "frames": {
+        "avgFps": {
+          "median": 121.5,
+          "min": 121.1,
+          "max": 121.7,
+          "n": 12
+        },
+        "p50Ms": {
+          "median": 8.223,
+          "min": 8.213,
+          "max": 8.249,
+          "n": 12
+        },
+        "low1PctMs": {
+          "median": 8.5165,
+          "min": 8.475,
+          "max": 9.211,
+          "n": 12
+        },
+        "low01PctMs": {
+          "median": 10.657,
+          "min": 10.022,
+          "max": 17.627,
+          "n": 12
+        },
+        "gpuBusyP50Ms": {
+          "median": 8.2045,
+          "min": 8.194,
+          "max": 8.234,
+          "n": 12
+        },
+        "cpuBusyP50Ms": {
+          "median": 8.19,
+          "min": 8.18,
+          "max": 8.213,
+          "n": 12
+        }
+      },
+      "systemCpuBusyPct": {
+        "median": 8.7175,
+        "min": 8.6615,
+        "max": 8.9479,
+        "n": 12
+      },
+      "drivers": [
+        {
+          "driver": "amdkmdag.sys",
+          "totalMsPerSecond": {
+            "median": 25.9931,
+            "min": 25.8796,
+            "max": 26.125,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 973.7748,
+              "min": 970.7781,
+              "max": 975.0662,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 26.71,
+              "min": 26.62,
+              "max": 26.82,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 173.35,
+              "min": 172.8,
+              "max": 175.1,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 25.9931,
+              "min": 25.8796,
+              "max": 26.125,
+              "n": 12
+            }
+          },
+          "cpu": []
+        },
+        {
+          "driver": "dxgkrnl.sys",
+          "totalMsPerSecond": {
+            "median": 18.9149,
+            "min": 18.841,
+            "max": 19.0147,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 847.3758,
+              "min": 845.8872,
+              "max": 851.4262,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 20.87,
+              "min": 20.77,
+              "max": 20.92,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 17.6881,
+              "min": 17.6411,
+              "max": 17.7124,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 1244.9255,
+              "min": 1182.8477,
+              "max": 1269.0232,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 0.98,
+              "min": 0.95,
+              "max": 1.12,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 7.7,
+              "min": 7.2,
+              "max": 8.2,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 1.2183,
+              "min": 1.1999,
+              "max": 1.3238,
+              "n": 12
+            }
+          },
+          "cpu": [
+            5
+          ]
+        },
+        {
+          "driver": "HDAudBus.sys",
+          "totalMsPerSecond": {
+            "median": 2.1583,
+            "min": 1.5191,
+            "max": 2.174,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 227.9967,
+              "min": 114.0563,
+              "max": 228.2587,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 8.355,
+              "min": 8.33,
+              "max": 14.44,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 1.9045,
+              "min": 1.26,
+              "max": 1.9151,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 114.0728,
+              "min": 113.9238,
+              "max": 114.1625,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 2.25,
+              "min": 2.17,
+              "max": 2.3,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 10.25,
+              "min": 10.2,
+              "max": 10.3,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 0.2561,
+              "min": 0.2477,
+              "max": 0.2623,
+              "n": 12
+            }
+          },
+          "cpu": [
+            5
+          ]
+        },
+        {
+          "driver": "ntoskrnl.exe",
+          "totalMsPerSecond": {
+            "median": 3.8361,
+            "min": 3.5783,
+            "max": 5.155,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 454.0983,
+              "min": 408.4272,
+              "max": 636.2417,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 8.405,
+              "min": 7.31,
+              "max": 9.15,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 33.9,
+              "min": 32.5,
+              "max": 35.3,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 3.8361,
+              "min": 3.5783,
+              "max": 5.155,
+              "n": 12
+            }
+          },
+          "cpu": []
+        },
+        {
+          "driver": "storport.sys",
+          "totalMsPerSecond": {
+            "median": 4.6848,
+            "min": 4.4923,
+            "max": 4.8256,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 145.952,
+              "min": 123.6093,
+              "max": 176.7164,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.485,
+              "min": 0.43,
+              "max": 0.55,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.0711,
+              "min": 0.0602,
+              "max": 0.0809,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 2654.1391,
+              "min": 2527.5,
+              "max": 2693.5987,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 1.75,
+              "min": 1.67,
+              "max": 1.79,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 5.5,
+              "min": 5.3,
+              "max": 5.6,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 4.6083,
+              "min": 4.4286,
+              "max": 4.7503,
+              "n": 12
+            }
+          },
+          "cpu": [
+            6,
+            12
+          ]
+        },
+        {
+          "driver": "Wdf01000.sys",
+          "totalMsPerSecond": {
+            "median": 15.4088,
+            "min": 14.3511,
+            "max": 15.7313,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 7516.5125,
+              "min": 7203.4768,
+              "max": 7642.6325,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.13,
+              "min": 0.13,
+              "max": 0.14,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.9824,
+              "min": 0.9386,
+              "max": 1.0162,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 7516.5871,
+              "min": 7203.4768,
+              "max": 7642.6325,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 1.92,
+              "min": 1.86,
+              "max": 1.95,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 2.8,
+              "min": 2.7,
+              "max": 2.9,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 14.4235,
+              "min": 13.4125,
+              "max": 14.7444,
+              "n": 12
+            }
+          },
+          "cpu": [
+            0
+          ]
+        }
+      ],
+      "probes": [
+        {
+          "cpu": 0,
+          "devices": [
+            "Wdf01000.sys"
+          ],
+          "stalledPct": {
+            "median": 2.715,
+            "min": 2.61,
+            "max": 2.8,
+            "n": 12
+          },
+          "gapP50Us": {
+            "median": 3.0,
+            "min": 3.0,
+            "max": 3.1,
+            "n": 12
+          },
+          "gapP99Us": {
+            "median": 5.5,
+            "min": 5.1,
+            "max": 6.7,
+            "n": 12
+          },
+          "gapP999Us": {
+            "median": 38.5,
+            "min": 27.0,
+            "max": 39.9,
+            "n": 12
+          },
+          "stallCount": {
+            "median": 3.0,
+            "min": 1.0,
+            "max": 7.0,
+            "n": 12
+          }
+        },
+        {
+          "cpu": 5,
+          "devices": [
+            "dxgkrnl.sys",
+            "HDAudBus.sys"
+          ],
+          "stalledPct": {
+            "median": 3.675,
+            "min": 3.52,
+            "max": 3.71,
+            "n": 12
+          },
+          "gapP50Us": {
+            "median": 13.95,
+            "min": 12.9,
+            "max": 18.2,
+            "n": 12
+          },
+          "gapP99Us": {
+            "median": 187.55,
+            "min": 186.6,
+            "max": 189.6,
+            "n": 12
+          },
+          "gapP999Us": {
+            "median": 205.95,
+            "min": 203.0,
+            "max": 213.6,
+            "n": 12
+          },
+          "stallCount": {
+            "median": 0.0,
+            "min": 0.0,
+            "max": 2.0,
+            "n": 12
+          }
+        }
+      ],
+      "longGapRuns": [],
+      "usbMiBPerSecond": {
+        "median": 156.75,
+        "min": 152.4,
+        "max": 158.4,
+        "n": 12
+      }
+    },
+    {
+      "label": "audio-msi",
+      "boots": [
+        1,
+        6,
+        14,
+        22,
+        29,
+        33,
+        39,
+        47,
+        52,
+        56,
+        60,
+        67
+      ],
+      "benchFiles": [
+        "msi-bench-boot01-state00.json",
+        "msi-bench-boot06-state00.json",
+        "msi-bench-boot14-state00.json",
+        "msi-bench-boot22-state00.json",
+        "msi-bench-boot29-state00.json",
+        "msi-bench-boot33-state00.json",
+        "msi-bench-boot39-state00.json",
+        "msi-bench-boot47-state00.json",
+        "msi-bench-boot52-state00.json",
+        "msi-bench-boot56-state00.json",
+        "msi-bench-boot60-state00.json",
+        "msi-bench-boot67-state00.json"
+      ],
+      "frames": {
+        "avgFps": {
+          "median": 121.5,
+          "min": 121.3,
+          "max": 121.6,
+          "n": 12
+        },
+        "p50Ms": {
+          "median": 8.2185,
+          "min": 8.213,
+          "max": 8.236,
+          "n": 12
+        },
+        "low1PctMs": {
+          "median": 8.5165,
+          "min": 8.454,
+          "max": 10.002,
+          "n": 12
+        },
+        "low01PctMs": {
+          "median": 10.2135,
+          "min": 8.661,
+          "max": 17.058,
+          "n": 12
+        },
+        "gpuBusyP50Ms": {
+          "median": 8.201,
+          "min": 8.191,
+          "max": 8.224,
+          "n": 12
+        },
+        "cpuBusyP50Ms": {
+          "median": 8.1855,
+          "min": 8.18,
+          "max": 8.203,
+          "n": 12
+        }
+      },
+      "systemCpuBusyPct": {
+        "median": 8.7151,
+        "min": 8.6314,
+        "max": 8.9328,
+        "n": 12
+      },
+      "drivers": [
+        {
+          "driver": "amdkmdag.sys",
+          "totalMsPerSecond": {
+            "median": 25.915,
+            "min": 25.7558,
+            "max": 26.0163,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 973.9073,
+              "min": 972.1689,
+              "max": 975.34,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 26.64,
+              "min": 26.46,
+              "max": 26.71,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 172.65,
+              "min": 172.2,
+              "max": 173.6,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 25.915,
+              "min": 25.7558,
+              "max": 26.0163,
+              "n": 12
+            }
+          },
+          "cpu": []
+        },
+        {
+          "driver": "dxgkrnl.sys",
+          "totalMsPerSecond": {
+            "median": 18.9274,
+            "min": 18.8567,
+            "max": 18.9781,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 847.6325,
+              "min": 846.5232,
+              "max": 851.6418,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 20.865,
+              "min": 20.77,
+              "max": 20.97,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 17.699,
+              "min": 17.6441,
+              "max": 17.7524,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 1245.9106,
+              "min": 1196.5232,
+              "max": 1269.2715,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 0.98,
+              "min": 0.94,
+              "max": 1.06,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 7.8,
+              "min": 7.2,
+              "max": 8.1,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 1.2251,
+              "min": 1.1872,
+              "max": 1.2778,
+              "n": 12
+            }
+          },
+          "cpu": [
+            5
+          ]
+        },
+        {
+          "driver": "HDAudBus.sys",
+          "totalMsPerSecond": {
+            "median": 1.8752,
+            "min": 1.867,
+            "max": 1.8877,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 114.0563,
+              "min": 113.9238,
+              "max": 114.1459,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 15.085,
+              "min": 14.95,
+              "max": 15.15,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 1.7208,
+              "min": 1.707,
+              "max": 1.7269,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 114.0563,
+              "min": 113.9238,
+              "max": 114.1459,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 1.375,
+              "min": 1.3,
+              "max": 1.45,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 5.7,
+              "min": 5.7,
+              "max": 5.8,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 0.1569,
+              "min": 0.1482,
+              "max": 0.1658,
+              "n": 12
+            }
+          },
+          "cpu": [
+            0
+          ]
+        },
+        {
+          "driver": "ntoskrnl.exe",
+          "totalMsPerSecond": {
+            "median": 3.7723,
+            "min": 3.6668,
+            "max": 4.7564,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 458.1623,
+              "min": 406.7715,
+              "max": 542.1689,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 8.705,
+              "min": 7.29,
+              "max": 9.57,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 33.95,
+              "min": 32.8,
+              "max": 35.7,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 3.7723,
+              "min": 3.6668,
+              "max": 4.7564,
+              "n": 12
+            }
+          },
+          "cpu": []
+        },
+        {
+          "driver": "storport.sys",
+          "totalMsPerSecond": {
+            "median": 4.6548,
+            "min": 4.549,
+            "max": 4.8501,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 125.485,
+              "min": 122.4298,
+              "max": 183.543,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.505,
+              "min": 0.44,
+              "max": 0.57,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.0698,
+              "min": 0.0612,
+              "max": 0.0838,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 2649.7765,
+              "min": 2567.5828,
+              "max": 2704.1225,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 1.75,
+              "min": 1.7,
+              "max": 1.77,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 5.5,
+              "min": 5.2,
+              "max": 5.6,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 4.585,
+              "min": 4.4832,
+              "max": 4.7664,
+              "n": 12
+            }
+          },
+          "cpu": [
+            6,
+            14
+          ]
+        },
+        {
+          "driver": "Wdf01000.sys",
+          "totalMsPerSecond": {
+            "median": 15.1908,
+            "min": 14.3929,
+            "max": 15.8093,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 7514.7682,
+              "min": 7241.0779,
+              "max": 7614.404,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.13,
+              "min": 0.13,
+              "max": 0.13,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.9807,
+              "min": 0.945,
+              "max": 0.9998,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 7514.851,
+              "min": 7241.1443,
+              "max": 7614.4702,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 1.905,
+              "min": 1.82,
+              "max": 1.95,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 2.8,
+              "min": 2.6,
+              "max": 2.9,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 14.2078,
+              "min": 13.431,
+              "max": 14.8228,
+              "n": 12
+            }
+          },
+          "cpu": [
+            0
+          ]
+        }
+      ],
+      "probes": [
+        {
+          "cpu": 0,
+          "devices": [
+            "HDAudBus.sys",
+            "Wdf01000.sys"
+          ],
+          "stalledPct": {
+            "median": 2.9,
+            "min": 2.74,
+            "max": 2.99,
+            "n": 12
+          },
+          "gapP50Us": {
+            "median": 3.0,
+            "min": 2.9,
+            "max": 3.1,
+            "n": 12
+          },
+          "gapP99Us": {
+            "median": 17.3,
+            "min": 17.1,
+            "max": 20.9,
+            "n": 12
+          },
+          "gapP999Us": {
+            "median": 51.2,
+            "min": 30.4,
+            "max": 53.5,
+            "n": 12
+          },
+          "stallCount": {
+            "median": 1.5,
+            "min": 0.0,
+            "max": 6.0,
+            "n": 12
+          }
+        },
+        {
+          "cpu": 5,
+          "devices": [
+            "dxgkrnl.sys"
+          ],
+          "stalledPct": {
+            "median": 3.44,
+            "min": 3.32,
+            "max": 3.46,
+            "n": 12
+          },
+          "gapP50Us": {
+            "median": 13.05,
+            "min": 12.9,
+            "max": 13.9,
+            "n": 12
+          },
+          "gapP99Us": {
+            "median": 186.8,
+            "min": 186.1,
+            "max": 187.9,
+            "n": 12
+          },
+          "gapP999Us": {
+            "median": 198.55,
+            "min": 196.8,
+            "max": 211.6,
+            "n": 12
+          },
+          "stallCount": {
+            "median": 0.5,
+            "min": 0.0,
+            "max": 2.0,
+            "n": 12
+          }
+        }
+      ],
+      "longGapRuns": [],
+      "usbMiBPerSecond": {
+        "median": 156.45,
+        "min": 153.0,
+        "max": 157.8,
+        "n": 12
+      }
+    },
+    {
+      "label": "usb-line",
+      "boots": [
+        2,
+        10,
+        17,
+        21,
+        25,
+        30,
+        36,
+        43,
+        51,
+        59,
+        64,
+        68
+      ],
+      "benchFiles": [
+        "msi-bench-boot02-state00.json",
+        "msi-bench-boot10-state00.json",
+        "msi-bench-boot17-state00.json",
+        "msi-bench-boot21-state00.json",
+        "msi-bench-boot25-state00.json",
+        "msi-bench-boot30-state00.json",
+        "msi-bench-boot36-state00.json",
+        "msi-bench-boot43-state00.json",
+        "msi-bench-boot51-state00.json",
+        "msi-bench-boot59-state00.json",
+        "msi-bench-boot64-state00.json",
+        "msi-bench-boot68-state00.json"
+      ],
+      "frames": {
+        "avgFps": {
+          "median": 121.4,
+          "min": 121.2,
+          "max": 121.8,
+          "n": 12
+        },
+        "p50Ms": {
+          "median": 8.228,
+          "min": 8.207,
+          "max": 8.248,
+          "n": 12
+        },
+        "low1PctMs": {
+          "median": 8.529,
+          "min": 8.481,
+          "max": 8.594,
+          "n": 12
+        },
+        "low01PctMs": {
+          "median": 10.256,
+          "min": 9.51,
+          "max": 18.369,
+          "n": 12
+        },
+        "gpuBusyP50Ms": {
+          "median": 8.209,
+          "min": 8.185,
+          "max": 8.231,
+          "n": 12
+        },
+        "cpuBusyP50Ms": {
+          "median": 8.195,
+          "min": 8.173,
+          "max": 8.212,
+          "n": 12
+        }
+      },
+      "systemCpuBusyPct": {
+        "median": 8.7887,
+        "min": 8.6897,
+        "max": 9.0049,
+        "n": 12
+      },
+      "drivers": [
+        {
+          "driver": "amdkmdag.sys",
+          "totalMsPerSecond": {
+            "median": 26.0321,
+            "min": 25.9191,
+            "max": 26.3419,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 973.6424,
+              "min": 970.3311,
+              "max": 975.7781,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 26.725,
+              "min": 26.62,
+              "max": 27.0,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 173.55,
+              "min": 172.9,
+              "max": 179.4,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 26.0321,
+              "min": 25.9191,
+              "max": 26.3419,
+              "n": 12
+            }
+          },
+          "cpu": []
+        },
+        {
+          "driver": "dxgkrnl.sys",
+          "totalMsPerSecond": {
+            "median": 18.917,
+            "min": 18.8767,
+            "max": 19.0893,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 848.2682,
+              "min": 845.3974,
+              "max": 851.2583,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 20.86,
+              "min": 20.84,
+              "max": 20.9,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 17.692,
+              "min": 17.6509,
+              "max": 17.7823,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 1244.2964,
+              "min": 1181.1093,
+              "max": 1278.6589,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 0.98,
+              "min": 0.95,
+              "max": 1.1,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 7.7,
+              "min": 7.5,
+              "max": 8.2,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 1.2227,
+              "min": 1.1847,
+              "max": 1.307,
+              "n": 12
+            }
+          },
+          "cpu": [
+            5
+          ]
+        },
+        {
+          "driver": "HDAudBus.sys",
+          "totalMsPerSecond": {
+            "median": 2.2184,
+            "min": 1.7014,
+            "max": 2.3622,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 231.3907,
+              "min": 117.9636,
+              "max": 234.0299,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 9.01,
+              "min": 6.29,
+              "max": 15.62,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 1.9675,
+              "min": 1.4514,
+              "max": 2.1043,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 114.0977,
+              "min": 113.957,
+              "max": 114.1791,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 2.25,
+              "min": 2.17,
+              "max": 2.28,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 10.3,
+              "min": 10.3,
+              "max": 10.4,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 0.2568,
+              "min": 0.247,
+              "max": 0.2597,
+              "n": 12
+            }
+          },
+          "cpu": [
+            5
+          ]
+        },
+        {
+          "driver": "ntoskrnl.exe",
+          "totalMsPerSecond": {
+            "median": 3.7369,
+            "min": 3.6321,
+            "max": 5.1972,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 425.6871,
+              "min": 402.8974,
+              "max": 620.0828,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 8.845,
+              "min": 8.38,
+              "max": 9.37,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 33.5,
+              "min": 33.1,
+              "max": 35.9,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 3.7369,
+              "min": 3.6321,
+              "max": 5.1972,
+              "n": 12
+            }
+          },
+          "cpu": []
+        },
+        {
+          "driver": "storport.sys",
+          "totalMsPerSecond": {
+            "median": 4.9502,
+            "min": 4.8277,
+            "max": 5.225,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 147.7401,
+              "min": 107.6987,
+              "max": 162.6656,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.475,
+              "min": 0.45,
+              "max": 0.52,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.0694,
+              "min": 0.0547,
+              "max": 0.0774,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 2985.4222,
+              "min": 2887.053,
+              "max": 3059.3046,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 1.655,
+              "min": 1.6,
+              "max": 1.7,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 5.4,
+              "min": 5.2,
+              "max": 5.6,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 4.885,
+              "min": 4.7608,
+              "max": 5.1571,
+              "n": 12
+            }
+          },
+          "cpu": [
+            6
+          ]
+        },
+        {
+          "driver": "Wdf01000.sys",
+          "totalMsPerSecond": {
+            "median": 21.3097,
+            "min": 20.7089,
+            "max": 21.9088,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 5709.106,
+              "min": 5510.6126,
+              "max": 5817.3179,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 1.06,
+              "min": 1.05,
+              "max": 1.06,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 6.0442,
+              "min": 5.8325,
+              "max": 6.1369,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 5708.8907,
+              "min": 5512.0199,
+              "max": 5817.0364,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 2.71,
+              "min": 2.59,
+              "max": 2.74,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 4.2,
+              "min": 4.0,
+              "max": 4.3,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 15.2752,
+              "min": 14.7927,
+              "max": 15.8103,
+              "n": 12
+            }
+          },
+          "cpu": [
+            0
+          ]
+        }
+      ],
+      "probes": [
+        {
+          "cpu": 0,
+          "devices": [
+            "Wdf01000.sys"
+          ],
+          "stalledPct": {
+            "median": 3.28,
+            "min": 3.16,
+            "max": 3.42,
+            "n": 12
+          },
+          "gapP50Us": {
+            "median": 4.6,
+            "min": 4.5,
+            "max": 4.7,
+            "n": 12
+          },
+          "gapP99Us": {
+            "median": 8.5,
+            "min": 7.8,
+            "max": 15.8,
+            "n": 12
+          },
+          "gapP999Us": {
+            "median": 39.4,
+            "min": 28.5,
+            "max": 44.0,
+            "n": 12
+          },
+          "stallCount": {
+            "median": 2.0,
+            "min": 0.0,
+            "max": 11.0,
+            "n": 12
+          }
+        },
+        {
+          "cpu": 5,
+          "devices": [
+            "dxgkrnl.sys",
+            "HDAudBus.sys"
+          ],
+          "stalledPct": {
+            "median": 3.685,
+            "min": 3.52,
+            "max": 3.73,
+            "n": 12
+          },
+          "gapP50Us": {
+            "median": 13.75,
+            "min": 12.8,
+            "max": 16.3,
+            "n": 12
+          },
+          "gapP99Us": {
+            "median": 187.3,
+            "min": 186.8,
+            "max": 192.7,
+            "n": 12
+          },
+          "gapP999Us": {
+            "median": 207.0,
+            "min": 204.2,
+            "max": 213.8,
+            "n": 12
+          },
+          "stallCount": {
+            "median": 0.0,
+            "min": 0.0,
+            "max": 2.0,
+            "n": 12
+          }
+        }
+      ],
+      "longGapRuns": [],
+      "usbMiBPerSecond": {
+        "median": 178.3,
+        "min": 173.4,
+        "max": 180.1,
+        "n": 12
+      }
+    },
+    {
+      "label": "mobo-audio-msi",
+      "boots": [
+        3,
+        7,
+        12,
+        20,
+        28,
+        35,
+        41,
+        46,
+        50,
+        54,
+        61,
+        69
+      ],
+      "benchFiles": [
+        "msi-bench-boot03-state00.json",
+        "msi-bench-boot07-state00.json",
+        "msi-bench-boot12-state00.json",
+        "msi-bench-boot20-state00.json",
+        "msi-bench-boot28-state00.json",
+        "msi-bench-boot35-state00.json",
+        "msi-bench-boot41-state00.json",
+        "msi-bench-boot46-state00.json",
+        "msi-bench-boot50-state00.json",
+        "msi-bench-boot54-state00.json",
+        "msi-bench-boot61-state00.json",
+        "msi-bench-boot69-state00.json"
+      ],
+      "frames": {
+        "avgFps": {
+          "median": 121.5,
+          "min": 121.3,
+          "max": 121.7,
+          "n": 12
+        },
+        "p50Ms": {
+          "median": 8.2255,
+          "min": 8.206,
+          "max": 8.235,
+          "n": 12
+        },
+        "low1PctMs": {
+          "median": 8.533,
+          "min": 8.478,
+          "max": 9.926,
+          "n": 12
+        },
+        "low01PctMs": {
+          "median": 12.171,
+          "min": 10.024,
+          "max": 18.439,
+          "n": 12
+        },
+        "gpuBusyP50Ms": {
+          "median": 8.2045,
+          "min": 8.186,
+          "max": 8.216,
+          "n": 12
+        },
+        "cpuBusyP50Ms": {
+          "median": 8.191,
+          "min": 8.173,
+          "max": 8.199,
+          "n": 12
+        }
+      },
+      "systemCpuBusyPct": {
+        "median": 8.7459,
+        "min": 8.6749,
+        "max": 8.9813,
+        "n": 12
+      },
+      "drivers": [
+        {
+          "driver": "amdkmdag.sys",
+          "totalMsPerSecond": {
+            "median": 25.9907,
+            "min": 25.8425,
+            "max": 26.1775,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 973.4603,
+              "min": 971.6722,
+              "max": 975.5132,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 26.715,
+              "min": 26.55,
+              "max": 26.91,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 173.05,
+              "min": 172.4,
+              "max": 176.8,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 25.9907,
+              "min": 25.8425,
+              "max": 26.1775,
+              "n": 12
+            }
+          },
+          "cpu": []
+        },
+        {
+          "driver": "dxgkrnl.sys",
+          "totalMsPerSecond": {
+            "median": 18.9305,
+            "min": 18.8857,
+            "max": 19.0521,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 847.5809,
+              "min": 846.1093,
+              "max": 849.4702,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 20.895,
+              "min": 20.81,
+              "max": 20.96,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 17.699,
+              "min": 17.6523,
+              "max": 17.7651,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 1223.113,
+              "min": 1172.4876,
+              "max": 1261.0614,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 1.03,
+              "min": 0.97,
+              "max": 1.12,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 7.95,
+              "min": 7.4,
+              "max": 8.2,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 1.2417,
+              "min": 1.1999,
+              "max": 1.3079,
+              "n": 12
+            }
+          },
+          "cpu": [
+            5
+          ]
+        },
+        {
+          "driver": "HDAudBus.sys",
+          "totalMsPerSecond": {
+            "median": 1.8855,
+            "min": 1.8811,
+            "max": 1.9037,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 114.106,
+              "min": 113.9404,
+              "max": 114.1791,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 15.055,
+              "min": 14.99,
+              "max": 15.16,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 1.7171,
+              "min": 1.7098,
+              "max": 1.7309,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 114.106,
+              "min": 113.9404,
+              "max": 114.1791,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 1.505,
+              "min": 1.43,
+              "max": 1.55,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 6.4,
+              "min": 5.8,
+              "max": 6.6,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 0.1713,
+              "min": 0.1632,
+              "max": 0.1768,
+              "n": 12
+            }
+          },
+          "cpu": [
+            5
+          ]
+        },
+        {
+          "driver": "ntoskrnl.exe",
+          "totalMsPerSecond": {
+            "median": 4.3048,
+            "min": 3.6195,
+            "max": 4.8905,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 484.3046,
+              "min": 411.2769,
+              "max": 610.6788,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 8.815,
+              "min": 8.0,
+              "max": 9.29,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 34.1,
+              "min": 33.3,
+              "max": 35.4,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 4.3048,
+              "min": 3.6195,
+              "max": 4.8905,
+              "n": 12
+            }
+          },
+          "cpu": []
+        },
+        {
+          "driver": "storport.sys",
+          "totalMsPerSecond": {
+            "median": 4.6912,
+            "min": 4.4494,
+            "max": 5.0571,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 149.7833,
+              "min": 122.1026,
+              "max": 179.1225,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.485,
+              "min": 0.44,
+              "max": 0.56,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.0733,
+              "min": 0.0637,
+              "max": 0.079,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 2672.0695,
+              "min": 2558.7417,
+              "max": 2714.9669,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 1.735,
+              "min": 1.68,
+              "max": 1.86,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 5.5,
+              "min": 5.2,
+              "max": 5.6,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 4.6163,
+              "min": 4.3845,
+              "max": 4.9804,
+              "n": 12
+            }
+          },
+          "cpu": [
+            6,
+            12
+          ]
+        },
+        {
+          "driver": "Wdf01000.sys",
+          "totalMsPerSecond": {
+            "median": 15.3286,
+            "min": 14.8549,
+            "max": 15.707,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 7535.79,
+              "min": 7306.1589,
+              "max": 7682.8974,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.13,
+              "min": 0.13,
+              "max": 0.13,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.9797,
+              "min": 0.9517,
+              "max": 1.0302,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 7535.8231,
+              "min": 7306.2417,
+              "max": 7682.8974,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 1.9,
+              "min": 1.88,
+              "max": 1.94,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 2.8,
+              "min": 2.7,
+              "max": 2.8,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 14.3505,
+              "min": 13.9032,
+              "max": 14.6768,
+              "n": 12
+            }
+          },
+          "cpu": [
+            0
+          ]
+        }
+      ],
+      "probes": [
+        {
+          "cpu": 0,
+          "devices": [
+            "Wdf01000.sys"
+          ],
+          "stalledPct": {
+            "median": 2.735,
+            "min": 2.56,
+            "max": 2.81,
+            "n": 12
+          },
+          "gapP50Us": {
+            "median": 3.0,
+            "min": 3.0,
+            "max": 3.1,
+            "n": 12
+          },
+          "gapP99Us": {
+            "median": 5.45,
+            "min": 5.0,
+            "max": 6.8,
+            "n": 12
+          },
+          "gapP999Us": {
+            "median": 36.35,
+            "min": 9.1,
+            "max": 39.0,
+            "n": 12
+          },
+          "stallCount": {
+            "median": 3.0,
+            "min": 1.0,
+            "max": 6.0,
+            "n": 12
+          }
+        },
+        {
+          "cpu": 5,
+          "devices": [
+            "dxgkrnl.sys",
+            "HDAudBus.sys"
+          ],
+          "stalledPct": {
+            "median": 3.6,
+            "min": 3.52,
+            "max": 3.68,
+            "n": 12
+          },
+          "gapP50Us": {
+            "median": 14.8,
+            "min": 13.7,
+            "max": 17.1,
+            "n": 12
+          },
+          "gapP99Us": {
+            "median": 187.35,
+            "min": 186.6,
+            "max": 192.0,
+            "n": 12
+          },
+          "gapP999Us": {
+            "median": 207.0,
+            "min": 202.2,
+            "max": 212.3,
+            "n": 12
+          },
+          "stallCount": {
+            "median": 0.0,
+            "min": 0.0,
+            "max": 3.0,
+            "n": 12
+          }
+        }
+      ],
+      "longGapRuns": [],
+      "usbMiBPerSecond": {
+        "median": 157.05,
+        "min": 154.0,
+        "max": 158.9,
+        "n": 12
+      }
+    },
+    {
+      "label": "gpu-audio-msi",
+      "boots": [
+        4,
+        11,
+        15,
+        19,
+        24,
+        32,
+        38,
+        42,
+        49,
+        57,
+        65,
+        70
+      ],
+      "benchFiles": [
+        "msi-bench-boot04-state00.json",
+        "msi-bench-boot11-state00.json",
+        "msi-bench-boot15-state00.json",
+        "msi-bench-boot19-state00.json",
+        "msi-bench-boot24-state00.json",
+        "msi-bench-boot32-state00.json",
+        "msi-bench-boot38-state00.json",
+        "msi-bench-boot42-state00.json",
+        "msi-bench-boot49-state00.json",
+        "msi-bench-boot57-state00.json",
+        "msi-bench-boot65-state00.json",
+        "msi-bench-boot70-state00.json"
+      ],
+      "frames": {
+        "avgFps": {
+          "median": 121.5,
+          "min": 121.3,
+          "max": 121.7,
+          "n": 12
+        },
+        "p50Ms": {
+          "median": 8.2245,
+          "min": 8.207,
+          "max": 8.237,
+          "n": 12
+        },
+        "low1PctMs": {
+          "median": 8.5035,
+          "min": 8.469,
+          "max": 8.584,
+          "n": 12
+        },
+        "low01PctMs": {
+          "median": 11.0585,
+          "min": 10.017,
+          "max": 16.783,
+          "n": 12
+        },
+        "gpuBusyP50Ms": {
+          "median": 8.2075,
+          "min": 8.19,
+          "max": 8.218,
+          "n": 12
+        },
+        "cpuBusyP50Ms": {
+          "median": 8.1895,
+          "min": 8.174,
+          "max": 8.2,
+          "n": 12
+        }
+      },
+      "systemCpuBusyPct": {
+        "median": 8.733,
+        "min": 8.6496,
+        "max": 8.9511,
+        "n": 12
+      },
+      "drivers": [
+        {
+          "driver": "amdkmdag.sys",
+          "totalMsPerSecond": {
+            "median": 25.998,
+            "min": 25.8058,
+            "max": 26.0302,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 973.2864,
+              "min": 971.6887,
+              "max": 975.0415,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 26.675,
+              "min": 26.55,
+              "max": 26.76,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 172.8,
+              "min": 172.2,
+              "max": 174.9,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 25.998,
+              "min": 25.8058,
+              "max": 26.0302,
+              "n": 12
+            }
+          },
+          "cpu": []
+        },
+        {
+          "driver": "dxgkrnl.sys",
+          "totalMsPerSecond": {
+            "median": 18.9513,
+            "min": 18.8633,
+            "max": 19.0461,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 847.707,
+              "min": 844.9917,
+              "max": 849.4205,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 20.89,
+              "min": 20.8,
+              "max": 20.96,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 17.6954,
+              "min": 17.6482,
+              "max": 17.7607,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 1226.3411,
+              "min": 1187.3841,
+              "max": 1267.1192,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 1.005,
+              "min": 0.95,
+              "max": 1.06,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 7.85,
+              "min": 7.1,
+              "max": 8.2,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 1.2395,
+              "min": 1.1917,
+              "max": 1.2855,
+              "n": 12
+            }
+          },
+          "cpu": [
+            5
+          ]
+        },
+        {
+          "driver": "HDAudBus.sys",
+          "totalMsPerSecond": {
+            "median": 1.8624,
+            "min": 1.1251,
+            "max": 1.8728,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 113.9934,
+              "min": 113.8742,
+              "max": 114.0728,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 14.25,
+              "min": 7.75,
+              "max": 14.3,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 1.6241,
+              "min": 0.8834,
+              "max": 1.6287,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 114.0315,
+              "min": 113.9073,
+              "max": 114.106,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 2.11,
+              "min": 2.04,
+              "max": 2.17,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 9.9,
+              "min": 9.9,
+              "max": 10.0,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 0.2406,
+              "min": 0.2322,
+              "max": 0.2474,
+              "n": 12
+            }
+          },
+          "cpu": [
+            0
+          ]
+        },
+        {
+          "driver": "ntoskrnl.exe",
+          "totalMsPerSecond": {
+            "median": 4.044,
+            "min": 3.6444,
+            "max": 4.8482,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 491.7701,
+              "min": 415.3642,
+              "max": 600.745,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 8.56,
+              "min": 7.2,
+              "max": 9.66,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 33.6,
+              "min": 31.4,
+              "max": 36.8,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 4.044,
+              "min": 3.6444,
+              "max": 4.8482,
+              "n": 12
+            }
+          },
+          "cpu": []
+        },
+        {
+          "driver": "storport.sys",
+          "totalMsPerSecond": {
+            "median": 4.6875,
+            "min": 4.4732,
+            "max": 4.8222,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 143.8485,
+              "min": 121.6722,
+              "max": 183.245,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.475,
+              "min": 0.43,
+              "max": 0.54,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.071,
+              "min": 0.0614,
+              "max": 0.085,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 2663.1209,
+              "min": 2568.7252,
+              "max": 2707.3013,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 1.75,
+              "min": 1.7,
+              "max": 1.77,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 5.45,
+              "min": 5.3,
+              "max": 5.5,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 4.6239,
+              "min": 4.4071,
+              "max": 4.7372,
+              "n": 12
+            }
+          },
+          "cpu": [
+            6,
+            12
+          ]
+        },
+        {
+          "driver": "Wdf01000.sys",
+          "totalMsPerSecond": {
+            "median": 15.2338,
+            "min": 14.9724,
+            "max": 15.9194,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 7517.9719,
+              "min": 7333.7252,
+              "max": 7647.3675,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.13,
+              "min": 0.13,
+              "max": 0.14,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.9879,
+              "min": 0.9497,
+              "max": 1.0429,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 7518.0464,
+              "min": 7333.7417,
+              "max": 7647.3675,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 1.91,
+              "min": 1.84,
+              "max": 1.95,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 2.8,
+              "min": 2.7,
+              "max": 2.9,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 14.2583,
+              "min": 13.9954,
+              "max": 14.9101,
+              "n": 12
+            }
+          },
+          "cpu": [
+            0
+          ]
+        }
+      ],
+      "probes": [
+        {
+          "cpu": 0,
+          "devices": [
+            "HDAudBus.sys",
+            "Wdf01000.sys"
+          ],
+          "stalledPct": {
+            "median": 2.9,
+            "min": 2.8,
+            "max": 3.14,
+            "n": 12
+          },
+          "gapP50Us": {
+            "median": 3.0,
+            "min": 3.0,
+            "max": 3.1,
+            "n": 12
+          },
+          "gapP99Us": {
+            "median": 16.7,
+            "min": 9.3,
+            "max": 26.9,
+            "n": 12
+          },
+          "gapP999Us": {
+            "median": 52.35,
+            "min": 30.0,
+            "max": 54.8,
+            "n": 12
+          },
+          "stallCount": {
+            "median": 2.0,
+            "min": 0.0,
+            "max": 5.0,
+            "n": 12
+          }
+        },
+        {
+          "cpu": 5,
+          "devices": [
+            "dxgkrnl.sys"
+          ],
+          "stalledPct": {
+            "median": 3.44,
+            "min": 3.32,
+            "max": 3.47,
+            "n": 12
+          },
+          "gapP50Us": {
+            "median": 13.0,
+            "min": 12.9,
+            "max": 14.2,
+            "n": 12
+          },
+          "gapP99Us": {
+            "median": 187.0,
+            "min": 186.4,
+            "max": 190.6,
+            "n": 12
+          },
+          "gapP999Us": {
+            "median": 198.85,
+            "min": 197.5,
+            "max": 211.7,
+            "n": 12
+          },
+          "stallCount": {
+            "median": 0.5,
+            "min": 0.0,
+            "max": 2.0,
+            "n": 12
+          }
+        }
+      ],
+      "longGapRuns": [],
+      "usbMiBPerSecond": {
+        "median": 156.95,
+        "min": 154.0,
+        "max": 158.7,
+        "n": 12
+      }
+    },
+    {
+      "label": "gpu-line",
+      "boots": [
+        5,
+        9,
+        13,
+        18,
+        26,
+        34,
+        40,
+        44,
+        48,
+        55,
+        63,
+        71
+      ],
+      "benchFiles": [
+        "msi-bench-boot05-state00.json",
+        "msi-bench-boot09-state00.json",
+        "msi-bench-boot13-state00.json",
+        "msi-bench-boot18-state00.json",
+        "msi-bench-boot26-state00.json",
+        "msi-bench-boot34-state00.json",
+        "msi-bench-boot40-state00.json",
+        "msi-bench-boot44-state00.json",
+        "msi-bench-boot48-state00.json",
+        "msi-bench-boot55-state00.json",
+        "msi-bench-boot63-state00.json",
+        "msi-bench-boot71-state00.json"
+      ],
+      "frames": {
+        "avgFps": {
+          "median": 121.6,
+          "min": 121.4,
+          "max": 121.9,
+          "n": 12
+        },
+        "p50Ms": {
+          "median": 8.221,
+          "min": 8.204,
+          "max": 8.231,
+          "n": 12
+        },
+        "low1PctMs": {
+          "median": 8.488,
+          "min": 8.451,
+          "max": 8.542,
+          "n": 12
+        },
+        "low01PctMs": {
+          "median": 8.614,
+          "min": 8.548,
+          "max": 11.928,
+          "n": 12
+        },
+        "gpuBusyP50Ms": {
+          "median": 8.1985,
+          "min": 8.182,
+          "max": 8.212,
+          "n": 12
+        },
+        "cpuBusyP50Ms": {
+          "median": 8.187,
+          "min": 8.171,
+          "max": 8.198,
+          "n": 12
+        }
+      },
+      "systemCpuBusyPct": {
+        "median": 8.7065,
+        "min": 8.5758,
+        "max": 8.8867,
+        "n": 12
+      },
+      "drivers": [
+        {
+          "driver": "amdkmdag.sys",
+          "totalMsPerSecond": {
+            "median": 23.0151,
+            "min": 22.3972,
+            "max": 23.6083,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 837.1109,
+              "min": 807.6451,
+              "max": 852.5993,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 27.52,
+              "min": 26.51,
+              "max": 28.39,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 175.5,
+              "min": 174.9,
+              "max": 177.0,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 23.0151,
+              "min": 22.3972,
+              "max": 23.6083,
+              "n": 12
+            }
+          },
+          "cpu": []
+        },
+        {
+          "driver": "dxgkrnl.sys",
+          "totalMsPerSecond": {
+            "median": 19.0496,
+            "min": 18.8205,
+            "max": 19.3593,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 789.6699,
+              "min": 755.1656,
+              "max": 801.606,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 21.815,
+              "min": 21.56,
+              "max": 22.75,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 17.2156,
+              "min": 17.1544,
+              "max": 17.2976,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 1216.5517,
+              "min": 1138.9735,
+              "max": 1248.4743,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 1.505,
+              "min": 1.28,
+              "max": 1.71,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 8.2,
+              "min": 5.7,
+              "max": 8.6,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 1.8372,
+              "min": 1.6039,
+              "max": 2.0799,
+              "n": 12
+            }
+          },
+          "cpu": [
+            5
+          ]
+        },
+        {
+          "driver": "HDAudBus.sys",
+          "totalMsPerSecond": {
+            "median": 2.2009,
+            "min": 1.639,
+            "max": 2.2147,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 228.8173,
+              "min": 115.0828,
+              "max": 229.404,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 8.495,
+              "min": 6.02,
+              "max": 14.68,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 1.9359,
+              "min": 1.3748,
+              "max": 1.9592,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 114.0596,
+              "min": 113.957,
+              "max": 114.1294,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 2.32,
+              "min": 2.18,
+              "max": 2.35,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 10.3,
+              "min": 10.2,
+              "max": 10.3,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 0.2644,
+              "min": 0.2483,
+              "max": 0.268,
+              "n": 12
+            }
+          },
+          "cpu": [
+            5
+          ]
+        },
+        {
+          "driver": "ntoskrnl.exe",
+          "totalMsPerSecond": {
+            "median": 3.994,
+            "min": 3.5787,
+            "max": 5.1944,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.0,
+              "min": 0.0,
+              "max": 0.0,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 461.7219,
+              "min": 399.5033,
+              "max": 627.6325,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 8.92,
+              "min": 7.29,
+              "max": 9.82,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 33.95,
+              "min": 31.7,
+              "max": 36.5,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 3.994,
+              "min": 3.5787,
+              "max": 5.1944,
+              "n": 12
+            }
+          },
+          "cpu": []
+        },
+        {
+          "driver": "storport.sys",
+          "totalMsPerSecond": {
+            "median": 4.7868,
+            "min": 4.6044,
+            "max": 4.8451,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 163.5927,
+              "min": 124.1722,
+              "max": 180.0828,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.48,
+              "min": 0.45,
+              "max": 0.55,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 0.0752,
+              "min": 0.0604,
+              "max": 0.0852,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 2705.022,
+              "min": 2679.8839,
+              "max": 2746.3079,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 1.73,
+              "min": 1.68,
+              "max": 1.75,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 5.4,
+              "min": 5.2,
+              "max": 5.6,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 4.7108,
+              "min": 4.5343,
+              "max": 4.7662,
+              "n": 12
+            }
+          },
+          "cpu": [
+            6,
+            12
+          ]
+        },
+        {
+          "driver": "Wdf01000.sys",
+          "totalMsPerSecond": {
+            "median": 15.686,
+            "min": 15.1176,
+            "max": 16.1489,
+            "n": 12
+          },
+          "metrics": {
+            "isrPerSecond": {
+              "median": 7676.9868,
+              "min": 7536.1921,
+              "max": 7733.2616,
+              "n": 12
+            },
+            "isrMeanUs": {
+              "median": 0.13,
+              "min": 0.13,
+              "max": 0.14,
+              "n": 12
+            },
+            "isrMsPerSecond": {
+              "median": 1.0036,
+              "min": 0.9732,
+              "max": 1.072,
+              "n": 12
+            },
+            "dpcPerSecond": {
+              "median": 7677.0281,
+              "min": 7536.2748,
+              "max": 7733.2616,
+              "n": 12
+            },
+            "dpcMeanUs": {
+              "median": 1.91,
+              "min": 1.87,
+              "max": 1.98,
+              "n": 12
+            },
+            "dpcP99Us": {
+              "median": 2.8,
+              "min": 2.7,
+              "max": 2.9,
+              "n": 12
+            },
+            "dpcMsPerSecond": {
+              "median": 14.6853,
+              "min": 14.1279,
+              "max": 15.1627,
+              "n": 12
+            }
+          },
+          "cpu": [
+            0
+          ]
+        }
+      ],
+      "probes": [
+        {
+          "cpu": 0,
+          "devices": [
+            "Wdf01000.sys"
+          ],
+          "stalledPct": {
+            "median": 2.81,
+            "min": 2.66,
+            "max": 3.22,
+            "n": 12
+          },
+          "gapP50Us": {
+            "median": 3.0,
+            "min": 3.0,
+            "max": 3.1,
+            "n": 12
+          },
+          "gapP99Us": {
+            "median": 5.6,
+            "min": 5.0,
+            "max": 27.2,
+            "n": 12
+          },
+          "gapP999Us": {
+            "median": 37.6,
+            "min": 8.6,
+            "max": 112.3,
+            "n": 12
+          },
+          "stallCount": {
+            "median": 1.5,
+            "min": 0.0,
+            "max": 3.0,
+            "n": 12
+          }
+        },
+        {
+          "cpu": 5,
+          "devices": [
+            "dxgkrnl.sys",
+            "HDAudBus.sys"
+          ],
+          "stalledPct": {
+            "median": 3.665,
+            "min": 3.53,
+            "max": 3.73,
+            "n": 12
+          },
+          "gapP50Us": {
+            "median": 15.45,
+            "min": 13.6,
+            "max": 18.7,
+            "n": 12
+          },
+          "gapP99Us": {
+            "median": 191.55,
+            "min": 190.9,
+            "max": 193.6,
+            "n": 12
+          },
+          "gapP999Us": {
+            "median": 210.0,
+            "min": 207.9,
+            "max": 215.3,
+            "n": 12
+          },
+          "stallCount": {
+            "median": 0.0,
+            "min": 0.0,
+            "max": 2.0,
+            "n": 12
+          }
+        }
+      ],
+      "longGapRuns": [],
+      "usbMiBPerSecond": {
+        "median": 158.75,
+        "min": 156.9,
+        "max": 160.3,
+        "n": 12
+      }
+    }
+  ],
+  "fileMap": [
+    {
+      "table": "Pre-registered tests",
+      "files": "msi-bench-bootNN-stateNN.json, bench/loads/<load.name>.json",
+      "fields": "probes[].devices, probes[].cpu, cpuPick.devices[].driver, cpuPick.devices[].cpu, cpuPick.devices[].mainTraceCpu, probes[].stalledPct, probes[].gapP99Us, frames.low1PctMs, frames.avgFps, trace.seconds, trace.drivers[].isrTotalUs, trace.drivers[].dpcTotalUs, trace.drivers[].isrPlain, trace.drivers[].isrMessage, trace.drivers[].isrPerCpu, load.name; the recipe bottleneck",
+      "runner": false
+    },
+    {
+      "table": "Frames",
+      "files": "msi-bench-bootNN-stateNN.json",
+      "fields": "frames.*, systemCpu",
+      "runner": false
+    },
+    {
+      "table": "Drivers",
+      "files": "msi-bench-bootNN-stateNN.json",
+      "fields": "trace.seconds, trace.drivers[]",
+      "runner": false
+    },
+    {
+      "table": "Probes",
+      "files": "msi-bench-bootNN-stateNN.json, msi-bench-bootNN-stateNN-stalls.csv",
+      "fields": "probes[], cpuPick.devices[]; stall file rows per cpu",
+      "runner": false
+    },
+    {
+      "table": "Runs with a gap of 5 ms or more",
+      "files": "msi-bench-bootNN-stateNN-stalls.csv",
+      "fields": "cpu, offsetMs, gapUs",
+      "runner": false
+    },
+    {
+      "table": "USB reads",
+      "files": "msi-bench-bootNN-stateNN.json",
+      "fields": "background.usbRead.mibPerSecond",
+      "runner": false
+    },
+    {
+      "table": "Testbed: OS, power, present mode, load, PresentMon",
+      "files": "msi-bench-bootNN-stateNN.json",
+      "fields": "metadata.*, frames.presentModes, load",
+      "runner": false
+    },
+    {
+      "table": "Testbed: CPU, BIOS, drivers, explicit power settings",
+      "files": "bootNN-stateNN-msi.json",
+      "fields": "environment.*",
+      "runner": true
+    },
+    {
+      "table": "Testbed: counts of disabled services, tasks and startup items",
+      "files": "journal.jsonl",
+      "fields": "start event services, tasks, startup counts",
+      "runner": true
+    },
+    {
+      "table": "State labels and device modes",
+      "files": "plan.json",
+      "fields": "boots[].label, boots[].states[].devices[]",
+      "runner": true
+    }
+  ]
+}

@@ -171,6 +171,8 @@ converts a double operand the same way.
 
 **`Get-ProbeCore` is the one place that decides whether a boot's probe measured its driver's core: only when `cpuPick.devices[].cpu` equals `mainTraceCpu` (a `null` there, no ISR in the main trace, is off the core); an off-core boot is left out of that core's tests and co-location only, as pre-registered, and a missing `cpuPick` fails the run.**
 
+**`bench/results/<series>.tables.md` and `<series>.summary.json` are the output of `Get-MsiSeriesTable.ps1` over the committed series folder, and `bench/results/README.md` quotes its test and frame tables verbatim: after any change to the script or the data, rebuild them with the script under PowerShell 7, never by hand (`bench/tests/bench-results.Tests.ps1` fails otherwise).**
+
 ## The RigPolice pages that mirror this script
 
 Every copy of the verdict (what MSI mode did or did not change in our measurements) is rewritten together

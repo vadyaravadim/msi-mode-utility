@@ -1,0 +1,2511 @@
+{
+  "series": "msi-six-state",
+  "benchPath": "F:\\bench-lab\\msi-mode-utility\\bench",
+  "settleSeconds": 120,
+  "load": "superposition",
+  "captureSeconds": 60,
+  "allow": [],
+  "probeDrivers": [
+    "dxgkrnl.sys",
+    "HDAudBus.sys",
+    "Wdf01000.sys"
+  ],
+  "isrFloorPerSecond": {
+    "dxgkrnl.sys": 400,
+    "HDAudBus.sys": 60,
+    "Wdf01000.sys": 2500
+  },
+  "maintenanceCpuSecondsLimit": 10.0,
+  "unattributedCpuSecondsLimit": 6.0,
+  "background": [
+    "tone",
+    "usb-read"
+  ],
+  "toneController": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+  "boots": [
+    {
+      "label": "stock",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "usb-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 0
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "mobo-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 0,
+              "sharedWith": []
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "mobo-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "stock",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 0,
+              "sharedWith": []
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "usb-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 0
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "mobo-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 0,
+              "sharedWith": []
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "stock",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "usb-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 0
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 0,
+              "sharedWith": []
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "mobo-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "usb-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 0
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "stock",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "usb-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 0
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 0,
+              "sharedWith": []
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "stock",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "mobo-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "usb-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 0
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "stock",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 0,
+              "sharedWith": []
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "mobo-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "usb-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 0
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "stock",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 0,
+              "sharedWith": []
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "mobo-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "usb-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 0
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 0,
+              "sharedWith": []
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "stock",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "mobo-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 0,
+              "sharedWith": []
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "mobo-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "usb-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 0
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "stock",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "mobo-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 0,
+              "sharedWith": []
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "stock",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "usb-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 0
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "mobo-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "stock",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 0,
+              "sharedWith": []
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "usb-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 0
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "stock",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "usb-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 0
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "mobo-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-audio-msi",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": []
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 1
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    },
+    {
+      "label": "gpu-line",
+      "states": [
+        {
+          "kind": "msi",
+          "devices": [
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A50&SUBSYS_EE131462&REV_11\\3&11583659&0&FB",
+              "deviceName": "High Definition Audio Controller",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Bus"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_AB30&SUBSYS_AB301002&REV_00\\6&86EE56A&0&01000008",
+              "deviceName": "High Definition Audio Bus",
+              "msiSupported": 0,
+              "sharedWith": [
+                "High Definition Audio Controller"
+              ]
+            },
+            {
+              "instanceId": "PCI\\VEN_8086&DEV_7A60&SUBSYS_7E131462&REV_11\\3&11583659&0&A0",
+              "deviceName": "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+              "msiSupported": 1
+            },
+            {
+              "instanceId": "PCI\\VEN_1002&DEV_747E&SUBSYS_060D1043&REV_C8\\6&86EE56A&0&00000008",
+              "deviceName": "AMD Radeon RX 7800 XT",
+              "msiSupported": 0,
+              "sharedWith": []
+            }
+          ],
+          "step": "msi"
+        }
+      ]
+    }
+  ]
+}
