@@ -1,0 +1,78 @@
+Phase: boot28-state00
+
+Device                                                          MSISupported Mode                         SharedWith                      
+------                                                          ------------ ----                         ----------                      
+AMD Radeon RX 7800 XT                                           on           message-signaled, 1 vector                                   
+Standard SATA AHCI Controller                                   on           message-signaled, 1 vector                                   
+Realtek 8852BE Wireless LAN WiFi 6 PCI-E NIC                    on           no IRQ assigned                                              
+Realtek Gaming 2.5GbE Family Controller #2                      on           no IRQ assigned                                              
+Standard NVM Express Controller                                 on           message-signaled, 33 vectors                                 
+Standard NVM Express Controller                                 on           message-signaled, 17 vectors                                 
+High Definition Audio Bus                                       off          line IRQ 17                  High Definition Audio Controller
+High Definition Audio Controller                                off          line IRQ 17                  High Definition Audio Bus       
+Intel(R) GNA Scoring Accelerator module                         on           message-signaled, 1 vector                                   
+Intel(R) Management Engine Interface #1                         on           message-signaled, 1 vector                                   
+Intel(R) PCI Express Root Port #1 - 7A38                        default      no IRQ assigned                                              
+Intel(R) PCI Express Root Port #15 - 7A36                       default      no IRQ assigned                                              
+Intel(R) PCI Express Root Port #5 - 7A3C                        default      no IRQ assigned                                              
+Intel(R) PCIe RC 010 G5 - A70D                                  default      no IRQ assigned                                              
+Intel(R) PCIe RC 060 (x4) G4 - A74D                             default      no IRQ assigned                                              
+Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft) on           message-signaled, 1 vector                                   
+
+
+
+Load: Counter-Strike 2, workshop benchmark map. Start it as bench\README.md says; this window waits.
+Console line: game_type 3; game_mode 0; sv_skirmish_id 0; sv_game_mode_flags 32; mapgroup @workshop/3240880604/de_dust2; nextlevel de_dust2; map de_dust2 customgamemode=3240880604 nomapvalidation=true; hideconsole
+Waiting for cs2.exe ...
+Found cs2.exe. Waiting for '[VProf] VProfLite started.' in console.log ...
+Load started. Waiting 15 s, then capturing 100 s. Do not touch the PC.
+Pre-trace for 5 s to find the CPU of each -Device driver...
+dxgkrnl.sys: CPU 2 (20271 of 20271 ISRs)
+HDAudBus.sys: CPU 2 (678 of 678 ISRs)
+Wdf01000.sys: CPU 0 (43287 of 43287 ISRs)
+Measuring for 100 s on CPU 0,2, keep your load running...
+Stall probe (gaps in a spinning time-critical thread):
+
+cpu devices                  seconds gapsPerSecond gapP50Us gapP99Us gapP999Us gapMaxUs  stalledUs stalledPct
+--- -------                  ------- ------------- -------- -------- --------- --------  --------- ----------
+  0 Wdf01000.sys                 100        7815.2      3.3      5.4       7.5    193.4    2774348       2.77
+  2 dxgkrnl.sys,HDAudBus.sys     100        3792.5     19.7    135.1     196.1    250.7 11270148.2      11.27
+
+
+
+Decoding the kernel trace...
+Kernel trace: 754094 plain ISRs, 353314 message-based ISRs, 2146551 DPCs in 100.5 s (0 undecodable events dropped)
+Plain ISRs land on: CPU 0: 742644, CPU 2: 11450
+Message-based ISRs land on: CPU 2: 335208, CPU 30: 7263, CPU 24: 2201, CPU 20: 1160
+
+driver        isrPlain isrMessage isrMaxUs isrMeanUs dpcCount dpcMaxUs dpcP99Us dpcMeanUs vectors                   
+------        -------- ---------- -------- --------- -------- -------- -------- --------- -------                   
+amdkmdag.sys         0          0        0         0   333761    224.2     61.9      18.8                           
+ntoskrnl.exe         0          0        0         0   108009    149.7     50.7     11.63                           
+dxgkrnl.sys          0     335192    140.9     10.67   575570      145      2.1      0.87 112:335192                
+HDAudBus.sys     11450          0    143.5     15.18    11463      124     10.5      2.51 96:11450                  
+amdfendr.sys         0          0        0         0    89226    110.9      0.2      0.11                           
+Wdf01000.sys    742644          0        3      0.17   742644     84.5      3.2      2.04 80:742644                 
+tcpip.sys            0          0        0         0      478     68.1     64.9     20.96                           
+CLASSPNP.SYS         0          0        0         0      280     37.1     33.8      7.52                           
+storport.sys         0      18122      3.4      1.29   265707     32.4     12.6      6.09 144:11819 160:6105 128:196
+ReFS.SYS             0          0        0         0        7      8.3      8.3      3.79                           
+vmswitch.sys         0          0        0         0        6      7.9      7.9       5.7                           
+symcryptk.dll        0          0        0         0     1200        7      2.7      1.03                           
+fastfat.SYS          0          0        0         0        1      6.3      6.3       6.3                           
+stornvme.sys         0          0        0         0    18099      5.5      2.9      1.86                           
+ndis.sys             0          0        0         0       14      4.3      4.3      3.46                           
+
+
+
+
+driver       cpu isrOnCpu isrTotal mainTraceCpu
+------       --- -------- -------- ------------
+dxgkrnl.sys    2    20271    20271            2
+HDAudBus.sys   2      678      678            2
+Wdf01000.sys   0    43287    43287            0
+
+
+
+Frames: 72651 at 726.6 fps avg, p50 1.19 ms, 1% low 3.918 ms, 0 lost to present buffer overflow
+Saved msi-bench-boot28-state00.json

@@ -1,0 +1,108 @@
+{
+    "series":  "msi-six-state",
+    "boot":  5,
+    "stateIndex":  0,
+    "state":  {
+                  "kind":  "msi",
+                  "devices":  [
+                                  {
+                                      "instanceId":  "PCI\\VEN_8086\u0026DEV_7A50\u0026SUBSYS_EE131462\u0026REV_11\\3\u002611583659\u00260\u0026FB",
+                                      "deviceName":  "High Definition Audio Controller",
+                                      "msiSupported":  0,
+                                      "sharedWith":  [
+                                                         "High Definition Audio Bus"
+                                                     ]
+                                  },
+                                  {
+                                      "instanceId":  "PCI\\VEN_1002\u0026DEV_AB30\u0026SUBSYS_AB301002\u0026REV_00\\6\u002686EE56A\u00260\u002601000008",
+                                      "deviceName":  "High Definition Audio Bus",
+                                      "msiSupported":  0,
+                                      "sharedWith":  [
+                                                         "High Definition Audio Controller"
+                                                     ]
+                                  },
+                                  {
+                                      "instanceId":  "PCI\\VEN_8086\u0026DEV_7A60\u0026SUBSYS_7E131462\u0026REV_11\\3\u002611583659\u00260\u0026A0",
+                                      "deviceName":  "Intel(R) USB 3.20 eXtensible Host Controller - 1.20 (Microsoft)",
+                                      "msiSupported":  1
+                                  },
+                                  {
+                                      "instanceId":  "PCI\\VEN_1002\u0026DEV_747E\u0026SUBSYS_060D1043\u0026REV_C8\\6\u002686EE56A\u00260\u002600000008",
+                                      "deviceName":  "AMD Radeon RX 7800 XT",
+                                      "msiSupported":  0,
+                                      "sharedWith":  [
+
+                                                     ]
+                                  }
+                              ],
+                  "step":  "msi"
+              },
+    "load":  "superposition",
+    "capturedAt":  "2026-11-22T17:21:06",
+    "bench":  {
+                  "exitCode":  0,
+                  "resultFile":  "msi-bench-boot05-state00.json",
+                  "files":  [
+                                "msi-bench-boot05-state00-presentmon.csv",
+                                "msi-bench-boot05-state00-stalls.csv",
+                                "msi-bench-boot05-state00.json"
+                            ],
+                  "log":  "boot05-state00-msi-bench.log"
+              },
+    "environment":  {
+                        "cpu":  {
+                                    "name":  "Intel(R) Core(TM) i9-14900F"
+                                },
+                        "microcodeRaw":  "37-01-00-00",
+                        "bios":  {
+                                     "version":  "1.C0",
+                                     "board":  "Micro-Star International Co., Ltd. MAG B760M MORTAR II (MS-7E13)"
+                                 },
+                        "drivers":  {
+                                        "gpu":  [
+                                                    {
+                                                        "device":  "AMD Radeon RX 7800 XT",
+                                                        "version":  "32.0.32029.2010"
+                                                    }
+                                                ],
+                                        "audio":  [
+                                                      {
+                                                          "device":  "Realtek High Definition Audio",
+                                                          "version":  "6.0.10007.1",
+                                                          "enumerator":  "HDAUDIO"
+                                                      },
+                                                      {
+                                                          "device":  "AMD High Definition Audio Device",
+                                                          "version":  "10.0.1.41",
+                                                          "enumerator":  "HDAUDIO"
+                                                      }
+                                                  ],
+                                        "chipset":  [
+                                                        {
+                                                            "device":  "High Definition Audio Controller",
+                                                            "version":  "10.0.26100.9818"
+                                                        },
+                                                        {
+                                                            "device":  "High Definition Audio Bus",
+                                                            "version":  "25.30.0.1"
+                                                        }
+                                                    ]
+                                    },
+                        "hvciEnabled":  1,
+                        "clockFlags":  {
+                                           "useplatformclock":  "not set",
+                                           "useplatformtick":  "not set",
+                                           "disabledynamictick":  "not set",
+                                           "tscsyncpolicy":  "not set",
+                                           "hypervisorlaunchtype":  "Auto"
+                                       },
+                        "powerExplicit":  [
+                                              "0012ee47-9041-4b5d-9b77-535fba8b1442\\6738e2c4-e8a5-4a42-b16a-e040e769756e:ac=0",
+                                              "245d8541-3943-4422-b025-13a784f679b7:ac=1",
+                                              "245d8541-3943-4422-b025-13a784f679b7:dc=1",
+                                              "2a737441-1930-4402-8d77-b2bebba308a3\\48e6b7a6-50f5-4782-a5d4-53bb8f07e226:ac=0",
+                                              "7516b95f-f776-4464-8c53-06167f40cc99\\3c0bc021-c8a8-4e07-a973-6b14cbcb2b7e:ac=3600"
+                                          ],
+                        "enabledNetworkAdapters":  0
+                    }
+}
