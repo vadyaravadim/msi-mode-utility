@@ -14,21 +14,23 @@ state under one load.
   complete output of [`../tools/Get-MsiSeriesTable.ps1`](../tools/Get-MsiSeriesTable.ps1) over these folders. The
   `.summary.json` files next to them hold the same numbers plus every per-boot value of the tests. A test in
   `../tests` rebuilds both from the committed files and fails if they differ.
-- Numbers are compared only inside one series. The two loads are never compared with each other.
+- Tests compare numbers only inside one series. Where the text sets the two loads side by side, it reads no verdict
+  from it.
 
 ## Short answer
 
-No interrupt mode moved a frame time we could measure. In CS2 the 1% low reads `no difference` in both states
-tested there; Superposition is GPU-bound, so its 1% low can only read `cannot show`. The tweak itself, both audio
-controllers in MSI mode, ran only under Superposition. What changed was small and on the kernel side:
+No tested frame time moved. In CS2 the 1% low reads `no difference` in both states tested there; Superposition is
+GPU-bound, so its 1% low can only read `cannot show`. The tweak itself, both audio controllers in MSI mode, ran only
+under Superposition. One untested number did move, the Superposition 0.1% low of `gpu-line` (see [What the tables
+show](#what-the-tables-show)). The tested changes were small and on the kernel side:
 
 - **Audio in MSI mode** (the one change `msi-mode-utility.ps1` makes on this PC) cut the audio driver's interrupt
   time by about 0.3 ms per second, 0.03% of one core.
 - **Switching the GPU's audio controller to MSI moved the audio interrupt to another CPU**, in every boot of both
-  series. About 0.2 points of stalled time left the CPU that serves the GPU and landed on the CPU that serves the
-  USB controller.
-- **Forcing the USB controller onto a legacy line** made each interrupt routine about eight times as long and
-  raised the driver's interrupt time by 40%.
+  series. In Superposition about 0.2 points of stalled time left the CPU that serves the GPU and landed on the CPU
+  that serves the USB controller.
+- **Forcing the USB controller onto a legacy line** made each interrupt routine about eight times as long and raised
+  the driver's interrupt time from 15.4 to 21.3 ms per second.
 - **Forcing the GPU onto a legacy line** changed its interrupt numbers a little in both directions.
 
 ## Testbed
@@ -89,12 +91,12 @@ controllers in MSI mode, ran only under Superposition. What changed was small an
     1280x720 with no vsync and the video settings of [`../loads/cs2_video.txt`](../loads/cs2_video.txt).
   - Audio: a 440 Hz tone at -40 dBFS looping on the motherboard's Realtek output, which keeps the HD Audio
     controller interrupting (114 interrupts/s).
-  - USB: back-to-back 64 KiB reads from a file on the T7 SSD with the Windows file cache bypassed, about 7,400 to
-    7,500 xHCI interrupts/s, close to a mouse polled at 8,000 Hz.
-- Superposition: 20 s after the load started, a 5 s kernel trace found the CPU that takes each device's
-  interrupts, then one stall probe per CPU was pinned and 60 s were recorded. CS2: the same from the line the game
-  logs when the route starts, with a 15 s pause and a 100 s window that ends before the route does. Recorded: the
-  NT Kernel Logger trace (ISR and DPC time per driver), the stall probes, and PresentMon 2.6.0 frame times.
+  - USB: back-to-back 64 KiB reads from a file on the T7 SSD with the Windows file cache bypassed, about 7,200 to
+    7,700 xHCI interrupts/s with the controller in MSI mode, close to a mouse polled at 8,000 Hz.
+- Superposition: 20 s after the load started, a 5 s kernel trace found the CPU that takes each device's interrupts,
+  then one stall probe per CPU was pinned and 60 s were recorded. CS2: from the line the game logs when the route
+  starts, a 15 s pause that holds the 5 s pre-trace, then a 100 s window that ends before the route does. Recorded:
+  the NT Kernel Logger trace (ISR and DPC time per driver), the stall probes, and PresentMon 2.6.0 frame times.
 - A boot is rejected and repeated if PresentMon lost a frame, if its frames covered less than 57 s of the 60 s
   window (95 s of 100 s for CS2), if the frames used more than one present mode, if a .NET garbage collection ran
   inside the window, if a device's interrupt rate fell below the floor in `plan.json` that proves its load was
@@ -103,8 +105,8 @@ controllers in MSI mode, ran only under Superposition. What changed was small an
 
 ## How the numbers are judged
 
-The metrics, the test and the verdict words were fixed before either series ran. Two rules were added later and
-are dated below. The outcome tables were first built on 2026-11-24, after the last rule was merged.
+The metrics, the test and the verdict words were fixed before either series ran. Three rules were added later, on
+two dates, and are listed below. The outcome tables were first built on 2026-11-24, after the last rule was merged.
 
 - **Six metrics per state, each against `stock`, lower is better:**
   1. Stalled share of the stall probe on the CPU that takes the GPU's interrupts (the `dxgkrnl.sys` core).
@@ -120,11 +122,12 @@ are dated below. The outcome tables were first built on 2026-11-24, after the la
   for Superposition, 12 for CS2) at alpha 0.05, and the Hodges-Lehmann shift (state minus stock) with an interval
   of at least 90% confidence.
 - **Verdict words:** `helped` or `hurt` when the Holm-adjusted p is under 0.05. `no difference` when the whole
-  interval lies strictly inside the margin: 0.3 points of stalled share, 10% of the stock median for gap p99,
-  0.5 ms/s of ISR plus DPC time, and for the 1% low 3.3% of the stock median. `cannot tell` otherwise. A verdict
-  word says the shift is real, not that it is large: read the shift next to it.
-- **Superposition is GPU-bound**, so its 1% low can only read `helped`, `hurt` or `cannot show`: a short stall on
-  the CPU side is absorbed there, and a flat frame time proves nothing.
+  interval lies strictly inside the margin: 0.3 points of stalled share, 10% of the stock median for gap p99, 0.5
+  ms/s of ISR plus DPC time, and for the CS2 1% low 3.3% of the stock median (the Superposition 1% low has no
+  margin, see below). `cannot tell` otherwise. A verdict word says the shift is real, not that it is large: read the
+  shift next to it.
+- **Superposition is GPU-bound**, so by the rule fixed in advance its 1% low can only read `helped`, `hurt` or
+  `cannot show`: a flat frame time on such a load proves nothing.
 - **Average fps is a load check only.** A state whose median differs from stock by more than 1% is marked; none
   was.
 - **Another driver on a probe's CPU.** If a driver other than the changed one loads a probe's CPU differently in
@@ -132,7 +135,8 @@ are dated below. The outcome tables were first built on 2026-11-24, after the la
   happen in either series.
 - **2026-11-23, after `msi-six-state` and before `msi-cs2` started:** a Windows Error Reporting event outside the
   measured window, with no error-reporting process inside it, is listed below and does not void the series. A boot
-  whose probes sit on other CPUs than usual stays in the tests and is named in the note; no boot needed that.
+  whose probes sit on other CPUs than usual, but on the CPUs its drivers used, stays in the tests, is named in the
+  note, and the tests are also reported without it; no boot needed that (boot 27 is covered by the next rule).
 - **2026-11-24, after both series, with their journals, device modes and interrupt placement checked and before
   any outcome table was built:** a probe that did not sit on the CPU its driver used in the measured window
   (`cpuPick.devices[].cpu` against `mainTraceCpu`) did not measure that driver's core, so the boot is left out of
@@ -220,10 +224,10 @@ The driver, probe and USB read tables of both series are in the `.tables.md` fil
   five tests read `cannot show`, as a GPU-bound load must. In CS2 it is 3.92 ms in all three states and both tests
   read `no difference`, with intervals of [-0.02, 0] and [-0.01, 0] ms inside a margin of 0.13 ms. No state moved
   the average fps by more than 0.3%.
-- **Audio in MSI mode saves the second routine call.** On the shared line an audio interrupt can run the routines
-  of both HD Audio controllers. `stock` ran 228 calls/s for 114 interrupts in 10 of 12 Superposition boots and
-  114 calls/s in the other 2, so the shared line did not cost the second call in every boot. In MSI mode it was
-  114 calls/s in every boot. The audio driver's ISR plus DPC time went from 2.16 to about 1.88 ms per second in
+- **Audio in MSI mode saves the second routine call.** On the shared line an audio interrupt can run the routines of
+  both HD Audio controllers. `stock` ran 228 calls/s for 114 interrupts in 10 of 12 Superposition boots (8 of 12 in
+  CS2) and 114 calls/s in the others, so the shared line did not cost the second call in every boot. In MSI mode it
+  was 114 calls/s in every boot. The audio driver's ISR plus DPC time went from 2.16 to about 1.88 ms per second in
   all three audio states, a saving of 0.03% of one core.
 - **The mode of the GPU's audio controller decides which CPU runs the audio routine.** With that controller on
   the line (`stock`, `mobo-audio-msi`, `usb-line`, `gpu-line`) the audio routine ran on the CPU that takes the
@@ -238,20 +242,20 @@ The driver, probe and USB read tables of both series are in the `.tables.md` fil
   and that CPU's gap p99 from 5.5 to 8.5 µs. The controller raised fewer interrupts for more data: 5,709/s at
   178 MiB/s against 7,517/s at 157 MiB/s.
 - **GPU on a legacy line** raised fewer interrupts in both loads (790/s against 847/s in Superposition, 3,169/s
-  against 3,363/s in CS2). In Superposition the two GPU drivers together spent less time in interrupt work (44.92
-  to 42.04 ms per second) while the gap p99 on the GPU's CPU grew 2% (187.55 to 191.55 µs). In CS2 the same gap
-  p99 fell 12% (135.05 to 119.3 µs) while the stalled share rose 0.16 points (11.16 to 11.31%). The directions
-  disagree and we cannot explain them from this data. The 1% low reads `no difference` in CS2 and `cannot show`
-  in Superposition.
+  against 3,363/s in CS2). In Superposition the two GPU drivers together spent less time in interrupt work (44.92 to
+  42.04 ms per second) while the gap p99 on the GPU's CPU grew 2% (187.55 to 191.55 µs). In CS2 the same gap p99
+  fell 12% (135.05 to 119.3 µs) while the stalled share rose 0.16 points (11.16 to 11.31%). The directions disagree
+  and we cannot explain them from this data. The 1% low reads `no difference` in CS2 and `cannot show` in
+  Superposition. One number outside the tests moved: under Superposition the 0.1% low of `gpu-line` was below the
+  lowest stock boot (10.02 ms) in 10 of 12 boots, median 8.61 ms against 10.66. We cannot explain that either.
 
 ## What went wrong
 
 - **Boot 27 of `msi-cs2` (`gpu-line`).** The 5 s pre-trace found most of the GPU's interrupts on CPU 10, the probe
   was pinned there, and in the measured window every GPU interrupt ran on CPU 2. That boot is left out of the two
-  `dxgkrnl.sys` core tests (11 boots against 12) and kept in the others. It is also the slowest boot of the
-  series: 705 fps against 727 to 740 in the other 35, with the GPU drivers' interrupt time about 45% higher
-  (147 ms per second against 101 to 103). It was the only boot without a spinning probe on the GPU's CPU, so the
-  probe may keep that CPU fast. One boot cannot show whether it does.
+  `dxgkrnl.sys` core tests (11 boots against 12) and kept in the others. It is also the slowest boot of the series:
+  705 fps against 727 to 740 in the other 35, with the GPU drivers' interrupt time about 45% higher (147 ms per
+  second against 101 to 103). It was the only boot without a spinning probe on the GPU's CPU.
 - **The CS2 series first refused to start.** Steam had updated the game from 1.41.9.6 to 1.42.0.0 and the plan
   pinned the old build, so the runner rejected the first boot twice and restored the PC. Nothing from that start
   is in the folder. The plan was changed to 1.42.0.0, a 6-boot smoke run was repeated on it, and then the series
@@ -265,8 +269,8 @@ The driver, probe and USB read tables of both series are in the `.tables.md` fil
   shows a gap p99 near 12.5 µs against 5.4 µs in the other boots of their states, and in boot 25 23 µs against
   16.8, with no extra driver interrupts on that CPU. The trace records DPCs per driver, not per CPU, so a driver
   with DPCs and no interrupts cannot be placed.
-- **CS2 used about half the CPU time in four early boots.** Boots 0, 4, 6 and 7 show 18 to 24% of the machine busy
-  against 30 to 35% in the rest, at the same frame rate.
+- **The machine was half to three quarters as busy as usual in four early CS2 boots.** Boots 0, 4, 6 and 7 show 18
+  to 24% of the machine busy against 30 to 35% in the rest, at the same frame rate.
 - **Lost trace events.** The kernel trace lost 1 event in boot 46 of `msi-six-state`, and 1 event in each of 8
   boots and 2 in one boot of `msi-cs2` (`trace.droppedEvents`).
 
@@ -303,9 +307,9 @@ To rebuild the tables, run from the `bench` folder:
 ## Caveats
 
 - **Verdict words are about certainty, not size.** `hurt` on a 12 µs change of a p99 gap is still 12 µs.
-- **The CS2 load is not purely CPU-bound.** PresentMon's CPU busy time (median 1.06 ms) and GPU busy time
-  (1.12 ms) both fill most of the 1.18 ms median frame: the GPU idled for about 5% of a frame, so it had little
-  slack either.
+- **The CS2 load is not purely CPU-bound.** PresentMon's GPU busy time (median 1.12 ms) fills about 95% of the 1.18
+  ms median frame, so the GPU had little slack. Its CPU busy time (1.06 ms) proves no CPU limit either: under
+  GPU-bound Superposition the same number reads 8.19 ms of an 8.22 ms frame.
 - **The probe is part of the system it measures.** A time-critical thread spins on each measured CPU for the whole
   window, in every state.
 - **Frame time and interrupt time are not input lag.** That needs an end-to-end instrument.

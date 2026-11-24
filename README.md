@@ -2,7 +2,7 @@
 
 # MSI Mode Utility
 
-**Check MSI mode in 10 seconds. Enable it in one click. We measured what it changes, and what it doesn't.**
+**Check MSI mode in 10 seconds. Enable it in one click. We measured what it changes, and say what we couldn't measure.**
 
 An open-source PowerShell script to view and toggle **MSI (Message Signaled Interrupts) mode** for PCI devices on Windows 10/11 — a transparent alternative to the closed-source "MSI Util v3" `.exe` from forum threads.
 Zero install. Zero dependencies. Built-in undo.
@@ -95,7 +95,7 @@ Rollback = double-click the undo file, then reboot. No System Restore needed, an
 
 ## The Problem: Line-Based (IRQ) vs Message Signaled Interrupts
 
-Legacy line-based (IRQ) interrupts share physical lines, so a device can be forced to wait or collide with others. MSI lets a device signal the CPU by writing to a memory address instead, so each device gets its own vector. Windows still leaves some devices in legacy mode even when their driver supports MSI. On our Windows 11 testbed that was both audio controllers. Windows' own HD Audio driver writes 0 for them, so they shared one line.
+Legacy line-based (IRQ) interrupts share physical lines, so a device can end up running its interrupt routine for a neighbor's interrupt. MSI lets a device signal the CPU by writing to a memory address instead, so each device gets its own vector. Windows still leaves some devices in legacy mode even when their driver supports MSI. On our Windows 11 testbed that was both audio controllers. Windows' own HD Audio driver writes 0 for them, so they shared one line.
 
 **Where guides say it helps** (what we measured is in the [FAQ](#does-enabling-msi-mode-reduce-input-lag-or-increase-fps)):
 
@@ -103,7 +103,7 @@ Legacy line-based (IRQ) interrupts share physical lines, so a device can be forc
 - DPC latency spikes that trace back to a driver on a shared line, as guides describe them (msinfo32 shows who shares with whom, see [Verify](#verify-check-if-msi-mode-is-enabled)). We haven't measured spikes
 - Older platforms and add-in cards (sound, USB, capture) that Windows left in line-based mode
 
-**What it won't do:** change anything for a device that already runs MSI. So the script shows you the current state first. On a modern PC the answer is often "already on". On our testbed, switching the one legacy pair that was left (the two audio controllers) moved no frame time we could measure.
+**What it won't do:** change anything for a device that already runs MSI. So the script shows you the current state first. On a modern PC the answer is often "already on". On our testbed the one legacy pair that was left (the two audio controllers) ran only under a GPU-bound benchmark, which can't show a frame time change. With only the GPU's audio controller switched, the CS2 1% low read "no difference".
 
 ## Requirements
 
@@ -151,16 +151,16 @@ MSI (Message Signaled Interrupts) is a way for a PCI/PCIe device to deliver inte
 
 ### Does enabling MSI mode reduce input lag or increase FPS?
 
-Not that we could measure. We have not measured input lag: that takes an end-to-end instrument (a Reflex Analyzer, LDAT or a photodiode), and interrupt or frame times are not input lag. Frame times we did measure, on an i9-14900F / RX 7800 XT desktop (Windows 11 26H2, Memory Integrity on), 12 clean boots per state, with an audio tone and back-to-back USB SSD reads in every boot. Two loads: Unigine Superposition at 1440p (GPU-bound, about 121 fps) and Counter-Strike 2 at 720p (about 734 fps).
+We found no FPS gain where we could test it, and we have not measured input lag: that takes an end-to-end instrument (a Reflex Analyzer, LDAT or a photodiode), and interrupt or frame times are not input lag. The change this script makes on our PC, both audio controllers, ran only under a GPU-bound load, which cannot show a frame time change. Frame times we did measure, on an i9-14900F / RX 7800 XT desktop (Windows 11 26H2, Memory Integrity on), 12 clean boots per state, with an audio tone and back-to-back USB SSD reads in every boot. Two loads: Unigine Superposition at 1440p (GPU-bound, about 121 fps) and Counter-Strike 2 at 720p (about 734 fps).
 
 | Change | Interrupt side | 1% low frame time |
 |--------|----------------|-------------------|
-| Two audio controllers, shared IRQ 17 → MSI (what this script changes on that PC) | The audio driver's interrupt time fell from 2.16 to 1.88 ms per second, 0.03% of one core; the audio routine moved from the GPU's CPU to the USB controller's CPU | Superposition: 8.52 → 8.52 ms, cannot show (the load is GPU-bound) |
+| Two audio controllers, shared IRQ 17 → MSI (what this script changes on that PC) | The audio driver's interrupt time fell from 2.16 to 1.88 ms per second, a saving of 0.03% of one core; the audio routine moved from the GPU's CPU to the USB controller's CPU | Superposition: 8.52 → 8.52 ms, cannot show (the load is GPU-bound) |
 | Only the GPU's audio controller, line → MSI | The same move of the audio routine; the gap p99 on the USB controller's CPU went from 5.4 to 16.8 µs | CS2: 3.92 → 3.92 ms, no difference |
 | GPU, MSI → forced legacy line (ceiling) | Fewer interrupts; in CS2 the stalled share on its CPU rose 0.16 points while the gap p99 there fell 12% | CS2: 3.92 → 3.92 ms, no difference |
 | USB xHCI at ~7,500 interrupts/s, MSI → forced legacy line (ceiling) | Mean ISR 0.13 → 1.06 µs; the driver's interrupt time rose from 15.4 to 21.3 ms per second | Superposition: 8.52 → 8.53 ms, cannot show |
 
-MSI mode removes one specific cost. When two devices share an interrupt line, Windows calls their routines in turn until a driver claims the interrupt, so a device can run its routine for its neighbor's interrupts. Windows 11 drivers had already put the GPU, USB, NVMe and network devices in MSI/MSI-X on that machine. The only legacy devices were the two audio controllers, and they shared a line only with each other: moving them to MSI saved the second routine call, and no frame time moved in what each load could show (the table above). On the igor'sLAB PC above, the sound crackled under full GPU load until HD Audio moved to MSI, and that is the case where the switch can matter. **[The RigPolice article](https://rigpolice.com/system/articles/enable-msi-mode/?utm_source=github&utm_medium=readme&utm_campaign=msi-mode-utility)** has the full method, the charts and a guide to checking your own PC in 30 seconds. Run the same measurement on your own machine with [`bench/msi-bench.ps1`](bench/msi-bench.ps1) (NT Kernel Logger + `tracerpt`, PresentMon for frames). The public bench repeats the trace, the probes and the frame capture, and it runs the same audio tone and SSD reads (`-Background tone,usb-read -UsbReadFile <path>`). The raw output of all 108 boots, the pre-registered tests and what went wrong are in [`bench/results/`](bench/results/).
+MSI mode removes one specific cost. When two devices share an interrupt line, Windows calls their routines in turn until a driver claims the interrupt, so a device can run its routine for its neighbor's interrupts. Windows 11 drivers had already put the GPU, USB and NVMe devices in MSI/MSI-X on that machine. The only legacy devices were the two audio controllers, and they shared a line only with each other: moving them to MSI saved the second routine call; the load they ran under can't show a frame time change, and no tested frame time moved in either load (the table above). The results README lists one untested number that did. On the igor'sLAB PC above, the sound crackled under full GPU load until HD Audio moved to MSI, and that is the case where the switch can matter. **[The RigPolice article](https://rigpolice.com/system/articles/enable-msi-mode/?utm_source=github&utm_medium=readme&utm_campaign=msi-mode-utility)** has the full method, the charts and a guide to checking your own PC in 30 seconds. Run the same measurement on your own machine with [`bench/msi-bench.ps1`](bench/msi-bench.ps1) (NT Kernel Logger + `tracerpt`, PresentMon for frames). The public bench repeats the trace, the probes and the frame capture, and it runs the same audio tone and SSD reads (`-Background tone,usb-read -UsbReadFile <path>`). The raw output of all 108 boots, the tests (fixed before the runs, plus three rules added later) and what went wrong are in [`bench/results/`](bench/results/).
 
 ### Is it safe to enable MSI mode?
 

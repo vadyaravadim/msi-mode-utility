@@ -58,12 +58,12 @@ Describe 'the published series' {
 
     It 'the README quotes the pre-registered tests of <_> verbatim' -ForEach $seriesNames {
         $block = Get-TableBlock -Markdown $script:reports[$_].Markdown -FirstCell 'State | Metric'
-        $script:readme.Contains($block) | Should -BeTrue
+        $script:readme.Contains("`n`n" + $block + "`n`n") | Should -BeTrue
     }
 
     It 'the README quotes the frames table of <_> verbatim' -ForEach $seriesNames {
         $block = Get-TableBlock -Markdown $script:reports[$_].Markdown -FirstCell 'State | Boots | Avg FPS'
-        $script:readme.Contains($block) | Should -BeTrue
+        $script:readme.Contains("`n`n" + $block + "`n`n") | Should -BeTrue
     }
 
     It 'the README links the folder and the tables of <_>' -ForEach $seriesNames {
