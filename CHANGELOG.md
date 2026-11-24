@@ -10,6 +10,10 @@ section is empty or its compare link at the bottom is missing.
 
 ## [Unreleased]
 
+### Added
+
+- `bench/msi-bench.ps1 -Device` prints a warning when the main trace puts most of a driver's interrupts on a different CPU than the pre-trace picked (or records none from it): the probe pinned for that driver measured another core in that run. The result file is unchanged; `cpuPick.devices[]` already held both CPUs.
+
 ### Changed
 
 - `bench/results/` holds two new series in place of the 32-boot retest: `msi-six-state` (72 boots, six interrupt-mode states, Unigine Superposition) and `msi-cs2` (36 boots, three states, Counter-Strike 2), 12 clean boots per state, with the tables `bench/tools/Get-MsiSeriesTable.ps1` builds from them and a test that rebuilds those tables from the committed files. The new series ran with the network adapters off, no garbage collection inside the window and tests fixed before the runs (three rules were added later, see `bench/results/README.md`). The frame-rate gain the retest showed for audio in MSI mode did not repeat: under the same load the average is 121.5 fps with and without it and the 1% low is 8.52 ms in both, which a GPU-bound load can only read as cannot show. The GPU's audio controller alone reads no difference in CS2, and no state moved the average frame rate by more than 0.3%. Audio in MSI mode cut the audio driver's interrupt time by about 0.3 ms per second and moved the audio routine to another CPU. The README FAQ and `bench/results/README.md` quote the new numbers.

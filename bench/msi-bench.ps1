@@ -32,8 +32,9 @@
 
       4. -Device <driver.sys>[,...] (needs admin): a 5 s pre-trace finds the CPU that takes most of
          each driver's ISRs, and the probe is pinned there as well. The picks and the CPU the main
-         trace shows for the same driver are saved under cpuPick. The GPU's ISRs are logged as
-         dxgkrnl.sys, not as the vendor driver.
+         trace shows for the same driver are saved under cpuPick, and a warning is printed when
+         they differ: that probe did not measure its driver's core in that run. The GPU's ISRs are
+         logged as dxgkrnl.sys, not as the vendor driver.
 
       5. -Load <name> -PresentMon <path> (needs admin): waits for the load recipe in loads\<name>.json
          (process and start marker), waits its load pause, then captures frame times with PresentMon
@@ -747,6 +748,15 @@ function ConvertTo-GcRecord {
     $record
 }
 
+function Get-CpuPickWarning {
+    param([Parameter(Mandatory)][object[]]$Device)
+    foreach ($pick in $Device) {
+        if ($null -ne $pick.mainTraceCpu -and $pick.mainTraceCpu -eq $pick.cpu) { continue }
+        $seen = if ($null -eq $pick.mainTraceCpu) { 'the measured window recorded no ISR from it' } else { "in the measured window most of its ISRs landed on CPU $($pick.mainTraceCpu)" }
+        "The probe for $($pick.driver) sat on CPU $($pick.cpu), but ${seen}: the stall figures of CPU $($pick.cpu) do not describe this driver in this run."
+    }
+}
+
 function Get-GcRejection {
     param([Parameter(Mandatory)][object[]]$Probe)
     $hit = @($Probe | Where-Object { (@($_.gcCollections.Values) | Measure-Object -Sum).Sum -gt 0 } | ForEach-Object {
@@ -1170,6 +1180,7 @@ if ($MyInvocation.InvocationName -ne '.') {
                 })
             }
             $cpuPick.devices | Format-Table -AutoSize | Out-String -Width 200 | Write-Host
+            foreach ($warning in Get-CpuPickWarning -Device $cpuPick.devices) { Write-Host $warning -ForegroundColor Yellow }
         }
     }
 

@@ -167,6 +167,27 @@ Describe 'Get-DeviceCpuPick' {
     }
 }
 
+Describe 'Get-CpuPickWarning' {
+    BeforeAll {
+        function New-PickDevice {
+            param([string]$Driver, [int]$Cpu, $MainTraceCpu)
+            [pscustomobject]@{ driver = $Driver; cpu = $Cpu; isrOnCpu = 9; isrTotal = 13; mainTraceCpu = $MainTraceCpu }
+        }
+    }
+    It 'says nothing when every probe sat on the CPU its driver used in the main trace' {
+        Get-CpuPickWarning -Device @((New-PickDevice 'a.sys' 4 4), (New-PickDevice 'b.sys' 0 0)) | Should -BeNullOrEmpty
+    }
+    It 'names the driver, the picked CPU and the main trace CPU when they differ' {
+        Get-CpuPickWarning -Device @((New-PickDevice 'a.sys' 4 4), (New-PickDevice 'dxgkrnl.sys' 10 2)) | Should -Be 'The probe for dxgkrnl.sys sat on CPU 10, but in the measured window most of its ISRs landed on CPU 2: the stall figures of CPU 10 do not describe this driver in this run.'
+    }
+    It 'says no ISR when the main trace recorded none from the driver' {
+        Get-CpuPickWarning -Device @((New-PickDevice 'dxgkrnl.sys' 10 $null)) | Should -Be 'The probe for dxgkrnl.sys sat on CPU 10, but the measured window recorded no ISR from it: the stall figures of CPU 10 do not describe this driver in this run.'
+    }
+    It 'warns once per driver off its core' {
+        @(Get-CpuPickWarning -Device @((New-PickDevice 'a.sys' 1 2), (New-PickDevice 'b.sys' 0 $null))).Count | Should -Be 2
+    }
+}
+
 Describe 'ConvertTo-ListArgument' {
     It 'splits comma-joined values and trims them' {
         (ConvertTo-ListArgument 'a, b') -join '|' | Should -Be 'a|b'
