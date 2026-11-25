@@ -1,6 +1,6 @@
 # MSI Mode Utility
 
-Maintainer notes for Claude Code and the maintainer. Contributors start with [CONTRIBUTING.md](https://github.com/vadyaravadim/.github/blob/main/CONTRIBUTING.md); `rigpolice`, named below, is the maintainer's private website repository.
+Maintainer notes for coding agents and the maintainer. Contributors start with [CONTRIBUTING.md](https://github.com/vadyaravadim/.github/blob/main/CONTRIBUTING.md); `rigpolice`, named below, is the maintainer's private website repository.
 
 A single self-contained PowerShell script (`msi-mode-utility.ps1`) that lists PCI devices in an
 `Out-GridView` picker and switches the selected ones to MSI (Message Signaled Interrupts) by writing the
@@ -156,7 +156,7 @@ so a clone of `main` was indistinguishable from the v1.0.0 release.
 An effect nobody measured, on frame times, DPC latency, stutter or input lag, is attributed to the guides
 that recommend the tweak or marked as not measured, never stated as fact, and the star ask names no
 effect. Frame time and ISR/DPC time are not input lag. The method lives in rigpolice's
-`.claude/rules/bench-methodology.md`, section "Conclusions".
+`bench-methodology.md`, section "Conclusions".
 
 ## The series table
 
